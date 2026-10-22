@@ -45,7 +45,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold);
 .scene { position: relative; overflow: hidden; background: #000; touch-action: none; cursor: grab; min-height: 0; }
 .scene:active { cursor: grabbing; }
 .scene canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: filter .8s ease; }
-.scene.card canvas { filter: blur(9px) brightness(.55) saturate(.8); }
+.scene.card canvas { filter: blur(9px) brightness(.4) saturate(.7); }
+.scene.card { cursor: default; }
+.scene.card .drag-hint { display: none; }
+.illus { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  padding: calc(max(12px, env(safe-area-inset-top, 0px)) + 56px) 16px 16px; }
+.illus svg { width: 100%; height: 100%; max-width: 640px; max-height: 100%; filter: drop-shadow(0 8px 24px rgba(0,0,0,.45)); }
 .hotspots { position: absolute; inset: 0; pointer-events: none; }
 .hotspot { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; transition: opacity .3s; }
 .hotspot span { background: rgba(16, 20, 23, .82); color: var(--fg); border: 1px solid rgba(214, 173, 94, .55); border-radius: 999px; padding: .2em .75em; font-size: var(--t-small); white-space: nowrap; font-weight: 700; }
@@ -147,6 +152,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
 <div class="app" id="app">
   <section class="scene" id="scene" aria-label="360 degree view">
     <canvas id="gl"></canvas>
+    <div class="illus" id="illus" aria-hidden="true" hidden></div>
     <div class="hotspots" id="hotspots"></div>
     <div class="scene-top">
       <div class="chip" id="placeChip"></div>
@@ -593,6 +599,19 @@ $('cAdd').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t]
 $('cUndo').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.max(0, state.counts[t] - 1); renderCounter(); };
 
 /* =================================================================== render */
+function drawIllus() {
+  const st = STATIONS[state.s], step = st.steps[state.k], el = $('illus');
+  if (!st.card || !step.illus || !ILLUS[step.illus]) { el.hidden = true; el.dataset.key = ''; return; }
+  const key = step.illus + ':' + state.lang;
+  el.hidden = false;
+  if (el.dataset.key === key) return;
+  el.dataset.key = key;
+  ILLUS.setLang(state.lang === 'ar');
+  el.innerHTML = ILLUS[step.illus](ILLUS_TEXT[state.lang]);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && el.firstElementChild.animate)
+    el.firstElementChild.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 450, easing: 'ease-out' });
+}
+
 function render() {
   const L = UI[state.lang], st = STATIONS[state.s], step = st.steps[state.k];
   document.documentElement.lang = state.lang;
@@ -635,6 +654,7 @@ function render() {
   setPlaying(state.playing);
   $('disclaimer').textContent = L.disclaimer;
   $('dragHint').textContent = L.drag;
+  drawIllus();
   $('loading').textContent = L.loading;
   $('sheetTitle').textContent = L.stations; $('sheetClose').textContent = L.close;
   $('stationList').replaceChildren(...STATIONS.map((x, i) => {

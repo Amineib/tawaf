@@ -45,7 +45,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold);
 .scene { position: relative; overflow: hidden; background: #000; touch-action: none; cursor: grab; min-height: 0; }
 .scene:active { cursor: grabbing; }
 .scene canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: filter .8s ease; }
-.scene.card canvas { filter: blur(9px) brightness(.55) saturate(.8); }
+.scene.card canvas { filter: blur(9px) brightness(.4) saturate(.7); }
+.scene.card { cursor: default; }
+.scene.card .drag-hint { display: none; }
+.illus { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  padding: calc(max(12px, env(safe-area-inset-top, 0px)) + 56px) 16px 16px; }
+.illus svg { width: 100%; height: 100%; max-width: 640px; max-height: 100%; filter: drop-shadow(0 8px 24px rgba(0,0,0,.45)); }
 .hotspots { position: absolute; inset: 0; pointer-events: none; }
 .hotspot { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; transition: opacity .3s; }
 .hotspot span { background: rgba(16, 20, 23, .82); color: var(--fg); border: 1px solid rgba(214, 173, 94, .55); border-radius: 999px; padding: .2em .75em; font-size: var(--t-small); white-space: nowrap; font-weight: 700; }
@@ -147,6 +152,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
 <div class="app" id="app">
   <section class="scene" id="scene" aria-label="360 degree view">
     <canvas id="gl"></canvas>
+    <div class="illus" id="illus" aria-hidden="true" hidden></div>
     <div class="hotspots" id="hotspots"></div>
     <div class="scene-top">
       <div class="chip" id="placeChip"></div>
@@ -389,12 +395,14 @@ const STATIONS = [
    {
     "look": "kaaba",
     "fov": 95,
+    "illus": "prep",
     "en": "Before you reach the Miqat, the boundary where ihram begins, take a full bath and trim your nails. Men may perfume their body, but not their clothes.",
     "ar": "قبل أن تصل إلى الميقات، وهو الحدّ الذي يبدأ منه الإحرام، اغتسل وقلّم أظافرك. ويجوز للرجل أن يتطيّب في بدنه دون ثيابه."
    },
    {
     "look": "kaaba",
     "fov": 95,
+    "illus": "clothes",
     "en": "Men wear two white unstitched cloths and sandals. Women wear their usual modest clothes, with the face and hands uncovered.",
     "ar": "يلبس الرجل إزارًا ورداءً أبيضين غير مخيطين، ونعلين. وتلبس المرأة ثيابها المحتشمة المعتادة، مع كشف الوجه والكفّين."
    },
@@ -402,6 +410,7 @@ const STATIONS = [
     "look": "kaaba",
     "fov": 95,
     "dua": "niyyah",
+    "illus": "niyyah",
     "en": "At the Miqat, make your intention for Umrah. If you are flying, the crew announces the Miqat, so be ready before take-off.",
     "ar": "عند الميقات، انوِ العمرة. وإن كنت مسافرًا بالطائرة، فإن الطاقم يعلن عن الميقات، فكن مستعدًّا قبل الإقلاع."
    },
@@ -409,6 +418,7 @@ const STATIONS = [
     "look": "kaaba",
     "fov": 95,
     "dua": "ishtirat",
+    "illus": "ishtirat",
     "en": "If you fear that illness may stop you, you may add this condition. It is a mercy for older and sick pilgrims.",
     "ar": "إن خشيت أن يمنعك مرض من إتمام العمرة، فلك أن تشترط هذا الشرط. وهو تيسير لكبار السن والمرضى."
    },
@@ -416,12 +426,14 @@ const STATIONS = [
     "look": "kaaba",
     "fov": 95,
     "dua": "talbiyah",
+    "illus": "talbiyah",
     "en": "Now repeat the Talbiyah often until you reach the Kaaba. Men say it aloud, women softly.",
     "ar": "ثم أكثِر من التلبية حتى تصل إلى الكعبة. يرفع بها الرجال أصواتهم، وتخفضها النساء."
    },
    {
     "look": "kaaba",
     "fov": 95,
+    "illus": "avoid",
     "en": "While in ihram, avoid perfume, cutting hair or nails, and marital relations. Men do not cover their head.",
     "ar": "وفي الإحرام اجتنب الطيب، وأخذ شيء من الشعر أو الأظافر، والجماع. ولا يغطّي الرجل رأسه."
    }
@@ -826,18 +838,160 @@ const STATIONS = [
    {
     "look": "marwa_rock",
     "fov": 90,
+    "illus": "halq",
     "en": "Men shave the whole head, which is best, or shorten the hair evenly. Women cut about a fingertip’s length from the end of their hair.",
     "ar": "يحلق الرجل رأسه كله، وهو الأفضل، أو يقصّر شعره من جميع رأسه. وتقصّ المرأة من أطراف شعرها قدر أنملة."
    },
    {
     "look": "marwa_rock",
     "fov": 90,
+    "illus": "complete",
     "en": "Your Umrah is complete, and the restrictions of ihram are lifted. May Allah accept it from you.",
     "ar": "وبهذا تمّت عمرتك، وحلّ لك ما كان محظورًا في الإحرام. تقبّل الله منك."
    }
   ]
  }
 ];
+
+/* Step illustrations for the stations that have no place to look at (before arrival, end of Umrah).
+   Flat, faceless figures on the dark scene; one SVG per step, labels in EN / AR. */
+const ILLUS_TEXT = {
+  en: {
+    bath: ['Full bath'], nails: ['Trim nails'], perfume: ['Perfume', 'on the body only'],
+    men: 'Men', women: 'Women', miqat: 'Miqat',
+    avoid_perfume: ['Perfume'], avoid_hair: ['Cutting hair', 'or nails'], avoid_marital: ['Marital', 'relations'], avoid_head: ['Covering', 'the head (men)'],
+    shave: ['Men', 'Shave (best)'], shorten: ['Men', 'Shorten evenly'], women_cut: ['Women', 'A fingertip’s length'],
+    accept: 'May Allah accept it from you', aloud: 'aloud', softly: 'softly',
+  },
+  ar: {
+    bath: ['الاغتسال'], nails: ['تقليم الأظافر'], perfume: ['الطيب', 'في البدن فقط'],
+    men: 'الرجال', women: 'النساء', miqat: 'الميقات',
+    avoid_perfume: ['الطيب'], avoid_hair: ['قص الشعر', 'أو الأظافر'], avoid_marital: ['الجماع'], avoid_head: ['تغطية الرأس', '(للرجال)'],
+    shave: ['الرجال', 'الحلق (أفضل)'], shorten: ['الرجال', 'التقصير'], women_cut: ['النساء', 'قدر أنملة'],
+    accept: 'تقبّل الله منك', aloud: 'جهرًا', softly: 'سرًّا',
+  },
+};
+
+const ILLUS = (() => {
+  const C = { ivory: '#f2eee6', ivory2: '#dcd6ca', gold: '#d6ad5e', muted: '#8d8576', skin: '#b88a68', raise: 'rgba(32,39,44,.92)',
+              line: 'rgba(255,255,255,.16)', blue: '#8cc4e8', red: '#e8826a', green: '#5fd38a', sand: '#c9b79c', dark: '#0b0b0c' };
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  let AR = false;
+  const font = () => AR ? `font-family="Noto Naskh Arabic, Geeza Pro, serif" direction="rtl"` : `font-family="Atkinson Hyperlegible, system-ui, sans-serif"`;
+  const text = (x, y, s, size = 18, fill = C.ivory, weight = 700) =>
+    `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" font-weight="${weight}" fill="${fill}" ${font()}>${esc(s)}</text>`;
+  const arabic = (x, y, s, size = 22, fill = C.gold) =>
+    `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" fill="${fill}" font-family="Amiri, Noto Naskh Arabic, serif" direction="rtl">${esc(s)}</text>`;
+  const svg = (inner) => `<svg viewBox="0 0 480 320" role="img" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+  const shadow = (x, y, w = 34) => `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="6" fill="rgba(0,0,0,.35)"/>`;
+
+  /* ---- icons, centred on (0,0), roughly 90 units tall */
+  const I = {
+    shower: () => `<path d="M-34,-44 H2 V-30" fill="none" stroke="${C.muted}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M-18,-30 H22 L15,-18 H-11 Z" fill="${C.ivory2}"/>
+      ${[[-10, -4], [2, 2], [14, -6], [-4, 18], [8, 24], [20, 12], [-14, 32], [2, 40]].map(([x, y]) => `<path d="M${x},${y - 7} q4,6 0,9 q-4,-3 0,-9z" fill="${C.blue}"/>`).join('')}`,
+    clipper: () => `<g transform="rotate(-18)"><rect x="-38" y="-2" width="70" height="12" rx="6" fill="${C.ivory2}"/>
+      <rect x="-38" y="-14" width="70" height="10" rx="5" fill="${C.ivory}"/>
+      <path d="M-30,-18 Q4,-44 34,-22" fill="none" stroke="${C.gold}" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="-30" cy="-16" r="4" fill="${C.gold}"/><rect x="26" y="-10" width="10" height="16" rx="2" fill="${C.muted}"/></g>`,
+    bottle: () => `<rect x="-24" y="-12" width="48" height="52" rx="12" fill="${C.gold}" opacity=".9"/>
+      <rect x="-14" y="-6" width="10" height="34" rx="5" fill="#fff" opacity=".25"/>
+      <rect x="-8" y="-26" width="16" height="14" fill="${C.ivory2}"/><rect x="-12" y="-38" width="24" height="12" rx="3" fill="${C.ivory}"/>
+      <path d="M22,-34 l4,-4 M28,-28 l6,-1 M24,-44 l1,-6" stroke="${C.ivory}" stroke-width="3" stroke-linecap="round"/>`,
+    scissors: () => `<circle cx="-14" cy="26" r="10" fill="none" stroke="${C.gold}" stroke-width="6"/><circle cx="14" cy="26" r="10" fill="none" stroke="${C.gold}" stroke-width="6"/>
+      <path d="M-8,16 L16,-40 M8,16 L-16,-40" stroke="${C.ivory}" stroke-width="7" stroke-linecap="round"/><circle cx="0" cy="-3" r="3.5" fill="${C.muted}"/>`,
+    rings: () => `<circle cx="-12" cy="6" r="20" fill="none" stroke="${C.gold}" stroke-width="6"/><circle cx="12" cy="6" r="20" fill="none" stroke="${C.gold}" stroke-width="6"/>
+      <path d="M-12,-24 l6,8 h-12 z" fill="${C.ivory}"/>`,
+    cap: () => `<path d="M-36,14 A36,34 0 0 1 36,14 Z" fill="${C.ivory2}"/><rect x="-40" y="12" width="80" height="10" rx="5" fill="${C.ivory}"/>
+      <path d="M-20,-8 Q0,-18 20,-8 M-28,4 Q0,-6 28,4" fill="none" stroke="${C.muted}" stroke-width="2"/>`,
+    razor: () => `<rect x="-30" y="-36" width="60" height="16" rx="4" fill="${C.ivory}"/><rect x="-26" y="-22" width="52" height="4" fill="${C.muted}"/>
+      <rect x="-6" y="-18" width="12" height="58" rx="6" fill="${C.gold}"/>${[0, 10, 20, 30].map((y) => `<rect x="-6" y="${y - 4}" width="12" height="3" fill="rgba(0,0,0,.25)"/>`).join('')}`,
+    strand: () => `<path d="M-8,-44 C-22,-20 10,-6 -6,14 C-16,26 -2,34 -6,40" fill="none" stroke="#3b2a20" stroke-width="12" stroke-linecap="round"/>
+      <path d="M-8,-44 C-22,-20 10,-6 -6,14 C-16,26 -2,34 -6,40" fill="none" stroke="#6b4a36" stroke-width="5" stroke-linecap="round"/>
+      <path d="M-30,30 H26" stroke="${C.gold}" stroke-width="3" stroke-dasharray="6 5"/><path d="M18,30 v12 M18,42 h-6 M18,30 h-6" stroke="${C.ivory}" stroke-width="3" fill="none"/>`,
+  };
+  const cross = () => `<circle r="42" fill="none" stroke="${C.red}" stroke-width="6"/><path d="M-30,30 L30,-30" stroke="${C.red}" stroke-width="6" stroke-linecap="round"/>`;
+
+  /* tile: rounded card with an icon and one or two label lines */
+  function tile(x, y, w, h, icon, label, { crossed = false, scale = 1 } = {}) {
+    const lines = Array.isArray(label) ? label : [label];
+    const short = h < 200;
+    const iy = h * (short ? 0.34 : 0.4);
+    const ly = h - 18 - (lines.length - 1) * 22;
+    return `<g transform="translate(${x},${y})"><rect width="${w}" height="${h}" rx="18" fill="${C.raise}" stroke="${C.line}"/>
+      <g transform="translate(${w / 2},${iy}) scale(${short ? scale * 0.86 : scale * 1.15})">${icon}${crossed ? cross() : ''}</g>
+      ${lines.map((l, i) => text(w / 2, ly + i * 22, l, i ? 16 : 21, i ? C.ivory2 : C.ivory, i ? 400 : 700)).join('')}</g>`;
+  }
+
+  /* faceless figures, feet at (0,0) */
+  const man = (x, y, s = 1, extra = '') => `<g transform="translate(${x},${y}) scale(${s})">${shadow(0, 0, 30)}
+    <rect x="-17" y="-16" width="11" height="14" rx="4" fill="${C.skin}"/><rect x="6" y="-16" width="11" height="14" rx="4" fill="${C.skin}"/>
+    <path d="M-20,-1 h16 M4,-1 h16" stroke="#5a3b28" stroke-width="5" stroke-linecap="round"/>
+    <path d="M-30,-80 H30 L34,-16 H-34 Z" fill="${C.ivory2}"/><path d="M-30,-60 L30,-42" stroke="${C.muted}" stroke-width="1.5" opacity=".6"/>
+    <path d="M-28,-124 Q0,-132 28,-124 L38,-72 Q0,-62 -38,-72 Z" fill="${C.ivory}"/>
+    <path d="M-12,-120 L24,-74" stroke="${C.muted}" stroke-width="1.5" opacity=".5"/>
+    <circle cx="-38" cy="-70" r="7" fill="${C.skin}"/><circle cx="38" cy="-70" r="7" fill="${C.skin}"/>
+    <rect x="-6" y="-134" width="12" height="10" fill="${C.skin}"/><circle cx="0" cy="-146" r="16" fill="${C.skin}"/>${extra}</g>`;
+  const woman = (x, y, s = 1, extra = '') => `<g transform="translate(${x},${y}) scale(${s})">${shadow(0, 0, 32)}
+    <path d="M-12,-4 h8 M4,-4 h8" stroke="#3a2a20" stroke-width="6" stroke-linecap="round"/>
+    <path d="M-22,-122 Q0,-130 22,-122 L40,-6 H-40 Z" fill="${C.sand}"/>
+    <path d="M-22,-118 L-36,-64 M22,-118 L36,-64" stroke="${C.sand}" stroke-width="16" stroke-linecap="round"/>
+    <circle cx="-37" cy="-58" r="6.5" fill="${C.skin}"/><circle cx="37" cy="-58" r="6.5" fill="${C.skin}"/>
+    <path d="M-20,-124 Q0,-110 20,-124 L16,-150 Q0,-172 -16,-150 Z" fill="#8e7f69"/>
+    <circle cx="0" cy="-146" r="18" fill="#8e7f69"/><ellipse cx="0" cy="-142" rx="10.5" ry="13" fill="${C.skin}"/>${extra}</g>`;
+  const kaaba = (x, y, s = 1, glow = false) => `<g transform="translate(${x},${y}) scale(${s})">
+    ${glow ? `<ellipse cx="18" cy="-46" rx="110" ry="80" fill="url(#glow)"/>` : ''}
+    <ellipse cx="18" cy="4" rx="76" ry="9" fill="rgba(0,0,0,.4)"/>
+    <path d="M-44,-100 L-8,-118 L82,-118 L46,-100 Z" fill="#2a2a2e"/>
+    <path d="M46,-100 L82,-118 L82,-18 L46,0 Z" fill="#17171a"/>
+    <rect x="-44" y="-100" width="90" height="100" fill="${C.dark}"/>
+    <rect x="-44" y="-80" width="90" height="9" fill="${C.gold}"/><path d="M46,-80 L82,-98 L82,-89 L46,-71 Z" fill="#a8843f"/>
+    <rect x="22" y="-46" width="16" height="34" fill="${C.gold}"/></g>`;
+  const bubble = (x, y, w, s, size = 22) => `<g transform="translate(${x},${y})"><rect x="${-w / 2}" y="-26" width="${w}" height="44" rx="22" fill="${C.raise}" stroke="rgba(214,173,94,.6)"/>
+    <path d="M-10,18 L-20,32 L4,18 Z" fill="${C.raise}"/>${arabic(0, 5, s, size)}</g>`;
+  const defs = `<defs><radialGradient id="glow"><stop offset="0" stop-color="#d6ad5e" stop-opacity=".45"/><stop offset="1" stop-color="#d6ad5e" stop-opacity="0"/></radialGradient></defs>`;
+
+  return {
+    prep: (L) => svg(tile(12, 30, 144, 260, I.shower(), L.bath) + tile(168, 30, 144, 260, I.clipper(), L.nails) + tile(324, 30, 144, 260, I.bottle(), L.perfume)),
+    clothes: (L) => svg(`<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
+      <path d="M240,40 V290" stroke="${C.line}" stroke-width="2"/>
+      ${man(126, 262, 1.18)}${woman(354, 262, 1.18)}
+      ${text(126, 298, L.men, 19, C.gold)}${text(354, 298, L.women, 19, C.gold)}`),
+    niyyah: (L) => svg(`${defs}<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
+      <path d="M24,250 H456" stroke="${C.muted}" stroke-width="2"/>
+      <path d="M40,150 Q120,128 180,118" fill="none" stroke="${C.ivory2}" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
+      <g transform="translate(205,112) rotate(-8)"><ellipse rx="40" ry="8" fill="${C.ivory}"/><path d="M-6,-2 L-22,-30 H-12 L10,-2 Z M-6,2 L-22,30 H-12 L10,2 Z" fill="${C.ivory2}"/>
+        <path d="M-36,-2 L-44,-18 H-38 L-28,-2 Z" fill="${C.ivory2}"/><circle cx="30" cy="-2" r="2" fill="${C.muted}"/></g>
+      <path d="M300,62 V250" stroke="${C.gold}" stroke-width="4" stroke-dasharray="10 8"/>
+      <rect x="248" y="34" width="104" height="30" rx="15" fill="${C.gold}"/>${text(300, 55, L.miqat, 17, '#1a1408')}
+      ${kaaba(408, 250, 0.42, true)}
+      ${bubble(150, 196, 220, 'لَبَّيْكَ اللَّهُمَّ عُمْرَةً')}`),
+    ishtirat: () => svg(`<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
+      ${man(150, 286, 1.1, `<path d="M44,-70 L54,0" stroke="#7a5a3a" stroke-width="5" stroke-linecap="round"/><path d="M38,-72 h10" stroke="#7a5a3a" stroke-width="5" stroke-linecap="round"/>`)}
+      <g transform="translate(330,170)"><path d="M0,-58 L46,-40 V2 C46,34 22,52 0,62 C-22,52 -46,34 -46,2 V-40 Z" fill="rgba(95,211,138,.16)" stroke="${C.green}" stroke-width="4"/>
+        <path d="M0,24 C-26,6 -24,-18 -10,-20 C-4,-21 0,-16 0,-12 C0,-16 4,-21 10,-20 C24,-18 26,6 0,24 Z" fill="${C.green}"/></g>
+      ${bubble(240, 60, 300, 'اللَّهُمَّ مَحِلِّي حَيْثُ حَبَسْتَنِي', 21)}`),
+    talbiyah: (L) => svg(`${defs}<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
+      <path d="M24,268 H456" stroke="${C.muted}" stroke-width="2"/>
+      <path d="M150,276 Q260,252 360,262" fill="none" stroke="${C.gold}" stroke-width="3" stroke-dasharray="2 10" stroke-linecap="round"/>
+      ${man(84, 268, 0.95)}${woman(176, 268, 0.82)}
+      ${[0, 1, 2].map((i) => `<path d="M${110 + i * 9},${118 - i * 2} q${10 + i * 6},${16} 0,${32 + i * 4}" fill="none" stroke="${C.gold}" stroke-width="3" stroke-linecap="round" opacity="${1 - i * .25}"/>`).join('')}
+      <path d="M196,${144} q8,12 0,24" fill="none" stroke="${C.gold}" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+      ${text(84, 298, L.aloud, 15, C.ivory2, 400)}${text(176, 298, L.softly, 15, C.ivory2, 400)}
+      ${kaaba(392, 262, 0.62, true)}
+      ${bubble(246, 66, 260, 'لَبَّيْكَ اللَّهُمَّ لَبَّيْكَ')}`),
+    avoid: (L) => svg(tile(12, 12, 222, 142, I.bottle(), L.avoid_perfume, { crossed: true, scale: .72 }) +
+      tile(246, 12, 222, 142, I.scissors(), L.avoid_hair, { crossed: true, scale: .72 }) +
+      tile(12, 166, 222, 142, I.rings(), L.avoid_marital, { crossed: true, scale: .72 }) +
+      tile(246, 166, 222, 142, I.cap(), L.avoid_head, { crossed: true, scale: .72 })),
+    halq: (L) => svg(tile(12, 30, 144, 260, I.razor(), L.shave) + tile(168, 30, 144, 260, I.scissors(), L.shorten) + tile(324, 30, 144, 260, I.strand(), L.women_cut)),
+    complete: (L) => svg(`${defs}<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
+      ${kaaba(222, 222, 1.2, true)}
+      <g transform="translate(352,92)"><circle r="26" fill="${C.green}"/><path d="M-12,0 L-3,10 L14,-10" fill="none" stroke="#07160d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g>
+      ${text(240, 280, L.accept, 21, C.gold)}`),
+    setLang(ar) { AR = ar; },
+  };
+})();
 
 const VIEWS = {"entry": {"kaaba": [0.0, 5.6], "black_stone": [-5.6, -0.1], "yemeni": [-6.6, -0.1], "door": [-1.3, 4.0], "hijr": [13.3, -0.6], "mizab": [7.0, 11.1], "maqam": [1.5, 0.0], "start_light": [-58.2, 2.9], "clock": [-48.0, 51.3], "zamzam": [0.0, -5.9], "gate": [117.3, 11.2]}, "hijr": {"kaaba": [9.3, 16.2], "black_stone": [-8.4, -0.2], "yemeni": [21.5, -0.2], "door": [-9.5, 9.2], "hijr": [33.7, -6.3], "mizab": [14.9, 43.8], "maqam": [-34.5, 0.0], "start_light": [-30.4, 1.5], "clock": [43.2, 52.8], "zamzam": [-58.0, -1.2], "gate": [-72.7, 2.2]}, "maqam": {"kaaba": [-3.2, 15.0], "black_stone": [-24.9, -0.4], "yemeni": [-17.6, -0.2], "door": [-9.6, 14.1], "hijr": [29.1, -1.3], "mizab": [15.3, 26.9], "maqam": [-2.4, 0.0], "start_light": [-123.4, 2.7], "clock": [-52.4, 53.0], "zamzam": [-177.5, -2.2], "gate": [166.7, 3.3]}, "start": {"kaaba": [-1.4, 17.4], "black_stone": [0.0, -0.7], "yemeni": [-27.7, -0.3], "door": [12.8, 16.8], "hijr": [19.1, -1.2], "mizab": [11.6, 26.3], "maqam": [69.7, 0.0], "start_light": [-179.2, 3.0], "clock": [-87.1, 54.0], "zamzam": [128.2, -1.7], "gate": [121.5, 2.7]}, "yemeni": {"kaaba": [1.5, 19.0], "black_stone": [30.0, -0.3], "yemeni": [0.0, -0.8], "door": [19.5, 9.8], "hijr": [-20.2, -1.3], "mizab": [-12.4, 27.9], "maqam": [27.8, 0.0], "start_light": [71.8, 1.8], "clock": [179.9, 55.3], "zamzam": [42.1, -1.0], "gate": [36.6, 1.9]}, "green": {"safa_rock": [178.1, 0.3], "marwa_rock": [1.4, 0.0], "to_marwa": [0.0, 0.1], "to_safa": [175.9, 0.1], "green_lights": [0.0, 25.3], "green_end": [0.0, 11.3], "divider": [177.1, -0.9]}, "marwa": {"safa_rock": [-179.4, 0.1], "marwa_rock": [-12.5, 0.0], "to_marwa": [-73.3, 2.2], "to_safa": [179.7, 0.1], "green_lights": [-177.2, 2.9], "green_end": [-177.0, 2.2], "divider": [-178.7, -0.2]}, "safa": {"safa_rock": [167.5, 2.8], "marwa_rock": [0.6, 0.0], "to_marwa": [-0.3, 0.1], "to_safa": [106.7, 2.2], "green_lights": [-0.6, 3.2], "green_end": [-0.6, 2.1], "divider": [0.9, -0.6]}};
 
@@ -1213,6 +1367,19 @@ $('cAdd').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t]
 $('cUndo').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.max(0, state.counts[t] - 1); renderCounter(); };
 
 /* =================================================================== render */
+function drawIllus() {
+  const st = STATIONS[state.s], step = st.steps[state.k], el = $('illus');
+  if (!st.card || !step.illus || !ILLUS[step.illus]) { el.hidden = true; el.dataset.key = ''; return; }
+  const key = step.illus + ':' + state.lang;
+  el.hidden = false;
+  if (el.dataset.key === key) return;
+  el.dataset.key = key;
+  ILLUS.setLang(state.lang === 'ar');
+  el.innerHTML = ILLUS[step.illus](ILLUS_TEXT[state.lang]);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && el.firstElementChild.animate)
+    el.firstElementChild.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 450, easing: 'ease-out' });
+}
+
 function render() {
   const L = UI[state.lang], st = STATIONS[state.s], step = st.steps[state.k];
   document.documentElement.lang = state.lang;
@@ -1255,6 +1422,7 @@ function render() {
   setPlaying(state.playing);
   $('disclaimer').textContent = L.disclaimer;
   $('dragHint').textContent = L.drag;
+  drawIllus();
   $('loading').textContent = L.loading;
   $('sheetTitle').textContent = L.stations; $('sheetClose').textContent = L.close;
   $('stationList').replaceChildren(...STATIONS.map((x, i) => {

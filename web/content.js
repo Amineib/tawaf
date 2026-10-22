@@ -169,12 +169,14 @@ const STATIONS = [
    {
     "look": "kaaba",
     "fov": 95,
+    "illus": "prep",
     "en": "Before you reach the Miqat, the boundary where ihram begins, take a full bath and trim your nails. Men may perfume their body, but not their clothes.",
     "ar": "قبل أن تصل إلى الميقات، وهو الحدّ الذي يبدأ منه الإحرام، اغتسل وقلّم أظافرك. ويجوز للرجل أن يتطيّب في بدنه دون ثيابه."
    },
    {
     "look": "kaaba",
     "fov": 95,
+    "illus": "clothes",
     "en": "Men wear two white unstitched cloths and sandals. Women wear their usual modest clothes, with the face and hands uncovered.",
     "ar": "يلبس الرجل إزارًا ورداءً أبيضين غير مخيطين، ونعلين. وتلبس المرأة ثيابها المحتشمة المعتادة، مع كشف الوجه والكفّين."
    },
@@ -182,6 +184,7 @@ const STATIONS = [
     "look": "kaaba",
     "fov": 95,
     "dua": "niyyah",
+    "illus": "niyyah",
     "en": "At the Miqat, make your intention for Umrah. If you are flying, the crew announces the Miqat, so be ready before take-off.",
     "ar": "عند الميقات، انوِ العمرة. وإن كنت مسافرًا بالطائرة، فإن الطاقم يعلن عن الميقات، فكن مستعدًّا قبل الإقلاع."
    },
@@ -189,6 +192,7 @@ const STATIONS = [
     "look": "kaaba",
     "fov": 95,
     "dua": "ishtirat",
+    "illus": "ishtirat",
     "en": "If you fear that illness may stop you, you may add this condition. It is a mercy for older and sick pilgrims.",
     "ar": "إن خشيت أن يمنعك مرض من إتمام العمرة، فلك أن تشترط هذا الشرط. وهو تيسير لكبار السن والمرضى."
    },
@@ -196,12 +200,14 @@ const STATIONS = [
     "look": "kaaba",
     "fov": 95,
     "dua": "talbiyah",
+    "illus": "talbiyah",
     "en": "Now repeat the Talbiyah often until you reach the Kaaba. Men say it aloud, women softly.",
     "ar": "ثم أكثِر من التلبية حتى تصل إلى الكعبة. يرفع بها الرجال أصواتهم، وتخفضها النساء."
    },
    {
     "look": "kaaba",
     "fov": 95,
+    "illus": "avoid",
     "en": "While in ihram, avoid perfume, cutting hair or nails, and marital relations. Men do not cover their head.",
     "ar": "وفي الإحرام اجتنب الطيب، وأخذ شيء من الشعر أو الأظافر، والجماع. ولا يغطّي الرجل رأسه."
    }
@@ -606,12 +612,14 @@ const STATIONS = [
    {
     "look": "marwa_rock",
     "fov": 90,
+    "illus": "halq",
     "en": "Men shave the whole head, which is best, or shorten the hair evenly. Women cut about a fingertip’s length from the end of their hair.",
     "ar": "يحلق الرجل رأسه كله، وهو الأفضل، أو يقصّر شعره من جميع رأسه. وتقصّ المرأة من أطراف شعرها قدر أنملة."
    },
    {
     "look": "marwa_rock",
     "fov": 90,
+    "illus": "complete",
     "en": "Your Umrah is complete, and the restrictions of ihram are lifted. May Allah accept it from you.",
     "ar": "وبهذا تمّت عمرتك، وحلّ لك ما كان محظورًا في الإحرام. تقبّل الله منك."
    }

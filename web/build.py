@@ -11,7 +11,7 @@ for f in ('haram_views.json', 'masa_views.json'):
         p = os.path.join(here, '..', 'test', f)
     views.update(json.load(open(p)))
 html = open(os.path.join(here, 'app.html')).read()
-html = html.replace('/*@CONTENT@*/', open(os.path.join(here, 'content.js')).read())
+html = html.replace('/*@CONTENT@*/', open(os.path.join(here, 'content.js')).read() + '\n' + open(os.path.join(here, 'illus.js')).read())
 html = html.replace('/*@VIEWS@*/', json.dumps(views))
 audio_dir = os.path.join(dist, 'audio')
 keys = sorted(f[:-4] for f in os.listdir(audio_dir) if f.endswith('.mp3')) if os.path.isdir(audio_dir) else []
