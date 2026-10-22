@@ -184,7 +184,7 @@ const LANG = store.get('lang', 'en') === 'ar' ? 'ar' : 'en';
 document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
 const T = {
   en: { intro: 'Umrah in 3D', introText: 'Walk through the Haram and the Mas‘a yourself. Each step of the Umrah is a mission. The minimap shows where to go, and “Guide me” walks for you.',
-        loading: 'Loading the Haram…', ready: 'Ready.', start: 'I am in ihram, begin', how: ['Move: W A S D or arrow keys. Look: drag with the mouse (double-click to lock it, Esc to release).', 'Phone: drag on the left to walk, on the right to look.', '“Guide me” walks you to the next goal. “Run” goes faster.'],
+        loading: 'Loading the Haram…', ready: 'Ready.', start: 'I am in ihram, begin', how: ['Move: W A S D or arrow keys. Look: drag with the mouse (double-click to lock it, Esc to release).', 'Phone: drag on the left to walk, on the right to look.', '“Guide me” walks you through the current mission, then hands control back. “Run” goes faster.'],
         note: 'Simplified real-time 3D for orientation, not an exact model. Duas from Hisn al-Muslim; Quran recitation by Mishary Rashid Alafasy.',
         niyyah: 'At the Miqat, make your intention:', talbiyah: 'Then repeat the Talbiyah:', listen: 'Listen', stop: 'Stop', ok: 'Continue',
         guide: 'Guide me', guiding: 'Guiding…', run: 'Run', day: 'Day', night: 'Night', tour: 'Guided tour', mission: 'Mission', of: 'of', m: 'm away',
@@ -199,7 +199,7 @@ const T = {
         soundOn: 'Sound on', soundOff: 'Sound off', takbir: 'At the Black Stone line', dhikr: 'Remember Allah',
         resume: (n, t) => `Continue: mission ${n}, ${t}`, missionDone: (t) => `✓ ${t}`, arriveSafa: 'At Safa', arriveMarwa: 'At Marwah', noWebgl: 'This device cannot show 3D (WebGL2 is not available).' },
   ar: { intro: 'العمرة ثلاثية الأبعاد', introText: 'امشِ بنفسك في المسجد الحرام والمسعى. كل خطوة من العمرة مهمة. الخريطة الصغيرة تدلّك على الطريق، وزر «أرشدني» يمشي بك.',
-        loading: 'جارٍ تحميل المسجد الحرام…', ready: 'جاهز.', start: 'أنا محرم، ابدأ', how: ['الحركة: مفاتيح W A S D أو الأسهم. النظر: اسحب بالفأرة (انقر مرتين لتثبيتها، وEsc لإلغاء ذلك).', 'على الهاتف: اسحب في اليسار للمشي، وفي اليمين للنظر.', 'زر «أرشدني» يوصلك إلى الهدف التالي، وزر «أسرع» يزيد السرعة.'],
+        loading: 'جارٍ تحميل المسجد الحرام…', ready: 'جاهز.', start: 'أنا محرم، ابدأ', how: ['الحركة: مفاتيح W A S D أو الأسهم. النظر: اسحب بالفأرة (انقر مرتين لتثبيتها، وEsc لإلغاء ذلك).', 'على الهاتف: اسحب في اليسار للمشي، وفي اليمين للنظر.', 'زر «أرشدني» يمشي بك خلال المهمة الحالية ثم يعيد إليك التحكم، وزر «أسرع» يزيد السرعة.'],
         note: 'مشهد ثلاثي الأبعاد مبسّط للمساعدة على التوجّه، وليس نموذجًا دقيقًا. الأدعية من حصن المسلم، والتلاوة بصوت مشاري راشد العفاسي.',
         niyyah: 'عند الميقات انوِ العمرة:', talbiyah: 'ثم أكثِر من التلبية:', listen: 'استمع', stop: 'إيقاف', ok: 'متابعة',
         guide: 'أرشدني', guiding: 'جارٍ الإرشاد…', run: 'أسرع', day: 'نهار', night: 'ليل', tour: 'الجولة الموجَّهة', mission: 'المهمة', of: 'من', m: 'م',
@@ -581,9 +581,7 @@ function checkMission(dt) {
   if (m.id === 'stone') {
     // on the line, and the explanation of what to do there has finished
     const a = Math.atan2(player.y, player.x), r = Math.hypot(player.x, player.y);
-    const onLine = Math.abs(wrapA(a - START_ANG)) < 0.09 && r > 8.8 && r < 30;
-    game.lineT = onLine ? (game.lineT || 0) + dt : 0;
-    if (onLine && (audioIdle() || game.lineT > 15)) return nextMission();
+    if (Math.abs(wrapA(a - START_ANG)) < 0.09 && r > 8.8 && r < 30) return nextMission();
   }
   if (m.id === 'tawaf') return tawafTick(dt);
   if ((m.id === 'maqam' || m.id === 'zamzam') && d < 2.2) return nextMission();
@@ -612,6 +610,7 @@ function tawafTick(dt) {
   if (cnt > tw.count) {
     tw.count = cnt; banner(T.circuit(cnt)); chime(); updateHud();
     if (cnt >= 7) { input.ff = false; return nextMission(); }
+    stopAudio();                                        // leftovers from the last circuit stop here
     if (!input.ff) say(['d:bismillah']);                // takbir each time you pass the Black Stone
     $('bSkip').hidden = false;
   }
@@ -632,6 +631,7 @@ function saiTick() {
 function arrived(where) {
   const s = game.sai; banner(T.length(s.count)); chime(); updateHud(); setProg(0);
   if (s.count >= 7) { input.ff = false; return finish(); }
+  stopAudio();
   if (!input.ff) say(s.count === 1 ? ['n:marwa_0', 'd:safa_dhikr'] : ['d:safa_dhikr']);   // the dhikr is repeated on each hill
   $('bSkip').hidden = false;
 }
@@ -639,7 +639,7 @@ function cue(a) { if (a.startsWith('dhikr:')) showDhikr(+a.slice(6)); else tip(a
 function nextMission() {
   const done = M[game.mi];
   game.mi++;
-  input.ff = false; $('bSkip').hidden = true;
+  stopGuide(); input.ff = false; $('bSkip').hidden = true;
   if (game.mi >= M.length) return finish();
   if (done && done.id !== 'tawaf') { banner(T.missionDone(done.title[LANG]), 2000); chime(); }
   startMission();
@@ -649,13 +649,13 @@ function startMission() {
   if (m.id === 'tawaf') game.tawaf = freshTawaf();
   if (m.id === 'sai') game.sai = freshSai();
   if (m.id === 'stone' || m.id === 'tawaf') scene.add(startLine); else scene.remove(startLine);
-  dropTips(); say(m.audio);
+  stopAudio(); say(m.audio);
   store.set('explore', { mi: game.mi });
   updateHud();
 }
 async function goToMasa() {
   game.busy = true;
-  const fade = $('fade'); fade.classList.add('on'); stopGuide(); banner(T.entering, 1500);
+  const fade = $('fade'); fade.classList.add('on'); stopGuide(); stopAudio(); banner(T.entering, 1500);
   await sleep(700);
   setWorld('masa'); Object.assign(player, { x: -4, y: 3, yaw: Math.PI, pitch: 0.05, z: 0.6 });
   game.mi++;
@@ -747,7 +747,10 @@ function pump() {
   snd.el.onended = done; snd.el.onerror = done;
   snd.el.src = urlFor(a); snd.el.play().catch(done);
 }
-function stopAudio() { snd.q.length = 0; snd.tips.length = 0; snd.cur = null; snd.el.pause(); hideCaption(); duck(false); }
+function stopAudio() {
+  snd.q.length = 0; snd.tips.length = 0; snd.cur = null; snd.el.pause(); hideCaption(); duck(false);
+  if (toastDua && !$('toast').hidden) hideDuaSoon();
+}
 function initAudio() {
   try {
     if (!snd.ctx) { snd.ctx = new AudioContext(); snd.master = snd.ctx.createGain(); snd.master.connect(snd.ctx.destination); }
@@ -985,7 +988,7 @@ $('bGuide').onclick = toggleGuide;
 $('bRun').onclick = () => { input.run = !input.run; $('bRun').setAttribute('aria-pressed', input.run); };
 $('bAct').onclick = () => { if (M[game.mi]?.id === 'safa') { stopAudio(); nextMission(); } };
 $('bSound').onclick = () => { initAudio(); setSound(!snd.on); };
-$('bSkip').onclick = () => { input.ff = true; snd.q.length = 0; dropTips(); startGuide(); $('bSkip').hidden = true; };
+$('bSkip').onclick = () => { input.ff = true; stopAudio(); startGuide(); $('bSkip').hidden = true; };
 $('bTime').onclick = () => { night = !night; store.set('night', night); applyLight(); };
 $('bTour').onclick = $('bBack').onclick = () => { location.href = 'index.html'; };
 $('bAgain').onclick = () => { $('done').hidden = true; begin(0); };
