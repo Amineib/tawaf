@@ -1,0 +1,1304 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>Umrah Step by Step</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: immersive 360° scene with a docked guide panel (right on wide screens, below on phones).
+   Single deliberate dark look: the panel reads like a night-lit courtyard so the scene stays the star. */
+:root {
+  --ink: #101417;          /* page + scene backdrop */
+  --panel: #171c20;        /* guide panel */
+  --raise: #20272c;        /* cards inside the panel */
+  --line: #2e373d;
+  --fg: #f2eee6;           /* warm white, like the marble */
+  --muted: #b3ada1;
+  --gold: #d6ad5e;         /* kiswa band gold, the single accent */
+  --gold-ink: #1a1408;
+  --green: #5fd38a;        /* the green lights / start line, used only for "active" */
+  --font: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --arabic: "Amiri", "Traditional Arabic", "Geeza Pro", serif;
+  --scale: 1;
+  --t-body: calc(1.2rem * var(--scale));
+  --t-step: calc(1.4rem * var(--scale));
+  --t-title: calc(1.55rem * var(--scale));
+  --t-small: calc(0.95rem * var(--scale));
+  --t-arabic: calc(1.9rem * var(--scale));
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--fg); font-family: var(--font); font-size: var(--t-body); line-height: 1.5; overflow: hidden; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; }
+button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: 1fr minmax(380px, 460px); height: 100%; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: minmax(220px, 40%) 1fr; }
+}
+
+/* ---------- scene */
+.scene { position: relative; overflow: hidden; background: #000; touch-action: none; cursor: grab; min-height: 0; }
+.scene:active { cursor: grabbing; }
+.scene canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: filter .8s ease; }
+.scene.card canvas { filter: blur(9px) brightness(.55) saturate(.8); }
+.hotspots { position: absolute; inset: 0; pointer-events: none; }
+.hotspot { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; transition: opacity .3s; }
+.hotspot span { background: rgba(16, 20, 23, .82); color: var(--fg); border: 1px solid rgba(214, 173, 94, .55); border-radius: 999px; padding: .2em .75em; font-size: var(--t-small); white-space: nowrap; font-weight: 700; }
+.hotspot i { width: 2px; height: 14px; background: var(--gold); }
+.hotspot b { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(214, 173, 94, .3); }
+.hotspot.focus span { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
+
+.scene-top { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }
+.scene-top > * { pointer-events: auto; }
+.chip { background: rgba(16, 20, 23, .8); border: 1px solid var(--line); border-radius: 999px; padding: .35em .9em; font-size: var(--t-small); }
+.chip strong { color: var(--gold); }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: var(--t-small); background: var(--ink); transition: opacity .5s; }
+.loading.gone { opacity: 0; pointer-events: none; }
+.drag-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: var(--t-small); color: var(--fg); background: rgba(16,20,23,.7); padding: .3em .9em; border-radius: 999px; pointer-events: none; transition: opacity .6s; }
+
+/* ---------- guide panel */
+.guide { background: var(--panel); border-inline-start: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+@media (max-width: 860px) { .guide { border-inline-start: 0; border-top: 1px solid var(--line); } }
+.guide-head { padding-block: 18px 10px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 10px; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { background: transparent; border: 0; padding: .4em .8em; min-height: 44px; font-size: var(--t-small); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--raise); color: var(--gold); font-weight: 700; }
+.toolbar .spacer { flex: 1; }
+.btn-stations { background: rgba(16, 20, 23, .85); border: 1px solid rgba(214, 173, 94, .6); color: var(--fg); border-radius: 999px; padding: .35em 1em; min-height: 44px; font-size: var(--t-small); font-weight: 700; cursor: pointer; flex: none; }
+.scene-top .chip { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; }
+
+.progress { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.progress button { height: 8px; border-radius: 4px; border: 0; background: var(--line); cursor: pointer; padding: 0; }
+.progress button.done { background: rgba(214, 173, 94, .5); }
+.progress button.now { background: var(--gold); }
+
+.eyebrow { font-size: var(--t-small); color: var(--muted); letter-spacing: .04em; }
+.eyebrow b { color: var(--gold); font-weight: 700; }
+h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance; }
+
+.guide-body { flex: 1; overflow-y: auto; padding-block: 6px 16px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; align-content: start; min-height: 0; }
+.step-meta { font-size: var(--t-small); color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.step-dots { display: flex; gap: 5px; }
+.step-dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.step-dots span.now { background: var(--fg); }
+.step-text { font-size: var(--t-step); line-height: 1.45; margin: 0; max-width: 34ch; }
+.step-text.speaking { color: #fff; }
+
+.dua { background: var(--raise); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; }
+.dua-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.btn-listen { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px solid var(--gold); color: var(--gold); border-radius: 999px; padding: .35em 1em; min-height: 48px; font-weight: 700; cursor: pointer; font-size: var(--t-small); }
+.btn-listen svg { width: 20px; height: 20px; fill: currentColor; }
+.btn-listen[aria-pressed="true"] { background: var(--gold); color: var(--gold-ink); }
+.synth { font-size: var(--t-small); color: var(--muted); }
+.dua .ar { font-family: var(--arabic); font-size: var(--t-arabic); line-height: 1.9; direction: rtl; text-align: right; color: var(--fg); }
+.dua .tr { font-style: italic; color: var(--gold); line-height: 1.45; }
+.dua .mean { color: var(--fg); line-height: 1.45; }
+.dua .src { font-size: var(--t-small); color: var(--muted); }
+
+.counter { background: var(--raise); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 10px 14px; align-items: center; transition: box-shadow .4s, border-color .4s; }
+.counter.pulse { border-color: var(--green); box-shadow: 0 0 0 3px rgba(95, 211, 138, .25); }
+.counter .lbl { font-size: var(--t-small); color: var(--muted); }
+.counter .num { font-size: calc(2rem * var(--scale)); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.counter .num small { font-size: .55em; color: var(--muted); font-weight: 400; }
+.counter .note { grid-column: 1 / -1; font-size: var(--t-small); color: var(--muted); }
+.counter .row { display: flex; gap: 8px; }
+.btn-count { background: var(--green); color: #07160d; border: 0; border-radius: 12px; font-weight: 700; padding: .5em 1em; min-height: 56px; min-width: 120px; cursor: pointer; font-size: var(--t-body); }
+.btn-undo { background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: .5em .8em; min-height: 56px; cursor: pointer; font-size: var(--t-small); }
+
+.disclaimer { font-size: var(--t-small); color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+
+.controls { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; border-top: 1px solid var(--line);
+  padding-block: 12px max(12px, env(safe-area-inset-bottom, 0px)); padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); background: var(--panel); }
+.controls button { min-height: 64px; border-radius: 14px; border: 1px solid var(--line); background: var(--raise); cursor: pointer; display: grid; place-items: center; gap: 2px; padding: 6px; font-size: var(--t-small); }
+.controls button svg { width: 26px; height: 26px; fill: currentColor; }
+.controls .play { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); font-weight: 700; font-size: var(--t-body); }
+.controls .play svg { width: 30px; height: 30px; }
+.controls button:disabled { opacity: .4; cursor: default; }
+
+/* station list */
+.sheet { position: fixed; inset: 0; background: rgba(5, 7, 8, .72); display: grid; place-items: end center; z-index: 20; }
+@media (min-width: 861px) { .sheet { place-items: center; } }
+.sheet-card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px 18px 0 0; width: min(560px, 100%); max-height: 86%; overflow-y: auto;
+  padding-block: 18px max(18px, env(safe-area-inset-bottom, 0px)); padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 861px) { .sheet-card { border-radius: 18px; } }
+.sheet-card h2 { font-size: var(--t-title); margin: 0 0 12px; }
+.sheet-card ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sheet-card li button { width: 100%; text-align: start; background: var(--raise); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-height: 56px; cursor: pointer; display: grid; grid-template-columns: 2.2em 1fr; gap: 10px; align-items: center; }
+.sheet-card li button .n { font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+.sheet-card li button small { display: block; color: var(--muted); font-size: var(--t-small); }
+.sheet-card li button[aria-current="true"] { border-color: var(--gold); }
+.sheet-close { margin-top: 12px; width: 100%; min-height: 52px; border-radius: 12px; background: transparent; border: 1px solid var(--line); cursor: pointer; }
+
+:root[dir="rtl"] { --font: "Noto Naskh Arabic", "Geeza Pro", "Atkinson Hyperlegible", serif; }
+:root[dir="rtl"] .step-text { line-height: 1.75; }
+:root[dir="rtl"] #btnPrev svg, :root[dir="rtl"] #btnNext svg { transform: scaleX(-1); }
+:root[dir="rtl"] .eyebrow { letter-spacing: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app" id="app">
+  <section class="scene" id="scene" aria-label="360 degree view">
+    <canvas id="gl"></canvas>
+    <div class="hotspots" id="hotspots"></div>
+    <div class="scene-top">
+      <div class="chip" id="placeChip"></div>
+      <button class="btn-stations" id="btnStations"></button>
+    </div>
+    <div class="drag-hint" id="dragHint"></div>
+    <div class="loading" id="loading">Loading the scene…</div>
+  </section>
+
+  <section class="guide" aria-label="Guide">
+    <div class="guide-head">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Language">
+          <button id="lang-en" data-lang="en">English</button>
+          <button id="lang-ar" data-lang="ar" lang="ar">العربية</button>
+        </div>
+        <div class="seg" role="group" aria-label="Text size">
+          <button id="size-1" data-size="1" aria-label="Normal text">A</button>
+          <button id="size-2" data-size="1.18" aria-label="Large text" style="font-size:1.15em">A</button>
+        </div>
+        <div class="seg" role="group" aria-label="Time of day" id="timeSeg">
+          <button id="time-day" data-time="day"></button>
+          <button id="time-night" data-time="night"></button>
+        </div>
+      </div>
+      <div class="progress" id="progress"></div>
+      <div class="eyebrow" id="eyebrow"></div>
+      <h1 id="title"></h1>
+    </div>
+
+    <div class="guide-body" id="body">
+      <div class="step-meta"><div class="step-dots" id="stepDots"></div><span id="stepCount"></span></div>
+      <p class="step-text" id="stepText" aria-live="polite"></p>
+      <div class="dua" id="dua" hidden>
+        <div class="dua-top">
+          <button class="btn-listen" id="btnListen" hidden><svg viewBox="0 0 24 24" aria-hidden="true" id="icoListen"><path d="M7 4v16l13-8z"/></svg><span id="lListen"></span></button>
+          <span class="synth" id="lSynth" hidden></span>
+        </div>
+        <div class="ar" id="duaAr" lang="ar"></div>
+        <div class="tr" id="duaTr"></div>
+        <div class="mean" id="duaMean"></div>
+        <div class="src" id="duaSrc"></div>
+      </div>
+      <div class="counter" id="counter" hidden>
+        <div><div class="lbl" id="cLabel"></div><div class="num" id="cNum"></div></div>
+        <div class="row"><button class="btn-undo" id="cUndo"></button><button class="btn-count" id="cAdd"></button></div>
+        <div class="note" id="cNote"></div>
+      </div>
+      <p class="disclaimer" id="disclaimer"></p>
+    </div>
+
+    <div class="controls">
+      <button id="btnPrev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg><span id="lPrev"></span></button>
+      <button class="play" id="btnPlay"><svg viewBox="0 0 24 24" aria-hidden="true" id="icoPlay"><path d="M7 4v16l13-8z"/></svg><span id="lPlay"></span></button>
+      <button id="btnNext"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg><span id="lNext"></span></button>
+    </div>
+  </section>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle"></h2>
+    <ol id="stationList"></ol>
+    <button class="sheet-close" id="sheetClose"></button>
+  </div>
+</div>
+
+<script>
+/* Umrah guided tour — script (English + Arabic).
+   Each station = one 360° scene; each step = where the camera looks + what is said.
+   DUAS[k].ar is the Arabic text of the dua itself; DUAS[k].en is its English meaning.
+   PROTOTYPE CONTENT — to be reviewed by a qualified scholar before any public release. */
+
+const DUAS = {
+ "niyyah": {
+  "ar": "لَبَّيْكَ اللَّهُمَّ عُمْرَةً",
+  "tr": "Labbayka Allāhumma ʿumrah",
+  "en": "Here I am, O Allah, for Umrah."
+ },
+ "ishtirat": {
+  "ar": "اللَّهُمَّ مَحِلِّي حَيْثُ حَبَسْتَنِي",
+  "tr": "Allāhumma maḥillī ḥaythu ḥabastanī",
+  "en": "O Allah, I will leave ihram wherever You hold me back.",
+  "src": {
+   "en": "Hadith, Bukhari & Muslim",
+   "ar": "حديث، رواه البخاري ومسلم"
+  }
+ },
+ "talbiyah": {
+  "ar": "لَبَّيْكَ اللَّهُمَّ لَبَّيْكَ، لَبَّيْكَ لَا شَرِيكَ لَكَ لَبَّيْكَ، إِنَّ الْحَمْدَ وَالنِّعْمَةَ لَكَ وَالْمُلْكَ، لَا شَرِيكَ لَكَ",
+  "tr": "Labbayka Allāhumma labbayk, labbayka lā sharīka laka labbayk, inna l-ḥamda wa n-niʿmata laka wa l-mulk, lā sharīka lak",
+  "en": "Here I am, O Allah, here I am. Here I am, You have no partner, here I am. All praise, all blessings and all sovereignty belong to You. You have no partner.",
+  "src": {
+   "en": "Hadith, Bukhari & Muslim",
+   "ar": "حديث، رواه البخاري ومسلم"
+  }
+ },
+ "enter": {
+  "ar": "بِسْمِ اللَّهِ، وَالصَّلَاةُ وَالسَّلَامُ عَلَى رَسُولِ اللَّهِ، اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ",
+  "tr": "Bismillāh, waṣ-ṣalātu was-salāmu ʿalā rasūlillāh, Allāhumma ftaḥ lī abwāba raḥmatik",
+  "en": "In the name of Allah, and peace and blessings be upon the Messenger of Allah. O Allah, open for me the gates of Your mercy.",
+  "src": {
+   "en": "Hadith, Muslim & Ibn Majah",
+   "ar": "حديث، رواه مسلم وابن ماجه"
+  }
+ },
+ "bismillah": {
+  "ar": "بِسْمِ اللَّهِ وَاللَّهُ أَكْبَرُ",
+  "tr": "Bismillāh, wallāhu akbar",
+  "en": "In the name of Allah, and Allah is the Greatest.",
+  "src": {"en": "Ibn Umar at the Black Stone, Ahmad & al-Bayhaqi", "ar": "أثر ابن عمر عند استلام الحجر، رواه أحمد والبيهقي"}
+ },
+ "rabbana": {
+  "ar": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+  "tr": "Rabbanā ātinā fid-dunyā ḥasanatan wa fil-ākhirati ḥasanatan wa qinā ʿadhāban-nār",
+  "en": "Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire.",
+  "src": {
+   "en": "Quran 2:201",
+   "ar": "سورة البقرة، الآية ٢٠١"
+  }
+ },
+ "maqam": {
+  "ar": "وَاتَّخِذُوا مِن مَّقَامِ إِبْرَاهِيمَ مُصَلًّى",
+  "tr": "Wattakhidhū min maqāmi Ibrāhīma muṣallā",
+  "en": "And take the station of Ibrahim as a place of prayer.",
+  "src": {
+   "en": "Quran 2:125",
+   "ar": "سورة البقرة، الآية ١٢٥"
+  }
+ },
+ "safa_verse": {
+  "ar": "إِنَّ الصَّفَا وَالْمَرْوَةَ مِن شَعَائِرِ اللَّهِ — أَبْدَأُ بِمَا بَدَأَ اللَّهُ بِهِ",
+  "tr": "Innaṣ-Ṣafā wal-Marwata min shaʿāʾirillāh — abdaʾu bimā badaʾa Allāhu bih",
+  "en": "Indeed, Safa and Marwah are among the symbols of Allah. I begin with what Allah began with.",
+  "src": {
+   "en": "Quran 2:158, then hadith of Jabir (Muslim)",
+   "ar": "سورة البقرة، الآية ١٥٨، ثم حديث جابر (مسلم)"
+  }
+ },
+ "safa_dhikr": {
+  "ar": "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ، أَنْجَزَ وَعْدَهُ، وَنَصَرَ عَبْدَهُ، وَهَزَمَ الْأَحْزَابَ وَحْدَهُ",
+  "tr": "Lā ilāha illā Allāhu waḥdahu lā sharīka lah, lahul-mulku wa lahul-ḥamd, wa huwa ʿalā kulli shayʾin qadīr. Lā ilāha illā Allāhu waḥdah, anjaza waʿdah, wa naṣara ʿabdah, wa hazamal-aḥzāba waḥdah",
+  "en": "There is no god but Allah alone, without partner. His is the dominion and the praise, and He has power over all things. There is no god but Allah alone. He fulfilled His promise, gave victory to His servant, and alone defeated the confederates.",
+  "src": {
+   "en": "Hadith of Jabir, Muslim",
+   "ar": "حديث جابر، رواه مسلم"
+  }
+ }
+};
+
+const LABELS = {
+ "kaaba": {
+  "en": "Kaaba",
+  "ar": "الكعبة"
+ },
+ "black_stone": {
+  "en": "Black Stone",
+  "ar": "الحجر الأسود"
+ },
+ "yemeni": {
+  "en": "Yemeni Corner",
+  "ar": "الركن اليماني"
+ },
+ "door": {
+  "en": "Door of the Kaaba",
+  "ar": "باب الكعبة"
+ },
+ "hijr": {
+  "en": "Hijr Ismail",
+  "ar": "حِجر إسماعيل"
+ },
+ "mizab": {
+  "en": "Golden waterspout",
+  "ar": "الميزاب"
+ },
+ "maqam": {
+  "en": "Maqam Ibrahim",
+  "ar": "مقام إبراهيم"
+ },
+ "start_light": {
+  "en": "Green start light",
+  "ar": "ضوء البداية الأخضر"
+ },
+ "clock": {
+  "en": "Clock tower",
+  "ar": "برج الساعة"
+ },
+ "zamzam": {
+  "en": "Zamzam water",
+  "ar": "ماء زمزم"
+ },
+ "gate": {
+  "en": "Gates",
+  "ar": "الأبواب"
+ },
+ "safa_rock": {
+  "en": "Hill of Safa",
+  "ar": "جبل الصفا"
+ },
+ "marwa_rock": {
+  "en": "Hill of Marwah",
+  "ar": "جبل المروة"
+ },
+ "to_marwa": {
+  "en": "Towards Marwah",
+  "ar": "نحو المروة"
+ },
+ "to_safa": {
+  "en": "Towards Safa",
+  "ar": "نحو الصفا"
+ },
+ "green_lights": {
+  "en": "Green lights",
+  "ar": "الأضواء الخضراء"
+ },
+ "green_end": {
+  "en": "End of green lights",
+  "ar": "نهاية الأضواء الخضراء"
+ }
+};
+
+const STATIONS = [
+ {
+  "id": "ihram",
+  "pano": "entry",
+  "card": true,
+  "labels": [],
+  "title": {
+   "en": "Entering ihram at the Miqat",
+   "ar": "الإحرام من الميقات"
+  },
+  "place": {
+   "en": "Before you arrive",
+   "ar": "قبل الوصول"
+  },
+  "steps": [
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "en": "Before you reach the Miqat, the boundary where ihram begins, take a full bath and trim your nails. Men may perfume their body, but not their clothes.",
+    "ar": "قبل أن تصل إلى الميقات، وهو الحدّ الذي يبدأ منه الإحرام، اغتسل وقلّم أظافرك. ويجوز للرجل أن يتطيّب في بدنه دون ثيابه."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "en": "Men wear two white unstitched cloths and sandals. Women wear their usual modest clothes, with the face and hands uncovered.",
+    "ar": "يلبس الرجل إزارًا ورداءً أبيضين غير مخيطين، ونعلين. وتلبس المرأة ثيابها المحتشمة المعتادة، مع كشف الوجه والكفّين."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "dua": "niyyah",
+    "en": "At the Miqat, make your intention for Umrah. If you are flying, the crew announces the Miqat, so be ready before take-off.",
+    "ar": "عند الميقات، انوِ العمرة. وإن كنت مسافرًا بالطائرة، فإن الطاقم يعلن عن الميقات، فكن مستعدًّا قبل الإقلاع."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "dua": "ishtirat",
+    "en": "If you fear that illness may stop you, you may add this condition. It is a mercy for older and sick pilgrims.",
+    "ar": "إن خشيت أن يمنعك مرض من إتمام العمرة، فلك أن تشترط هذا الشرط. وهو تيسير لكبار السن والمرضى."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "dua": "talbiyah",
+    "en": "Now repeat the Talbiyah often until you reach the Kaaba. Men say it aloud, women softly.",
+    "ar": "ثم أكثِر من التلبية حتى تصل إلى الكعبة. يرفع بها الرجال أصواتهم، وتخفضها النساء."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "en": "While in ihram, avoid perfume, cutting hair or nails, and marital relations. Men do not cover their head.",
+    "ar": "وفي الإحرام اجتنب الطيب، وأخذ شيء من الشعر أو الأظافر، والجماع. ولا يغطّي الرجل رأسه."
+   }
+  ]
+ },
+ {
+  "id": "enter",
+  "pano": "entry",
+  "labels": [
+   "kaaba",
+   "zamzam",
+   "gate"
+  ],
+  "title": {
+   "en": "Entering the Haram",
+   "ar": "دخول المسجد الحرام"
+  },
+  "place": {
+   "en": "Masjid al-Haram",
+   "ar": "المسجد الحرام"
+  },
+  "steps": [
+   {
+    "look": "gate",
+    "fov": 85,
+    "en": "Every gate of the Haram has a number and a name. Note them down or take a photo before you enter. This is your meeting point if you are separated from your group.",
+    "ar": "لكل باب من أبواب الحرم رقم واسم. دوّنهما أو التقط لهما صورة قبل الدخول، فهذا مكان لقائك إن افترقت عن مجموعتك."
+   },
+   {
+    "look": "kaaba",
+    "fov": 85,
+    "dua": "enter",
+    "en": "Enter with your right foot first and say the supplication for entering the mosque.",
+    "ar": "ادخل برجلك اليمنى، وقل دعاء دخول المسجد."
+   },
+   {
+    "look": "kaaba",
+    "fov": 45,
+    "en": "This is the Kaaba. Take your time. Make any supplication you wish, in your own language.",
+    "ar": "هذه هي الكعبة المشرّفة. تمهّل، وادعُ بما شئت، وبلغتك أنت."
+   },
+   {
+    "look": "zamzam",
+    "fov": 75,
+    "en": "Zamzam water is available in coolers all around the mosque. Drink and rest whenever you need. Umrah has no time limit.",
+    "ar": "ماء زمزم متوفّر في برّادات حول المسجد كله. اشرب واسترح متى احتجت، فليس للعمرة وقت محدّد."
+   },
+   {
+    "look": "kaaba",
+    "fov": 70,
+    "en": "Make sure you have wudu before Tawaf. Stop saying the Talbiyah when you begin.",
+    "ar": "تأكّد أنك على وضوء قبل الطواف، واقطع التلبية عند بدء الطواف."
+   }
+  ]
+ },
+ {
+  "id": "start",
+  "pano": "start",
+  "counter": "tawaf",
+  "labels": [
+   "black_stone",
+   "door",
+   "start_light",
+   "maqam"
+  ],
+  "title": {
+   "en": "Starting Tawaf at the Black Stone",
+   "ar": "بدء الطواف عند الحجر الأسود"
+  },
+  "place": {
+   "en": "Tawaf · the Mataf",
+   "ar": "الطواف – صحن المطاف"
+  },
+  "steps": [
+   {
+    "look": "black_stone",
+    "dpitch": 6,
+    "fov": 55,
+    "en": "Walk to the corner of the Kaaba with the Black Stone, set in a silver frame. Tawaf starts and ends here.",
+    "ar": "توجّه إلى ركن الكعبة الذي فيه الحجر الأسود، في إطاره الفضّي. من هنا يبدأ الطواف وإليه ينتهي."
+   },
+   {
+    "look": "start_light",
+    "fov": 70,
+    "en": "Behind you, a green light on the mosque wall marks the starting line. Use it to see where each circuit begins.",
+    "ar": "خلفك ضوء أخضر على جدار المسجد يحدّد خطّ البداية. استعن به لتعرف أين يبدأ كل شوط."
+   },
+   {
+    "look": "black_stone",
+    "dpitch": 6,
+    "fov": 55,
+    "dua": "bismillah",
+    "en": "Men uncover the right shoulder for this Tawaf. Face the Black Stone, raise your right hand towards it, and say these words. Do not push to kiss or touch it. Pointing is enough.",
+    "ar": "يكشف الرجل كتفه الأيمن في هذا الطواف. استقبل الحجر الأسود، وأشر إليه بيدك اليمنى، وقل هذه الكلمات. ولا تزاحم لتقبيله أو لمسه، فالإشارة تكفي."
+   },
+   {
+    "look": "kaaba",
+    "dyaw": 25,
+    "fov": 85,
+    "en": "Now walk counter-clockwise, keeping the Kaaba on your left. Men walk briskly in the first three circuits if they are able.",
+    "ar": "والآن طُف عكس اتجاه عقارب الساعة، والكعبة عن يسارك. ويُسرع الرجال في الأشواط الثلاثة الأولى إن استطاعوا."
+   },
+   {
+    "look": "door",
+    "fov": 60,
+    "en": "You will pass the door of the Kaaba, behind a gold-embroidered curtain. There is no fixed supplication for each circuit. Make dua, remember Allah, or recite Quran, in any language.",
+    "ar": "ستمرّ بباب الكعبة خلف ستارة مطرّزة بالذهب. ليس لكل شوط دعاء مخصوص، فادعُ واذكر الله أو اقرأ القرآن، بأي لغة."
+   },
+   {
+    "look": "black_stone",
+    "dpitch": 6,
+    "fov": 70,
+    "highlight": "counter",
+    "en": "Each time you come back to the Black Stone line, one circuit is complete. Tap the counter so you never lose count.",
+    "ar": "كلما عدت إلى خط الحجر الأسود اكتمل شوط. اضغط على العدّاد حتى لا يفوتك العدد."
+   }
+  ]
+ },
+ {
+  "id": "hijr",
+  "pano": "hijr",
+  "counter": "tawaf",
+  "labels": [
+   "hijr",
+   "mizab",
+   "kaaba"
+  ],
+  "title": {
+   "en": "Around the Hijr Ismail",
+   "ar": "حول حِجر إسماعيل"
+  },
+  "place": {
+   "en": "Tawaf · north-west side",
+   "ar": "الطواف – الجهة الشمالية الغربية"
+  },
+  "steps": [
+   {
+    "look": "hijr",
+    "dpitch": 4,
+    "fov": 70,
+    "en": "This low, curved wall is the Hijr Ismail. The area inside is part of the Kaaba, so walk around the outside of the wall.",
+    "ar": "هذا الجدار المنخفض المقوّس هو حِجر إسماعيل. وما بداخله من الكعبة، فطُف من خارج الجدار."
+   },
+   {
+    "look": "mizab",
+    "fov": 50,
+    "en": "Above it, the golden waterspout carries rainwater from the roof of the Kaaba.",
+    "ar": "وفوقه الميزاب الذهبي الذي ينزل منه ماء المطر من سطح الكعبة."
+   },
+   {
+    "look": "kaaba",
+    "dyaw": -60,
+    "fov": 90,
+    "en": "If you are tired, move towards the outer part of the courtyard or to an upper floor. The circuits are longer, but the crowd is lighter.",
+    "ar": "إن شعرت بالتعب، فابتعد نحو أطراف الصحن أو اصعد إلى أحد الطوابق. الأشواط أطول، لكن الزحام أخفّ."
+   },
+   {
+    "look": "kaaba",
+    "fov": 80,
+    "en": "If you lose your group, do not stop or walk against the crowd. Finish your circuit and go to your meeting gate.",
+    "ar": "إن فقدت مجموعتك، فلا تتوقّف ولا تمشِ عكس الزحام. أكمل شوطك ثم اذهب إلى باب اللقاء."
+   }
+  ]
+ },
+ {
+  "id": "yemeni",
+  "pano": "yemeni",
+  "counter": "tawaf",
+  "labels": [
+   "yemeni",
+   "black_stone",
+   "clock"
+  ],
+  "title": {
+   "en": "The Yemeni Corner",
+   "ar": "الركن اليماني"
+  },
+  "place": {
+   "en": "Tawaf · south side",
+   "ar": "الطواف – الجهة الجنوبية"
+  },
+  "steps": [
+   {
+    "look": "yemeni",
+    "dpitch": 6,
+    "fov": 55,
+    "en": "This is the Yemeni Corner, the last corner before the Black Stone. Touch it with your right hand only if it is easy. If you cannot, simply walk on, without pointing.",
+    "ar": "هذا هو الركن اليماني، آخر ركن قبل الحجر الأسود. المسه بيدك اليمنى إن تيسّر، وإلا فامضِ دون إشارة."
+   },
+   {
+    "look": "black_stone",
+    "dyaw": -8,
+    "dpitch": 8,
+    "fov": 65,
+    "dua": "rabbana",
+    "en": "Between the Yemeni Corner and the Black Stone, say this verse.",
+    "ar": "وبين الركن اليماني والحجر الأسود قل هذه الآية."
+   },
+   {
+    "look": "clock",
+    "dpitch": -25,
+    "fov": 95,
+    "en": "The tall clock tower stands behind this side of the mosque. It helps you find your direction from almost anywhere.",
+    "ar": "برج الساعة الشاهق يقع خلف هذه الجهة من المسجد، ويساعدك على معرفة الاتجاه من أي مكان تقريبًا."
+   },
+   {
+    "look": "black_stone",
+    "dpitch": 6,
+    "fov": 70,
+    "highlight": "counter",
+    "en": "Continue until you complete seven circuits, ending at the Black Stone. Then men cover their right shoulder again.",
+    "ar": "أكمل سبعة أشواط تنتهي عند الحجر الأسود، ثم يغطّي الرجال كتفهم الأيمن."
+   }
+  ]
+ },
+ {
+  "id": "maqam",
+  "pano": "maqam",
+  "labels": [
+   "maqam",
+   "kaaba",
+   "zamzam"
+  ],
+  "title": {
+   "en": "Prayer at Maqam Ibrahim",
+   "ar": "الصلاة عند مقام إبراهيم"
+  },
+  "place": {
+   "en": "After Tawaf",
+   "ar": "بعد الطواف"
+  },
+  "steps": [
+   {
+    "look": "maqam",
+    "fov": 55,
+    "dua": "maqam",
+    "en": "This golden structure is the Maqam Ibrahim, the station of the Prophet Ibrahim. Go behind it and recite this verse.",
+    "ar": "هذا البناء الذهبي هو مقام إبراهيم عليه السلام. قف خلفه واقرأ هذه الآية."
+   },
+   {
+    "look": "kaaba",
+    "fov": 70,
+    "en": "Pray two short rak’ahs. It is recommended to recite Al-Kafirun in the first and Al-Ikhlas in the second. If it is crowded, pray anywhere in the mosque.",
+    "ar": "صلِّ ركعتين خفيفتين، ويُستحب أن تقرأ في الأولى سورة الكافرون وفي الثانية سورة الإخلاص. وإن كان المكان مزدحمًا فصلِّ في أي مكان من المسجد."
+   },
+   {
+    "look": "zamzam",
+    "fov": 80,
+    "en": "Then drink Zamzam water and ask Allah for whatever you wish.",
+    "ar": "ثم اشرب من ماء زمزم، وادعُ الله بما تشاء."
+   },
+   {
+    "look": "kaaba",
+    "dyaw": -40,
+    "fov": 90,
+    "en": "Next comes the Sa’i. Follow the signs to the Mas’a and the hill of Safa.",
+    "ar": "بعد ذلك يأتي السعي. اتبع اللوحات المؤدية إلى المسعى وجبل الصفا."
+   }
+  ]
+ },
+ {
+  "id": "safa",
+  "pano": "safa",
+  "counter": "sai",
+  "labels": [
+   "safa_rock",
+   "to_marwa"
+  ],
+  "title": {
+   "en": "Beginning Sa’i at Safa",
+   "ar": "بدء السعي من الصفا"
+  },
+  "place": {
+   "en": "Sa’i · the Mas’a",
+   "ar": "السعي – المسعى"
+  },
+  "steps": [
+   {
+    "look": "safa_rock",
+    "fov": 70,
+    "dua": "safa_verse",
+    "en": "This rock is the hill of Safa, where Sa’i begins. As you approach it the first time, recite this.",
+    "ar": "هذه الصخرة هي جبل الصفا، ومنه يبدأ السعي. وعند اقترابك منه أول مرة اقرأ هذا."
+   },
+   {
+    "look": "safa_rock",
+    "dpitch": 10,
+    "fov": 80,
+    "dua": "safa_dhikr",
+    "en": "Face the direction of the Kaaba and raise your hands as in supplication. Say Allahu Akbar three times, then these words. Repeat three times, with your own dua in between.",
+    "ar": "استقبل جهة الكعبة، وارفع يديك كهيئة الدعاء. كبّر ثلاثًا، ثم قل هذا الذكر. كرّره ثلاث مرات، وادعُ بما شئت بينها."
+   },
+   {
+    "look": "to_marwa",
+    "fov": 80,
+    "en": "Now walk towards Marwah. Keep to the lane going in your direction and follow the signs above you.",
+    "ar": "والآن امشِ نحو المروة. الزم المسار الخاص باتجاهك واتبع اللوحات فوقك."
+   },
+   {
+    "look": "to_marwa",
+    "dyaw": -30,
+    "dpitch": -8,
+    "fov": 85,
+    "en": "Sa’i does not require wudu, and you may stop to rest. If walking is difficult, you may use a wheelchair.",
+    "ar": "لا يُشترط الوضوء للسعي، ويجوز لك أن تستريح. وإن صعب عليك المشي فلك أن تستعمل كرسيًّا متحرّكًا."
+   }
+  ]
+ },
+ {
+  "id": "green",
+  "pano": "green",
+  "counter": "sai",
+  "labels": [
+   "green_lights",
+   "to_marwa"
+  ],
+  "title": {
+   "en": "Between the green lights",
+   "ar": "بين العلمين الأخضرين"
+  },
+  "place": {
+   "en": "Sa’i · middle section",
+   "ar": "السعي – المنتصف"
+  },
+  "steps": [
+   {
+    "look": "green_lights",
+    "fov": 80,
+    "en": "These green lights mark the stretch where Hajar ran in search of water for her son Ismail.",
+    "ar": "هذه الأضواء الخضراء تحدّد المسافة التي سعت فيها هاجر بحثًا عن الماء لابنها إسماعيل."
+   },
+   {
+    "look": "to_marwa",
+    "dpitch": -6,
+    "fov": 85,
+    "en": "Men walk quickly between the green lights if they are able. Women walk at their normal pace.",
+    "ar": "يُسرع الرجال بين الضوءين الأخضرين إن استطاعوا، وتمشي النساء مشيًا عاديًّا."
+   },
+   {
+    "look": "to_marwa",
+    "dyaw": 40,
+    "fov": 85,
+    "en": "There is no fixed supplication here. Ask Allah for whatever you need, in your own words.",
+    "ar": "ليس هنا دعاء مخصوص، فاسأل الله ما تحتاج بكلماتك أنت."
+   }
+  ]
+ },
+ {
+  "id": "marwa",
+  "pano": "marwa",
+  "counter": "sai",
+  "labels": [
+   "marwa_rock",
+   "to_safa"
+  ],
+  "title": {
+   "en": "Arriving at Marwah",
+   "ar": "الوصول إلى المروة"
+  },
+  "place": {
+   "en": "Sa’i · the Mas’a",
+   "ar": "السعي – المسعى"
+  },
+  "steps": [
+   {
+    "look": "marwa_rock",
+    "fov": 70,
+    "dua": "safa_dhikr",
+    "en": "This is Marwah. Reaching it completes one length. Face the Kaaba and repeat the same remembrance as at Safa, without the verse.",
+    "ar": "هذه هي المروة. ببلوغها يكتمل شوط واحد. استقبل الكعبة وكرّر الذكر نفسه الذي قلته على الصفا، دون الآية."
+   },
+   {
+    "look": "to_safa",
+    "fov": 80,
+    "en": "Returning to Safa is length two. Seven lengths in total, Safa to Marwah and back, ending here at Marwah.",
+    "ar": "والعودة إلى الصفا شوط ثانٍ. والمجموع سبعة أشواط بين الصفا والمروة، تنتهي هنا عند المروة."
+   },
+   {
+    "look": "marwa_rock",
+    "dyaw": 30,
+    "fov": 85,
+    "highlight": "counter",
+    "en": "Use the counter. Tap once each time you reach a hill.",
+    "ar": "استعمل العدّاد، واضغط مرة واحدة كلما بلغت أحد الجبلين."
+   }
+  ]
+ },
+ {
+  "id": "done",
+  "pano": "marwa",
+  "card": true,
+  "labels": [],
+  "title": {
+   "en": "Shaving or shortening the hair",
+   "ar": "الحلق أو التقصير"
+  },
+  "place": {
+   "en": "End of Umrah",
+   "ar": "نهاية العمرة"
+  },
+  "steps": [
+   {
+    "look": "marwa_rock",
+    "fov": 90,
+    "en": "Men shave the whole head, which is best, or shorten the hair evenly. Women cut about a fingertip’s length from the end of their hair.",
+    "ar": "يحلق الرجل رأسه كله، وهو الأفضل، أو يقصّر شعره من جميع رأسه. وتقصّ المرأة من أطراف شعرها قدر أنملة."
+   },
+   {
+    "look": "marwa_rock",
+    "fov": 90,
+    "en": "Your Umrah is complete, and the restrictions of ihram are lifted. May Allah accept it from you.",
+    "ar": "وبهذا تمّت عمرتك، وحلّ لك ما كان محظورًا في الإحرام. تقبّل الله منك."
+   }
+  ]
+ }
+];
+
+const VIEWS = {"entry": {"kaaba": [0.0, 5.6], "black_stone": [-5.6, -0.1], "yemeni": [-6.6, -0.1], "door": [-1.3, 4.0], "hijr": [13.3, -0.6], "mizab": [7.0, 11.1], "maqam": [1.5, 0.0], "start_light": [-58.2, 2.9], "clock": [-48.0, 51.3], "zamzam": [0.0, -5.9], "gate": [117.3, 11.2]}, "hijr": {"kaaba": [9.3, 16.2], "black_stone": [-8.4, -0.2], "yemeni": [21.5, -0.2], "door": [-9.5, 9.2], "hijr": [33.7, -6.3], "mizab": [14.9, 43.8], "maqam": [-34.5, 0.0], "start_light": [-30.4, 1.5], "clock": [43.2, 52.8], "zamzam": [-58.0, -1.2], "gate": [-72.7, 2.2]}, "maqam": {"kaaba": [-3.2, 15.0], "black_stone": [-24.9, -0.4], "yemeni": [-17.6, -0.2], "door": [-9.6, 14.1], "hijr": [29.1, -1.3], "mizab": [15.3, 26.9], "maqam": [-2.4, 0.0], "start_light": [-123.4, 2.7], "clock": [-52.4, 53.0], "zamzam": [-177.5, -2.2], "gate": [166.7, 3.3]}, "start": {"kaaba": [-1.4, 17.4], "black_stone": [0.0, -0.7], "yemeni": [-27.7, -0.3], "door": [12.8, 16.8], "hijr": [19.1, -1.2], "mizab": [11.6, 26.3], "maqam": [69.7, 0.0], "start_light": [-179.2, 3.0], "clock": [-87.1, 54.0], "zamzam": [128.2, -1.7], "gate": [121.5, 2.7]}, "yemeni": {"kaaba": [1.5, 19.0], "black_stone": [30.0, -0.3], "yemeni": [0.0, -0.8], "door": [19.5, 9.8], "hijr": [-20.2, -1.3], "mizab": [-12.4, 27.9], "maqam": [27.8, 0.0], "start_light": [71.8, 1.8], "clock": [179.9, 55.3], "zamzam": [42.1, -1.0], "gate": [36.6, 1.9]}, "green": {"safa_rock": [178.1, 0.3], "marwa_rock": [1.4, 0.0], "to_marwa": [0.0, 0.1], "to_safa": [175.9, 0.1], "green_lights": [0.0, 25.3], "green_end": [0.0, 11.3], "divider": [177.1, -0.9]}, "marwa": {"safa_rock": [-179.4, 0.1], "marwa_rock": [-12.5, 0.0], "to_marwa": [-73.3, 2.2], "to_safa": [179.7, 0.1], "green_lights": [-177.2, 2.9], "green_end": [-177.0, 2.2], "divider": [-178.7, -0.2]}, "safa": {"safa_rock": [167.5, 2.8], "marwa_rock": [0.6, 0.0], "to_marwa": [-0.3, 0.1], "to_safa": [106.7, 2.2], "green_lights": [-0.6, 3.2], "green_end": [-0.6, 2.1], "divider": [0.9, -0.6]}};
+
+const UI = {
+  en: { play: 'Play', pause: 'Pause', resume: 'Resume', prev: 'Previous', next: 'Next', stations: 'All steps', station: 'Station', of: 'of', step: 'Step',
+        close: 'Close', tawafLabel: 'Tawaf circuits', saiLabel: 'Sa’i lengths', add: '+1 done', undo: 'Undo', tawafNote: 'Tap at each return to the Black Stone line.',
+        saiNote: 'Tap each time you reach Safa or Marwah. Safa → Marwah is 1.', complete: 'Complete. May Allah accept it.', drag: 'Drag to look around',
+        loading: 'Loading the scene…', meaning: 'Meaning:', listen: 'Listen in Arabic', day: 'Day', night: 'Night', stopListen: 'Stop', synth: 'Synthetic voice · preview', reciter: 'Recitation: Mishary Rashid Alafasy', hisn: 'Recording: Hisn al-Muslim (hisnmuslim.com)', mixed: 'Recitation: Mishary Rashid Alafasy · Hisn al-Muslim',
+        disclaimer: 'Prototype. The 3D scenes are a simplified reconstruction for orientation, not an exact model. Rulings follow commonly taught positions; your group guide or a scholar may advise differently. The narration and some duas use AI-generated voices. Quran recitation: Mishary Rashid Alafasy, via AlQuran Cloud (Islamic Network); word timings from Quran.com. Duas: Hisn al-Muslim recordings from hisnmuslim.com.' },
+  ar: { play: 'تشغيل', pause: 'إيقاف مؤقت', resume: 'متابعة', prev: 'السابق', next: 'التالي', stations: 'كل المراحل', station: 'المرحلة', of: 'من', step: 'الخطوة',
+        close: 'إغلاق', tawafLabel: 'أشواط الطواف', saiLabel: 'أشواط السعي', add: '+1 تمّ', undo: 'تراجع', tawafNote: 'اضغط عند كل عودة إلى خط الحجر الأسود.',
+        saiNote: 'اضغط عند كل وصول إلى الصفا أو المروة. من الصفا إلى المروة شوط واحد.', complete: 'اكتمل. تقبّل الله منك.', drag: 'اسحب للنظر حولك',
+        loading: 'جارٍ تحميل المشهد…', meaning: 'المعنى:', listen: 'استمع إلى الدعاء', day: 'نهار', night: 'ليل', stopListen: 'إيقاف', synth: 'صوت مُولَّد – نسخة تجريبية', reciter: 'تلاوة: مشاري راشد العفاسي', hisn: 'تسجيل: حصن المسلم (hisnmuslim.com)', mixed: 'تلاوة: مشاري راشد العفاسي · حصن المسلم',
+        disclaimer: 'نسخة تجريبية. المشاهد ثلاثية الأبعاد إعادة بناء مبسّطة للمساعدة على التوجّه، وليست نموذجًا دقيقًا. الأحكام وفق الأقوال الأكثر تداولًا، وقد يرشدك مرشد مجموعتك أو أهل العلم إلى غير ذلك. السرد وبعض الأدعية بأصوات مولَّدة بالذكاء الاصطناعي، أما الآيات القرآنية فبصوت الشيخ مشاري راشد العفاسي، عبر AlQuran Cloud (Islamic Network)، وتوقيت الكلمات من Quran.com. الأدعية: تسجيلات حصن المسلم من hisnmuslim.com.' },
+};
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('umrah:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('umrah:' + k, JSON.stringify(v)); } catch {} },
+};
+
+const state = {
+  lang: (() => { const l = store.get('lang', (navigator.language || 'en').startsWith('ar') ? 'ar' : 'en'); return l === 'ar' ? 'ar' : 'en'; })(),
+  size: store.get('size', 1),
+  night: store.get('night', true),
+  s: 0, k: 0, playing: false, started: false,
+  counts: { tawaf: 0, sai: 0 },
+};
+const $ = (id) => document.getElementById(id);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =================================================================== 360 viewer (WebGL2) */
+const canvas = $('gl');
+const gl = canvas.getContext('webgl2', { antialias: false, premultipliedAlpha: false });
+const view = { yaw: 0, pitch: 0, fov: 80 };
+let tex = [null, null], mix = 0, curPano = null;
+const texCache = {};
+let prog, uni = {};
+
+function initGL() {
+  if (!gl) { $('loading').textContent = 'This device cannot show 3D scenes (WebGL2 missing).'; return false; }
+  const vs = `#version 300 es
+  in vec2 p; out vec2 v; void main(){ v = p; gl_Position = vec4(p, 0., 1.); }`;
+  const fs = `#version 300 es
+  precision highp float; in vec2 v; out vec4 o;
+  uniform sampler2D t0, t1; uniform float yaw, pitch, tf, aspect, mixv;
+  const float PI = 3.14159265;
+  vec3 sampleP(sampler2D t, vec3 d){ float lon = atan(d.x, d.z); float lat = asin(clamp(d.y,-1.,1.));
+    return texture(t, vec2(0.5 + lon/(2.*PI), 0.5 - lat/PI)).rgb; }
+  void main(){
+    vec3 d = normalize(vec3(v.x*tf*aspect, v.y*tf, 1.));
+    float cp = cos(pitch), sp = sin(pitch);
+    d = vec3(d.x, d.y*cp + d.z*sp, -d.y*sp + d.z*cp);
+    float cy = cos(yaw), sy = sin(yaw);
+    d = vec3(d.x*cy + d.z*sy, d.y, -d.x*sy + d.z*cy);
+    vec3 a = sampleP(t0, d);
+    vec3 b = mixv > 0. ? sampleP(t1, d) : a;
+    o = vec4(mix(a, b, mixv), 1.);
+  }`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; };
+  prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  for (const n of ['t0','t1','yaw','pitch','tf','aspect','mixv']) uni[n] = gl.getUniformLocation(prog, n);
+  gl.uniform1i(uni.t0, 0); gl.uniform1i(uni.t1, 1);
+  return true;
+}
+
+const HD = ["entry", "entry_night", "green", "hijr", "hijr_night", "maqam", "maqam_night", "marwa", "safa", "start", "start_night", "yemeni", "yemeni_night"];
+const NIGHT = ["entry", "hijr", "maqam", "start", "yemeni"];    // scenes that also exist at night
+function panoFor(st) { return state.night && NIGHT.includes(st.pano) ? st.pano + '_night' : st.pano; }          // scenes that have a 4K version
+const maxTex = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 0;
+function loadPano(name, hd = false) {
+  const key = (hd ? 'hd/' : '') + name;
+  if (texCache[key]) return texCache[key];
+  texCache[key] = new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      res(t);
+    };
+    img.onerror = () => { delete texCache[key]; rej(new Error('Could not load ' + name)); };
+    img.src = (hd ? 'pano4k/' : 'pano/') + name + '.jpg';
+  });
+  return texCache[key];
+}
+/* After the quick 2K image is up, fetch the 4K one and swap it in silently. */
+function upgradePano(name) {
+  if (!HD.includes(name) || maxTex < 4096) return;
+  loadPano(name, true).then((t) => { if (curPano === name && mix === 0) tex[0] = t; }).catch(() => {});
+}
+
+async function showPano(name) {
+  if (name === curPano) return;
+  const first = !curPano;
+  curPano = name;
+  if (first) $('loading').classList.remove('gone');
+  let t;
+  try { t = await loadPano(name); } catch (e) { $('loading').textContent = e.message; return; }
+  if (curPano !== name) return;
+  $('loading').classList.add('gone');
+  if (first || reduceMotion) { tex[0] = t; mix = 0; upgradePano(name); return; }
+  tex[1] = t; const t0 = performance.now();
+  await new Promise((done) => {
+    const tick = (now) => { mix = Math.min(1, (now - t0) / 900); if (mix < 1) requestAnimationFrame(tick); else done(); };
+    requestAnimationFrame(tick);
+  });
+  tex[0] = t; tex[1] = null; mix = 0;
+  upgradePano(name);
+}
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  }
+}
+
+const D2R = Math.PI / 180;
+function frame() {
+  resize();
+  if (gl && tex[0]) {
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[0]);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tex[1] || tex[0]);
+    const aspect = canvas.width / canvas.height;
+    // fov is the larger of horizontal/vertical so phones in portrait still see enough
+    const vf = aspect >= 1 ? view.fov : Math.min(110, view.fov / aspect * 0.75);
+    view._tf = Math.tan(vf * D2R / 2); view._aspect = aspect;
+    gl.uniform1f(uni.yaw, view.yaw * D2R); gl.uniform1f(uni.pitch, view.pitch * D2R);
+    gl.uniform1f(uni.tf, view._tf); gl.uniform1f(uni.aspect, aspect); gl.uniform1f(uni.mixv, mix);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  placeHotspots();
+  requestAnimationFrame(frame);
+}
+
+/* project a (yaw, pitch) direction to screen, or null if behind */
+function project(yaw, pitch) {
+  const cp = Math.cos(pitch * D2R);
+  let x = cp * Math.sin(yaw * D2R), y = Math.sin(pitch * D2R), z = cp * Math.cos(yaw * D2R);
+  const Y = view.yaw * D2R, P = view.pitch * D2R;
+  let x1 = x * Math.cos(Y) - z * Math.sin(Y), z1 = x * Math.sin(Y) + z * Math.cos(Y);
+  let y2 = y * Math.cos(P) - z1 * Math.sin(P), z2 = y * Math.sin(P) + z1 * Math.cos(P);
+  if (z2 < 0.15) return null;
+  const sx = x1 / z2 / (view._tf * view._aspect), sy = y2 / z2 / view._tf;
+  if (Math.abs(sx) > 1.05 || Math.abs(sy) > 1.05) return null;
+  return [(sx + 1) / 2 * canvas.clientWidth, (1 - sy) / 2 * canvas.clientHeight];
+}
+
+let hotspotEls = [];
+function buildHotspots() {
+  const st = STATIONS[state.s];
+  $('hotspots').replaceChildren();
+  hotspotEls = (st.card ? [] : st.labels).map((key) => {
+    const el = document.createElement('div'); el.className = 'hotspot';
+    el.innerHTML = '<span></span><i></i><b></b>';
+    el.querySelector('span').textContent = LABELS[key][state.lang];
+    $('hotspots').appendChild(el);
+    return { key, el };
+  });
+}
+function placeHotspots() {
+  if (!view._tf) return;
+  const st = STATIONS[state.s]; const v = VIEWS[st.pano]; if (!v) return;
+  const focus = st.steps[state.k].look;
+  for (const h of hotspotEls) {
+    const a = v[h.key]; if (!a) { h.el.style.opacity = 0; continue; }
+    const p = project(a[0], a[1]);
+    if (!p) { h.el.style.opacity = 0; continue; }
+    h.el.style.opacity = 1; h.el.style.left = p[0] + 'px'; h.el.style.top = p[1] + 'px';
+    h.el.classList.toggle('focus', h.key === focus);
+  }
+}
+
+/* camera tween */
+let tween = null;
+function lookAt(target, ms = 1600) {
+  const from = { ...view };
+  let dy = ((target.yaw - from.yaw + 540) % 360) - 180;
+  if (reduceMotion || ms === 0) { Object.assign(view, { yaw: from.yaw + dy, pitch: target.pitch, fov: target.fov }); return; }
+  const t0 = performance.now(); const id = {}; tween = id;
+  const ease = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const step = (now) => {
+    if (tween !== id) return;
+    const t = Math.min(1, (now - t0) / ms), e = ease(t);
+    view.yaw = from.yaw + dy * e; view.pitch = from.pitch + (target.pitch - from.pitch) * e; view.fov = from.fov + (target.fov - from.fov) * e;
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function stepTarget(st, step) {
+  const v = (VIEWS[st.pano] || {})[step.look] || [0, 0];
+  return { yaw: v[0] + (step.dyaw || 0), pitch: Math.max(-60, Math.min(60, v[1] + (step.dpitch || 0))), fov: step.fov || 80 };
+}
+
+/* drag to look */
+(function drag() {
+  const el = $('scene'); let down = null;
+  el.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch }; tween = null; el.setPointerCapture(e.pointerId); hideHint(); });
+  el.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    const k = view.fov / el.clientWidth * (view._aspect >= 1 ? 1 : 1.4);
+    view.yaw = down.yaw - (e.clientX - down.x) * k;
+    view.pitch = Math.max(-80, Math.min(80, down.pitch + (e.clientY - down.y) * k));
+  });
+  const up = () => { down = null; };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  el.addEventListener('wheel', (e) => { e.preventDefault(); tween = null; view.fov = Math.max(35, Math.min(110, view.fov + e.deltaY * 0.05)); }, { passive: false });
+})();
+function hideHint() { $('dragHint').style.opacity = 0; }
+
+/* =================================================================== narration */
+const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
+let runId = 0, timer = null;
+function pickVoice(lang) {
+  if (!synth) return null;
+  const vs = synth.getVoices().filter((v) => v.lang && v.lang.toLowerCase().startsWith(lang));
+  const pref = vs.find((v) => /natural|neural|premium|enhanced|google/i.test(v.name)) || vs.find((v) => v.localService) || vs[0];
+  return pref || null;
+}
+if (synth) synth.onvoiceschanged = () => {};
+
+const AUDIO = ["bismillah", "enter", "ishtirat", "maqam", "niyyah", "rabbana", "safa_dhikr", "safa_verse", "talbiyah"];
+const NARR_EN = ["done_0", "done_1", "enter_0", "enter_1", "enter_2", "enter_3", "enter_4", "green_0", "green_1", "green_2", "hijr_0", "hijr_1", "hijr_2", "hijr_3", "ihram_0", "ihram_1", "ihram_2", "ihram_3", "ihram_4", "ihram_5", "maqam_0", "maqam_1", "maqam_2", "maqam_3", "marwa_0", "marwa_1", "marwa_2", "meaning_bismillah", "meaning_enter", "meaning_ishtirat", "meaning_maqam", "meaning_niyyah", "meaning_rabbana", "meaning_safa_dhikr", "meaning_safa_verse", "meaning_talbiyah", "safa_0", "safa_1", "safa_2", "safa_3", "start_0", "start_1", "start_2", "start_3", "start_4", "start_5", "yemeni_0", "yemeni_1", "yemeni_2", "yemeni_3"];
+const NARR_AR = ["done_0", "done_1", "enter_0", "enter_1", "enter_2", "enter_3", "enter_4", "green_0", "green_1", "green_2", "hijr_0", "hijr_1", "hijr_2", "hijr_3", "ihram_0", "ihram_1", "ihram_2", "ihram_3", "ihram_4", "ihram_5", "maqam_0", "maqam_1", "maqam_2", "maqam_3", "marwa_0", "marwa_1", "marwa_2", "safa_0", "safa_1", "safa_2", "safa_3", "start_0", "start_1", "start_2", "start_3", "start_4", "start_5", "yemeni_0", "yemeni_1", "yemeni_2", "yemeni_3"];
+/* Who recorded each dua clip: 'alafasy' (Quran verses), 'hisn' (Hisn al-Muslim), otherwise synthetic. */
+const AUDIO_CREDIT = Object.assign({ maqam: 'reciter', rabbana: 'reciter' }, {"talbiyah": "hisn", "enter": "hisn", "safa_dhikr": "hisn", "bismillah": "hisn"}, { safa_verse: 'mixed' });
+const num = (n) => String(n);   // Western digits: clearer for Maghreb readers, and Arabic-Indic ٠ looks like a dot
+const sep = () => state.lang === 'ar' ? ' – ' : ' · ';
+const player = new Audio();
+player.preload = 'auto';
+function playDua(key, done) {
+  const id = runId;
+  if (!AUDIO.includes(key)) { done && done(); return; }
+  player.onended = () => { setListen(false); if (id === runId && done) done(); };
+  player.onerror = () => { setListen(false); if (id === runId && done) done(); };
+  player.src = 'audio/' + key + '.mp3';
+  player.currentTime = 0;
+  setListen(true);
+  player.play().catch(() => { setListen(false); if (id === runId && done) done(); });
+}
+function playFile(url, done) {
+  const id = runId;
+  player.onended = () => { if (id === runId) done(); };
+  player.onerror = () => { if (id === runId) done(); };
+  player.src = url; player.currentTime = 0;
+  player.play().catch(() => { if (id === runId) done(); });
+}
+/* Speak one line: a recorded voice when we have it, otherwise the browser voice. */
+function speakLine(lineId, text, done) {
+  const rec = state.lang === 'ar' ? NARR_AR : NARR_EN;
+  if (rec.includes(lineId)) { ++runId; playFile('voice/' + state.lang + '/' + lineId + '.mp3', done); }
+  else speak(text, done);
+}
+function stopDua() { player.onended = player.onerror = null; player.pause(); setListen(false); }
+function setListen(on) {
+  $('btnListen').setAttribute('aria-pressed', on);
+  $('lListen').textContent = on ? UI[state.lang].stopListen : UI[state.lang].listen;
+  $('icoListen').innerHTML = on ? '<path d="M6 6h12v12H6z"/>' : '<path d="M7 4v16l13-8z"/>';
+}
+function sentences(text) { return text.match(/[^.!?;:]+[.!?;:]*/g)?.map((s) => s.trim()).filter(Boolean) || [text]; }
+
+function speak(text, done) {
+  const id = ++runId;
+  const voice = pickVoice(state.lang);
+  if (!synth || !voice) {
+    const words = text.split(/\s+/).length;
+    timer = setTimeout(() => { if (id === runId) done(); }, Math.max(4500, words * 430));
+    return;
+  }
+  const queue = sentences(text);
+  const next = () => {
+    if (id !== runId) return;
+    const s = queue.shift(); if (!s) { done(); return; }
+    const u = new SpeechSynthesisUtterance(s);
+    u.voice = voice; u.lang = voice.lang; u.rate = 0.88; u.pitch = 1;
+    u.onend = () => { if (id === runId) setTimeout(next, 120); };
+    u.onerror = (e) => { if (id === runId && e.error !== 'interrupted' && e.error !== 'canceled') setTimeout(next, 120); };
+    synth.speak(u);
+  };
+  next();
+}
+function stopSpeech() { runId++; clearTimeout(timer); if (synth) synth.cancel(); stopDua(); $('stepText').classList.remove('speaking'); }
+
+/* =================================================================== flow */
+function setPlaying(p) {
+  state.playing = p;
+  const L = UI[state.lang];
+  $('lPlay').textContent = p ? L.pause : (state.started ? L.resume : L.play);
+  $('icoPlay').innerHTML = p ? '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>' : '<path d="M7 4v16l13-8z"/>';
+  $('btnPlay').setAttribute('aria-pressed', p);
+}
+
+function runStep() {
+  if (!state.playing) return;
+  const st = STATIONS[state.s], step = st.steps[state.k];
+  $('stepText').classList.add('speaking');
+  if (step.highlight === 'counter') pulseCounter();
+  const begin = performance.now();
+  const L = state.lang;
+  const finish = () => {
+    $('stepText').classList.remove('speaking');
+    const wait = Math.max(900, 1700 - (performance.now() - begin));
+    timer = setTimeout(() => { if (state.playing) advance(1, true); }, wait);
+  };
+  speakLine(st.id + '_' + state.k, step[L], () => {
+    if (!step.dua) return finish();
+    const id = runId;
+    playDua(step.dua, () => {
+      if (id !== runId) return;
+      if (L === 'ar') return finish();   // the dua is already in the listener's language
+      speakLine('meaning_' + step.dua, UI[L].meaning + ' ' + DUAS[step.dua][L], finish);
+    });
+  });
+}
+
+async function go(s, k, { auto = false } = {}) {
+  stopSpeech();
+  const prevPano = STATIONS[state.s]?.pano;
+  const changed = s !== state.s;
+  state.s = s; state.k = k;
+  const st = STATIONS[s];
+  render();
+  if (changed || !curPano) buildHotspots();
+  const target = stepTarget(st, st.steps[k]);
+  if (panoFor(st) !== curPano) {
+    const firstLoad = !curPano;
+    const p = showPano(panoFor(st));
+    if (firstLoad) { lookAt(target, 0); await p; }
+    else { await p; lookAt(target, 0); }
+  } else {
+    lookAt(target, auto || changed ? 1700 : 900);
+  }
+  $('scene').classList.toggle('card', !!st.card);
+  // preload the next scene
+  const nx = STATIONS[s + 1]; if (nx) loadPano(panoFor(nx)).catch(() => {});
+  if (state.playing) setTimeout(runStep, changed ? 500 : 250);
+}
+
+function advance(dir, auto = false) {
+  let s = state.s, k = state.k + dir;
+  if (k >= STATIONS[s].steps.length) { s++; k = 0; }
+  if (k < 0) { s--; if (s < 0) { s = 0; k = 0; } else k = STATIONS[s].steps.length - 1; }
+  if (s >= STATIONS.length) { setPlaying(false); return; }
+  go(s, k, { auto });
+}
+
+/* =================================================================== counter */
+function pulseCounter() { const c = $('counter'); if (c.hidden) return; c.classList.remove('pulse'); void c.offsetWidth; c.classList.add('pulse'); setTimeout(() => c.classList.remove('pulse'), 2400); }
+function renderCounter() {
+  const st = STATIONS[state.s], L = UI[state.lang], type = st.counter;
+  $('counter').hidden = !type; if (!type) return;
+  const n = state.counts[type];
+  $('cLabel').textContent = type === 'tawaf' ? L.tawafLabel : L.saiLabel;
+  $('cNum').innerHTML = `${num(Math.min(n, 7))} <small>/ ${num(7)}</small>`;
+  $('cNote').textContent = n >= 7 ? L.complete : (type === 'tawaf' ? L.tawafNote : L.saiNote);
+  $('cAdd').textContent = L.add; $('cUndo').textContent = L.undo;
+  $('cAdd').disabled = n >= 7; $('cUndo').disabled = n <= 0;
+}
+$('cAdd').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.min(7, state.counts[t] + 1); renderCounter(); };
+$('cUndo').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.max(0, state.counts[t] - 1); renderCounter(); };
+
+/* =================================================================== render */
+function render() {
+  const L = UI[state.lang], st = STATIONS[state.s], step = st.steps[state.k];
+  document.documentElement.lang = state.lang;
+  document.documentElement.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.style.setProperty('--scale', state.size);
+  for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === state.lang);
+  for (const b of document.querySelectorAll('[data-size]')) b.setAttribute('aria-pressed', +b.dataset.size === state.size);
+  $('timeSeg').hidden = !NIGHT.length;
+  $('time-day').textContent = L.day; $('time-night').textContent = L.night;
+  for (const b of document.querySelectorAll('[data-time]')) b.setAttribute('aria-pressed', (b.dataset.time === 'night') === state.night);
+  $('btnStations').textContent = L.stations;
+  $('progress').replaceChildren(...STATIONS.map((x, i) => {
+    const b = document.createElement('button');
+    b.className = i < state.s ? 'done' : i === state.s ? 'now' : '';
+    b.setAttribute('aria-label', `${L.station} ${i + 1}: ${x.title[state.lang]}`);
+    b.onclick = () => go(i, 0);
+    return b;
+  }));
+  $('eyebrow').innerHTML = `<b>${L.station} ${num(state.s + 1)}</b> ${L.of} ${num(STATIONS.length)}${sep()}${st.place[state.lang]}`;
+  $('title').textContent = st.title[state.lang];
+  $('placeChip').innerHTML = `<strong>${num(state.s + 1)}/${num(STATIONS.length)}</strong>${sep()}${st.title[state.lang]}`;
+  $('stepDots').replaceChildren(...st.steps.map((_, i) => { const d = document.createElement('span'); if (i === state.k) d.className = 'now'; return d; }));
+  $('stepCount').textContent = `${L.step} ${num(state.k + 1)} ${L.of} ${num(st.steps.length)}`;
+  $('stepText').textContent = step[state.lang];
+  const d = step.dua && DUAS[step.dua];
+  $('dua').hidden = !d;
+  if (d) {
+    $('duaAr').textContent = d.ar; $('duaTr').textContent = d.tr; $('duaMean').textContent = d.en;
+    $('duaTr').hidden = $('duaMean').hidden = state.lang === 'ar';
+    $('duaSrc').textContent = d.src ? d.src[state.lang] : ''; $('duaSrc').hidden = !d.src;
+    const has = AUDIO.includes(step.dua);
+    $('btnListen').hidden = !has; $('lSynth').hidden = !has; $('lSynth').textContent = L[AUDIO_CREDIT[step.dua] || 'synth'];
+    setListen(!player.paused && player.src.endsWith('/' + step.dua + '.mp3'));
+  }
+  renderCounter();
+  $('lPrev').textContent = L.prev; $('lNext').textContent = L.next;
+  $('btnPrev').disabled = state.s === 0 && state.k === 0;
+  $('btnNext').disabled = state.s === STATIONS.length - 1 && state.k === st.steps.length - 1;
+  setPlaying(state.playing);
+  $('disclaimer').textContent = L.disclaimer;
+  $('dragHint').textContent = L.drag;
+  $('loading').textContent = L.loading;
+  $('sheetTitle').textContent = L.stations; $('sheetClose').textContent = L.close;
+  $('stationList').replaceChildren(...STATIONS.map((x, i) => {
+    const li = document.createElement('li'); const b = document.createElement('button');
+    b.innerHTML = `<span class="n">${num(i + 1)}</span><span><span class="t"></span><small></small></span>`;
+    b.querySelector('.t').textContent = x.title[state.lang]; b.querySelector('small').textContent = x.place[state.lang];
+    if (i === state.s) b.setAttribute('aria-current', 'true');
+    b.onclick = () => { $('sheet').hidden = true; go(i, 0); };
+    li.appendChild(b); return li;
+  }));
+  $('body').scrollTop = 0;
+}
+
+/* =================================================================== wiring */
+$('btnPlay').onclick = () => {
+  if (state.playing) { stopSpeech(); setPlaying(false); return; }
+  state.started = true; setPlaying(true); hideHint(); runStep();
+};
+$('btnListen').onclick = () => {
+  if (!player.paused) { stopDua(); return; }
+  if (state.playing) { stopSpeech(); setPlaying(false); }
+  playDua(STATIONS[state.s].steps[state.k].dua);
+};
+$('btnNext').onclick = () => advance(1);
+$('btnPrev').onclick = () => advance(-1);
+for (const b of document.querySelectorAll('[data-lang]')) b.onclick = () => {
+  state.lang = b.dataset.lang; store.set('lang', state.lang); const was = state.playing;
+  stopSpeech(); render(); buildHotspots(); if (was) runStep();
+};
+for (const b of document.querySelectorAll('[data-time]')) b.onclick = () => {
+  state.night = b.dataset.time === 'night'; store.set('night', state.night); render();
+  const p = panoFor(STATIONS[state.s]); if (p !== curPano) showPano(p);
+};
+for (const b of document.querySelectorAll('[data-size]')) b.onclick = () => { state.size = +b.dataset.size; store.set('size', state.size); render(); };
+$('btnStations').onclick = () => { $('sheet').hidden = false; $('stationList').querySelector('[aria-current]')?.focus(); };
+$('sheetClose').onclick = () => { $('sheet').hidden = true; };
+$('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
+document.addEventListener('keydown', (e) => {
+  if (!$('sheet').hidden) { if (e.key === 'Escape') $('sheet').hidden = true; return; }
+  if (e.target.closest('button') && (e.key === ' ' || e.key === 'Enter')) return;
+  if (e.key === ' ') { e.preventDefault(); $('btnPlay').click(); }
+  if (e.key === 'ArrowRight') advance(1);
+  if (e.key === 'ArrowLeft') advance(-1);
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && state.playing) { stopSpeech(); setPlaying(false); } });
+
+if (initGL()) requestAnimationFrame(frame);
+render();
+go(0, 0);
+</script>

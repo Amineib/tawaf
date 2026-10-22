@@ -1,0 +1,620 @@
+/* Umrah guided tour — script (English + Arabic).
+   Each station = one 360° scene; each step = where the camera looks + what is said.
+   DUAS[k].ar is the Arabic text of the dua itself; DUAS[k].en is its English meaning.
+   PROTOTYPE CONTENT — to be reviewed by a qualified scholar before any public release. */
+
+const DUAS = {
+ "niyyah": {
+  "ar": "لَبَّيْكَ اللَّهُمَّ عُمْرَةً",
+  "tr": "Labbayka Allāhumma ʿumrah",
+  "en": "Here I am, O Allah, for Umrah."
+ },
+ "ishtirat": {
+  "ar": "اللَّهُمَّ مَحِلِّي حَيْثُ حَبَسْتَنِي",
+  "tr": "Allāhumma maḥillī ḥaythu ḥabastanī",
+  "en": "O Allah, I will leave ihram wherever You hold me back.",
+  "src": {
+   "en": "Hadith, Bukhari & Muslim",
+   "ar": "حديث، رواه البخاري ومسلم"
+  }
+ },
+ "talbiyah": {
+  "ar": "لَبَّيْكَ اللَّهُمَّ لَبَّيْكَ، لَبَّيْكَ لَا شَرِيكَ لَكَ لَبَّيْكَ، إِنَّ الْحَمْدَ وَالنِّعْمَةَ لَكَ وَالْمُلْكَ، لَا شَرِيكَ لَكَ",
+  "tr": "Labbayka Allāhumma labbayk, labbayka lā sharīka laka labbayk, inna l-ḥamda wa n-niʿmata laka wa l-mulk, lā sharīka lak",
+  "en": "Here I am, O Allah, here I am. Here I am, You have no partner, here I am. All praise, all blessings and all sovereignty belong to You. You have no partner.",
+  "src": {
+   "en": "Hadith, Bukhari & Muslim",
+   "ar": "حديث، رواه البخاري ومسلم"
+  }
+ },
+ "enter": {
+  "ar": "بِسْمِ اللَّهِ، وَالصَّلَاةُ وَالسَّلَامُ عَلَى رَسُولِ اللَّهِ، اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ",
+  "tr": "Bismillāh, waṣ-ṣalātu was-salāmu ʿalā rasūlillāh, Allāhumma ftaḥ lī abwāba raḥmatik",
+  "en": "In the name of Allah, and peace and blessings be upon the Messenger of Allah. O Allah, open for me the gates of Your mercy.",
+  "src": {
+   "en": "Hadith, Muslim & Ibn Majah",
+   "ar": "حديث، رواه مسلم وابن ماجه"
+  }
+ },
+ "bismillah": {
+  "ar": "بِسْمِ اللَّهِ وَاللَّهُ أَكْبَرُ",
+  "tr": "Bismillāh, wallāhu akbar",
+  "en": "In the name of Allah, and Allah is the Greatest.",
+  "src": {"en": "Ibn Umar at the Black Stone, Ahmad & al-Bayhaqi", "ar": "أثر ابن عمر عند استلام الحجر، رواه أحمد والبيهقي"}
+ },
+ "rabbana": {
+  "ar": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+  "tr": "Rabbanā ātinā fid-dunyā ḥasanatan wa fil-ākhirati ḥasanatan wa qinā ʿadhāban-nār",
+  "en": "Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire.",
+  "src": {
+   "en": "Quran 2:201",
+   "ar": "سورة البقرة، الآية ٢٠١"
+  }
+ },
+ "maqam": {
+  "ar": "وَاتَّخِذُوا مِن مَّقَامِ إِبْرَاهِيمَ مُصَلًّى",
+  "tr": "Wattakhidhū min maqāmi Ibrāhīma muṣallā",
+  "en": "And take the station of Ibrahim as a place of prayer.",
+  "src": {
+   "en": "Quran 2:125",
+   "ar": "سورة البقرة، الآية ١٢٥"
+  }
+ },
+ "safa_verse": {
+  "ar": "إِنَّ الصَّفَا وَالْمَرْوَةَ مِن شَعَائِرِ اللَّهِ — أَبْدَأُ بِمَا بَدَأَ اللَّهُ بِهِ",
+  "tr": "Innaṣ-Ṣafā wal-Marwata min shaʿāʾirillāh — abdaʾu bimā badaʾa Allāhu bih",
+  "en": "Indeed, Safa and Marwah are among the symbols of Allah. I begin with what Allah began with.",
+  "src": {
+   "en": "Quran 2:158, then hadith of Jabir (Muslim)",
+   "ar": "سورة البقرة، الآية ١٥٨، ثم حديث جابر (مسلم)"
+  }
+ },
+ "safa_dhikr": {
+  "ar": "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ، أَنْجَزَ وَعْدَهُ، وَنَصَرَ عَبْدَهُ، وَهَزَمَ الْأَحْزَابَ وَحْدَهُ",
+  "tr": "Lā ilāha illā Allāhu waḥdahu lā sharīka lah, lahul-mulku wa lahul-ḥamd, wa huwa ʿalā kulli shayʾin qadīr. Lā ilāha illā Allāhu waḥdah, anjaza waʿdah, wa naṣara ʿabdah, wa hazamal-aḥzāba waḥdah",
+  "en": "There is no god but Allah alone, without partner. His is the dominion and the praise, and He has power over all things. There is no god but Allah alone. He fulfilled His promise, gave victory to His servant, and alone defeated the confederates.",
+  "src": {
+   "en": "Hadith of Jabir, Muslim",
+   "ar": "حديث جابر، رواه مسلم"
+  }
+ }
+};
+
+const LABELS = {
+ "kaaba": {
+  "en": "Kaaba",
+  "ar": "الكعبة"
+ },
+ "black_stone": {
+  "en": "Black Stone",
+  "ar": "الحجر الأسود"
+ },
+ "yemeni": {
+  "en": "Yemeni Corner",
+  "ar": "الركن اليماني"
+ },
+ "door": {
+  "en": "Door of the Kaaba",
+  "ar": "باب الكعبة"
+ },
+ "hijr": {
+  "en": "Hijr Ismail",
+  "ar": "حِجر إسماعيل"
+ },
+ "mizab": {
+  "en": "Golden waterspout",
+  "ar": "الميزاب"
+ },
+ "maqam": {
+  "en": "Maqam Ibrahim",
+  "ar": "مقام إبراهيم"
+ },
+ "start_light": {
+  "en": "Green start light",
+  "ar": "ضوء البداية الأخضر"
+ },
+ "clock": {
+  "en": "Clock tower",
+  "ar": "برج الساعة"
+ },
+ "zamzam": {
+  "en": "Zamzam water",
+  "ar": "ماء زمزم"
+ },
+ "gate": {
+  "en": "Gates",
+  "ar": "الأبواب"
+ },
+ "safa_rock": {
+  "en": "Hill of Safa",
+  "ar": "جبل الصفا"
+ },
+ "marwa_rock": {
+  "en": "Hill of Marwah",
+  "ar": "جبل المروة"
+ },
+ "to_marwa": {
+  "en": "Towards Marwah",
+  "ar": "نحو المروة"
+ },
+ "to_safa": {
+  "en": "Towards Safa",
+  "ar": "نحو الصفا"
+ },
+ "green_lights": {
+  "en": "Green lights",
+  "ar": "الأضواء الخضراء"
+ },
+ "green_end": {
+  "en": "End of green lights",
+  "ar": "نهاية الأضواء الخضراء"
+ }
+};
+
+const STATIONS = [
+ {
+  "id": "ihram",
+  "pano": "entry",
+  "card": true,
+  "labels": [],
+  "title": {
+   "en": "Entering ihram at the Miqat",
+   "ar": "الإحرام من الميقات"
+  },
+  "place": {
+   "en": "Before you arrive",
+   "ar": "قبل الوصول"
+  },
+  "steps": [
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "en": "Before you reach the Miqat, the boundary where ihram begins, take a full bath and trim your nails. Men may perfume their body, but not their clothes.",
+    "ar": "قبل أن تصل إلى الميقات، وهو الحدّ الذي يبدأ منه الإحرام، اغتسل وقلّم أظافرك. ويجوز للرجل أن يتطيّب في بدنه دون ثيابه."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "en": "Men wear two white unstitched cloths and sandals. Women wear their usual modest clothes, with the face and hands uncovered.",
+    "ar": "يلبس الرجل إزارًا ورداءً أبيضين غير مخيطين، ونعلين. وتلبس المرأة ثيابها المحتشمة المعتادة، مع كشف الوجه والكفّين."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "dua": "niyyah",
+    "en": "At the Miqat, make your intention for Umrah. If you are flying, the crew announces the Miqat, so be ready before take-off.",
+    "ar": "عند الميقات، انوِ العمرة. وإن كنت مسافرًا بالطائرة، فإن الطاقم يعلن عن الميقات، فكن مستعدًّا قبل الإقلاع."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "dua": "ishtirat",
+    "en": "If you fear that illness may stop you, you may add this condition. It is a mercy for older and sick pilgrims.",
+    "ar": "إن خشيت أن يمنعك مرض من إتمام العمرة، فلك أن تشترط هذا الشرط. وهو تيسير لكبار السن والمرضى."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "dua": "talbiyah",
+    "en": "Now repeat the Talbiyah often until you reach the Kaaba. Men say it aloud, women softly.",
+    "ar": "ثم أكثِر من التلبية حتى تصل إلى الكعبة. يرفع بها الرجال أصواتهم، وتخفضها النساء."
+   },
+   {
+    "look": "kaaba",
+    "fov": 95,
+    "en": "While in ihram, avoid perfume, cutting hair or nails, and marital relations. Men do not cover their head.",
+    "ar": "وفي الإحرام اجتنب الطيب، وأخذ شيء من الشعر أو الأظافر، والجماع. ولا يغطّي الرجل رأسه."
+   }
+  ]
+ },
+ {
+  "id": "enter",
+  "pano": "entry",
+  "labels": [
+   "kaaba",
+   "zamzam",
+   "gate"
+  ],
+  "title": {
+   "en": "Entering the Haram",
+   "ar": "دخول المسجد الحرام"
+  },
+  "place": {
+   "en": "Masjid al-Haram",
+   "ar": "المسجد الحرام"
+  },
+  "steps": [
+   {
+    "look": "gate",
+    "fov": 85,
+    "en": "Every gate of the Haram has a number and a name. Note them down or take a photo before you enter. This is your meeting point if you are separated from your group.",
+    "ar": "لكل باب من أبواب الحرم رقم واسم. دوّنهما أو التقط لهما صورة قبل الدخول، فهذا مكان لقائك إن افترقت عن مجموعتك."
+   },
+   {
+    "look": "kaaba",
+    "fov": 85,
+    "dua": "enter",
+    "en": "Enter with your right foot first and say the supplication for entering the mosque.",
+    "ar": "ادخل برجلك اليمنى، وقل دعاء دخول المسجد."
+   },
+   {
+    "look": "kaaba",
+    "fov": 45,
+    "en": "This is the Kaaba. Take your time. Make any supplication you wish, in your own language.",
+    "ar": "هذه هي الكعبة المشرّفة. تمهّل، وادعُ بما شئت، وبلغتك أنت."
+   },
+   {
+    "look": "zamzam",
+    "fov": 75,
+    "en": "Zamzam water is available in coolers all around the mosque. Drink and rest whenever you need. Umrah has no time limit.",
+    "ar": "ماء زمزم متوفّر في برّادات حول المسجد كله. اشرب واسترح متى احتجت، فليس للعمرة وقت محدّد."
+   },
+   {
+    "look": "kaaba",
+    "fov": 70,
+    "en": "Make sure you have wudu before Tawaf. Stop saying the Talbiyah when you begin.",
+    "ar": "تأكّد أنك على وضوء قبل الطواف، واقطع التلبية عند بدء الطواف."
+   }
+  ]
+ },
+ {
+  "id": "start",
+  "pano": "start",
+  "counter": "tawaf",
+  "labels": [
+   "black_stone",
+   "door",
+   "start_light",
+   "maqam"
+  ],
+  "title": {
+   "en": "Starting Tawaf at the Black Stone",
+   "ar": "بدء الطواف عند الحجر الأسود"
+  },
+  "place": {
+   "en": "Tawaf · the Mataf",
+   "ar": "الطواف – صحن المطاف"
+  },
+  "steps": [
+   {
+    "look": "black_stone",
+    "dpitch": 6,
+    "fov": 55,
+    "en": "Walk to the corner of the Kaaba with the Black Stone, set in a silver frame. Tawaf starts and ends here.",
+    "ar": "توجّه إلى ركن الكعبة الذي فيه الحجر الأسود، في إطاره الفضّي. من هنا يبدأ الطواف وإليه ينتهي."
+   },
+   {
+    "look": "start_light",
+    "fov": 70,
+    "en": "Behind you, a green light on the mosque wall marks the starting line. Use it to see where each circuit begins.",
+    "ar": "خلفك ضوء أخضر على جدار المسجد يحدّد خطّ البداية. استعن به لتعرف أين يبدأ كل شوط."
+   },
+   {
+    "look": "black_stone",
+    "dpitch": 6,
+    "fov": 55,
+    "dua": "bismillah",
+    "en": "Men uncover the right shoulder for this Tawaf. Face the Black Stone, raise your right hand towards it, and say these words. Do not push to kiss or touch it. Pointing is enough.",
+    "ar": "يكشف الرجل كتفه الأيمن في هذا الطواف. استقبل الحجر الأسود، وأشر إليه بيدك اليمنى، وقل هذه الكلمات. ولا تزاحم لتقبيله أو لمسه، فالإشارة تكفي."
+   },
+   {
+    "look": "kaaba",
+    "dyaw": 25,
+    "fov": 85,
+    "en": "Now walk counter-clockwise, keeping the Kaaba on your left. Men walk briskly in the first three circuits if they are able.",
+    "ar": "والآن طُف عكس اتجاه عقارب الساعة، والكعبة عن يسارك. ويُسرع الرجال في الأشواط الثلاثة الأولى إن استطاعوا."
+   },
+   {
+    "look": "door",
+    "fov": 60,
+    "en": "You will pass the door of the Kaaba, behind a gold-embroidered curtain. There is no fixed supplication for each circuit. Make dua, remember Allah, or recite Quran, in any language.",
+    "ar": "ستمرّ بباب الكعبة خلف ستارة مطرّزة بالذهب. ليس لكل شوط دعاء مخصوص، فادعُ واذكر الله أو اقرأ القرآن، بأي لغة."
+   },
+   {
+    "look": "black_stone",
+    "dpitch": 6,
+    "fov": 70,
+    "highlight": "counter",
+    "en": "Each time you come back to the Black Stone line, one circuit is complete. Tap the counter so you never lose count.",
+    "ar": "كلما عدت إلى خط الحجر الأسود اكتمل شوط. اضغط على العدّاد حتى لا يفوتك العدد."
+   }
+  ]
+ },
+ {
+  "id": "hijr",
+  "pano": "hijr",
+  "counter": "tawaf",
+  "labels": [
+   "hijr",
+   "mizab",
+   "kaaba"
+  ],
+  "title": {
+   "en": "Around the Hijr Ismail",
+   "ar": "حول حِجر إسماعيل"
+  },
+  "place": {
+   "en": "Tawaf · north-west side",
+   "ar": "الطواف – الجهة الشمالية الغربية"
+  },
+  "steps": [
+   {
+    "look": "hijr",
+    "dpitch": 4,
+    "fov": 70,
+    "en": "This low, curved wall is the Hijr Ismail. The area inside is part of the Kaaba, so walk around the outside of the wall.",
+    "ar": "هذا الجدار المنخفض المقوّس هو حِجر إسماعيل. وما بداخله من الكعبة، فطُف من خارج الجدار."
+   },
+   {
+    "look": "mizab",
+    "fov": 50,
+    "en": "Above it, the golden waterspout carries rainwater from the roof of the Kaaba.",
+    "ar": "وفوقه الميزاب الذهبي الذي ينزل منه ماء المطر من سطح الكعبة."
+   },
+   {
+    "look": "kaaba",
+    "dyaw": -60,
+    "fov": 90,
+    "en": "If you are tired, move towards the outer part of the courtyard or to an upper floor. The circuits are longer, but the crowd is lighter.",
+    "ar": "إن شعرت بالتعب، فابتعد نحو أطراف الصحن أو اصعد إلى أحد الطوابق. الأشواط أطول، لكن الزحام أخفّ."
+   },
+   {
+    "look": "kaaba",
+    "fov": 80,
+    "en": "If you lose your group, do not stop or walk against the crowd. Finish your circuit and go to your meeting gate.",
+    "ar": "إن فقدت مجموعتك، فلا تتوقّف ولا تمشِ عكس الزحام. أكمل شوطك ثم اذهب إلى باب اللقاء."
+   }
+  ]
+ },
+ {
+  "id": "yemeni",
+  "pano": "yemeni",
+  "counter": "tawaf",
+  "labels": [
+   "yemeni",
+   "black_stone",
+   "clock"
+  ],
+  "title": {
+   "en": "The Yemeni Corner",
+   "ar": "الركن اليماني"
+  },
+  "place": {
+   "en": "Tawaf · south side",
+   "ar": "الطواف – الجهة الجنوبية"
+  },
+  "steps": [
+   {
+    "look": "yemeni",
+    "dpitch": 6,
+    "fov": 55,
+    "en": "This is the Yemeni Corner, the last corner before the Black Stone. Touch it with your right hand only if it is easy. If you cannot, simply walk on, without pointing.",
+    "ar": "هذا هو الركن اليماني، آخر ركن قبل الحجر الأسود. المسه بيدك اليمنى إن تيسّر، وإلا فامضِ دون إشارة."
+   },
+   {
+    "look": "black_stone",
+    "dyaw": -8,
+    "dpitch": 8,
+    "fov": 65,
+    "dua": "rabbana",
+    "en": "Between the Yemeni Corner and the Black Stone, say this verse.",
+    "ar": "وبين الركن اليماني والحجر الأسود قل هذه الآية."
+   },
+   {
+    "look": "clock",
+    "dpitch": -25,
+    "fov": 95,
+    "en": "The tall clock tower stands behind this side of the mosque. It helps you find your direction from almost anywhere.",
+    "ar": "برج الساعة الشاهق يقع خلف هذه الجهة من المسجد، ويساعدك على معرفة الاتجاه من أي مكان تقريبًا."
+   },
+   {
+    "look": "black_stone",
+    "dpitch": 6,
+    "fov": 70,
+    "highlight": "counter",
+    "en": "Continue until you complete seven circuits, ending at the Black Stone. Then men cover their right shoulder again.",
+    "ar": "أكمل سبعة أشواط تنتهي عند الحجر الأسود، ثم يغطّي الرجال كتفهم الأيمن."
+   }
+  ]
+ },
+ {
+  "id": "maqam",
+  "pano": "maqam",
+  "labels": [
+   "maqam",
+   "kaaba",
+   "zamzam"
+  ],
+  "title": {
+   "en": "Prayer at Maqam Ibrahim",
+   "ar": "الصلاة عند مقام إبراهيم"
+  },
+  "place": {
+   "en": "After Tawaf",
+   "ar": "بعد الطواف"
+  },
+  "steps": [
+   {
+    "look": "maqam",
+    "fov": 55,
+    "dua": "maqam",
+    "en": "This golden structure is the Maqam Ibrahim, the station of the Prophet Ibrahim. Go behind it and recite this verse.",
+    "ar": "هذا البناء الذهبي هو مقام إبراهيم عليه السلام. قف خلفه واقرأ هذه الآية."
+   },
+   {
+    "look": "kaaba",
+    "fov": 70,
+    "en": "Pray two short rak’ahs. It is recommended to recite Al-Kafirun in the first and Al-Ikhlas in the second. If it is crowded, pray anywhere in the mosque.",
+    "ar": "صلِّ ركعتين خفيفتين، ويُستحب أن تقرأ في الأولى سورة الكافرون وفي الثانية سورة الإخلاص. وإن كان المكان مزدحمًا فصلِّ في أي مكان من المسجد."
+   },
+   {
+    "look": "zamzam",
+    "fov": 80,
+    "en": "Then drink Zamzam water and ask Allah for whatever you wish.",
+    "ar": "ثم اشرب من ماء زمزم، وادعُ الله بما تشاء."
+   },
+   {
+    "look": "kaaba",
+    "dyaw": -40,
+    "fov": 90,
+    "en": "Next comes the Sa’i. Follow the signs to the Mas’a and the hill of Safa.",
+    "ar": "بعد ذلك يأتي السعي. اتبع اللوحات المؤدية إلى المسعى وجبل الصفا."
+   }
+  ]
+ },
+ {
+  "id": "safa",
+  "pano": "safa",
+  "counter": "sai",
+  "labels": [
+   "safa_rock",
+   "to_marwa"
+  ],
+  "title": {
+   "en": "Beginning Sa’i at Safa",
+   "ar": "بدء السعي من الصفا"
+  },
+  "place": {
+   "en": "Sa’i · the Mas’a",
+   "ar": "السعي – المسعى"
+  },
+  "steps": [
+   {
+    "look": "safa_rock",
+    "fov": 70,
+    "dua": "safa_verse",
+    "en": "This rock is the hill of Safa, where Sa’i begins. As you approach it the first time, recite this.",
+    "ar": "هذه الصخرة هي جبل الصفا، ومنه يبدأ السعي. وعند اقترابك منه أول مرة اقرأ هذا."
+   },
+   {
+    "look": "safa_rock",
+    "dpitch": 10,
+    "fov": 80,
+    "dua": "safa_dhikr",
+    "en": "Face the direction of the Kaaba and raise your hands as in supplication. Say Allahu Akbar three times, then these words. Repeat three times, with your own dua in between.",
+    "ar": "استقبل جهة الكعبة، وارفع يديك كهيئة الدعاء. كبّر ثلاثًا، ثم قل هذا الذكر. كرّره ثلاث مرات، وادعُ بما شئت بينها."
+   },
+   {
+    "look": "to_marwa",
+    "fov": 80,
+    "en": "Now walk towards Marwah. Keep to the lane going in your direction and follow the signs above you.",
+    "ar": "والآن امشِ نحو المروة. الزم المسار الخاص باتجاهك واتبع اللوحات فوقك."
+   },
+   {
+    "look": "to_marwa",
+    "dyaw": -30,
+    "dpitch": -8,
+    "fov": 85,
+    "en": "Sa’i does not require wudu, and you may stop to rest. If walking is difficult, you may use a wheelchair.",
+    "ar": "لا يُشترط الوضوء للسعي، ويجوز لك أن تستريح. وإن صعب عليك المشي فلك أن تستعمل كرسيًّا متحرّكًا."
+   }
+  ]
+ },
+ {
+  "id": "green",
+  "pano": "green",
+  "counter": "sai",
+  "labels": [
+   "green_lights",
+   "to_marwa"
+  ],
+  "title": {
+   "en": "Between the green lights",
+   "ar": "بين العلمين الأخضرين"
+  },
+  "place": {
+   "en": "Sa’i · middle section",
+   "ar": "السعي – المنتصف"
+  },
+  "steps": [
+   {
+    "look": "green_lights",
+    "fov": 80,
+    "en": "These green lights mark the stretch where Hajar ran in search of water for her son Ismail.",
+    "ar": "هذه الأضواء الخضراء تحدّد المسافة التي سعت فيها هاجر بحثًا عن الماء لابنها إسماعيل."
+   },
+   {
+    "look": "to_marwa",
+    "dpitch": -6,
+    "fov": 85,
+    "en": "Men walk quickly between the green lights if they are able. Women walk at their normal pace.",
+    "ar": "يُسرع الرجال بين الضوءين الأخضرين إن استطاعوا، وتمشي النساء مشيًا عاديًّا."
+   },
+   {
+    "look": "to_marwa",
+    "dyaw": 40,
+    "fov": 85,
+    "en": "There is no fixed supplication here. Ask Allah for whatever you need, in your own words.",
+    "ar": "ليس هنا دعاء مخصوص، فاسأل الله ما تحتاج بكلماتك أنت."
+   }
+  ]
+ },
+ {
+  "id": "marwa",
+  "pano": "marwa",
+  "counter": "sai",
+  "labels": [
+   "marwa_rock",
+   "to_safa"
+  ],
+  "title": {
+   "en": "Arriving at Marwah",
+   "ar": "الوصول إلى المروة"
+  },
+  "place": {
+   "en": "Sa’i · the Mas’a",
+   "ar": "السعي – المسعى"
+  },
+  "steps": [
+   {
+    "look": "marwa_rock",
+    "fov": 70,
+    "dua": "safa_dhikr",
+    "en": "This is Marwah. Reaching it completes one length. Face the Kaaba and repeat the same remembrance as at Safa, without the verse.",
+    "ar": "هذه هي المروة. ببلوغها يكتمل شوط واحد. استقبل الكعبة وكرّر الذكر نفسه الذي قلته على الصفا، دون الآية."
+   },
+   {
+    "look": "to_safa",
+    "fov": 80,
+    "en": "Returning to Safa is length two. Seven lengths in total, Safa to Marwah and back, ending here at Marwah.",
+    "ar": "والعودة إلى الصفا شوط ثانٍ. والمجموع سبعة أشواط بين الصفا والمروة، تنتهي هنا عند المروة."
+   },
+   {
+    "look": "marwa_rock",
+    "dyaw": 30,
+    "fov": 85,
+    "highlight": "counter",
+    "en": "Use the counter. Tap once each time you reach a hill.",
+    "ar": "استعمل العدّاد، واضغط مرة واحدة كلما بلغت أحد الجبلين."
+   }
+  ]
+ },
+ {
+  "id": "done",
+  "pano": "marwa",
+  "card": true,
+  "labels": [],
+  "title": {
+   "en": "Shaving or shortening the hair",
+   "ar": "الحلق أو التقصير"
+  },
+  "place": {
+   "en": "End of Umrah",
+   "ar": "نهاية العمرة"
+  },
+  "steps": [
+   {
+    "look": "marwa_rock",
+    "fov": 90,
+    "en": "Men shave the whole head, which is best, or shorten the hair evenly. Women cut about a fingertip’s length from the end of their hair.",
+    "ar": "يحلق الرجل رأسه كله، وهو الأفضل، أو يقصّر شعره من جميع رأسه. وتقصّ المرأة من أطراف شعرها قدر أنملة."
+   },
+   {
+    "look": "marwa_rock",
+    "fov": 90,
+    "en": "Your Umrah is complete, and the restrictions of ihram are lifted. May Allah accept it from you.",
+    "ar": "وبهذا تمّت عمرتك، وحلّ لك ما كان محظورًا في الإحرام. تقبّل الله منك."
+   }
+  ]
+ }
+];
