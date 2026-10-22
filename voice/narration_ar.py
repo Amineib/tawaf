@@ -3,8 +3,11 @@
 
 Run:
   source .venv/bin/activate
-  PYTORCH_ENABLE_MPS_FALLBACK=1 python narration_ar.py        # uses ref_4
+  PYTORCH_ENABLE_MPS_FALLBACK=1 python narration_ar.py                    # uses ref_4
+  PYTORCH_ENABLE_MPS_FALLBACK=1 python narration_ar.py 4 tashkeel         # fully vowelled text
+  PYTORCH_ENABLE_MPS_FALLBACK=1 python narration_ar.py 4 tashkeel sample  # 3 lines to compare first
 Writes umrah_voice/narration_ar/<id>.wav for every line in umrah_voice/narration_ar.json
+(tashkeel: reads narration_ar_tashkeel.json, made by tashkeel_ar.py, writes narration_ar_tashkeel/)
 Already-generated lines are skipped, so you can stop and resume.
 """
 import os, re, sys, json
@@ -14,7 +17,10 @@ import torch
 from duas_arabic import load, trim
 
 REF = f"umrah_voice/ref_{sys.argv[1] if len(sys.argv) > 1 else 4}.wav"
-OUT = "umrah_voice/narration_ar"
+TASHKEEL = "tashkeel" in sys.argv[2:]
+SAMPLE = "sample" in sys.argv[2:]
+SRC = "umrah_voice/narration_ar_tashkeel.json" if TASHKEEL else "umrah_voice/narration_ar.json"
+OUT = "umrah_voice/narration_ar_tashkeel" if TASHKEEL else "umrah_voice/narration_ar"
 EXAGGERATION = 0.35
 CFG_WEIGHT = 0.3
 SEEDS = [21, 22, 23]
@@ -39,7 +45,9 @@ def say(model, sentence):
 
 
 def main():
-    lines = json.load(open("umrah_voice/narration_ar.json"))
+    lines = json.load(open(SRC, encoding="utf-8"))
+    if SAMPLE:
+        lines = {k: lines[k] for k in ("ihram_2", "start_2", "marwa_1")}
     os.makedirs(OUT, exist_ok=True)
     model = load()
     sr = model.sr
