@@ -45,4 +45,21 @@ hd_dir = os.path.join(dist, 'pano4k')
 hd = sorted(f[:-4] for f in os.listdir(hd_dir) if f.endswith('.jpg')) if os.path.isdir(hd_dir) else []
 html = html.replace('/*@HD@*/', json.dumps(hd))
 open(os.path.join(dist, 'index.html'), 'w').write(html)
+shutil.copy(os.path.join(here, 'explore.html'), os.path.join(dist, 'explore.html'))
 print('ok', sorted(os.listdir(os.path.join(dist, 'pano'))))
+
+# 3D Explore assets: GLB -> self-contained glTF JSON (artifact hosting serves .json, not .glb)
+import base64, struct
+fps_src = os.path.join(here, '..', 'fps'); fps_out = os.path.join(dist, 'fps')
+if os.path.isdir(fps_src):
+    os.makedirs(fps_out, exist_ok=True)
+    for f in os.listdir(fps_src):
+        if f.endswith('.glb'):
+            d = open(os.path.join(fps_src, f), 'rb').read()
+            jl = struct.unpack('<I', d[12:16])[0]; j = json.loads(d[20:20 + jl])
+            o = 20 + jl; bl = struct.unpack('<I', d[o:o + 4])[0]
+            j['buffers'][0]['uri'] = 'data:application/octet-stream;base64,' + base64.b64encode(d[o + 8:o + 8 + bl]).decode()
+            open(os.path.join(fps_out, f[:-4] + '.json'), 'w').write(json.dumps(j, separators=(',', ':')))
+        elif f.endswith('.jpg'):
+            shutil.copy(os.path.join(fps_src, f), fps_out)
+    print('fps', sorted(os.listdir(fps_out)))
