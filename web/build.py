@@ -45,7 +45,14 @@ hd_dir = os.path.join(dist, 'pano4k')
 hd = sorted(f[:-4] for f in os.listdir(hd_dir) if f.endswith('.jpg')) if os.path.isdir(hd_dir) else []
 html = html.replace('/*@HD@*/', json.dumps(hd))
 open(os.path.join(dist, 'index.html'), 'w').write(html)
-shutil.copy(os.path.join(here, 'explore.html'), os.path.join(dist, 'explore.html'))
+# explore.html gets the narration texts (for captions) from the tour script
+_c = open(os.path.join(here, 'content.js')).read()
+_i = _c.index('const STATIONS = ') + len('const STATIONS = ')
+_st = json.loads(_c[_i:_c.index('\n];', _i) + 2])
+_narr = {f"{x['id']}_{k}": {'en': st['en'], 'ar': st['ar']} for x in _st for k, st in enumerate(x['steps'])}
+_ex = open(os.path.join(here, 'explore.html')).read()
+assert '/*@NARR_TEXT@*/{}' in _ex
+open(os.path.join(dist, 'explore.html'), 'w').write(_ex.replace('/*@NARR_TEXT@*/{}', json.dumps(_narr, ensure_ascii=False)))
 print('ok', sorted(os.listdir(os.path.join(dist, 'pano'))))
 
 # 3D Explore assets: GLB -> self-contained glTF JSON (artifact hosting serves .json, not .glb)
