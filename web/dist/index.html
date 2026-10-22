@@ -1,4 +1,6 @@
+<!doctype html>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Umrah Step by Step</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1046,7 +1048,7 @@ function stepTarget(st, step) {
 /* drag to look */
 (function drag() {
   const el = $('scene'); let down = null;
-  el.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch }; tween = null; el.setPointerCapture(e.pointerId); hideHint(); });
+  el.addEventListener('pointerdown', (e) => { if (e.target.closest('a, button')) return; down = { x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch }; tween = null; el.setPointerCapture(e.pointerId); hideHint(); });
   el.addEventListener('pointermove', (e) => {
     if (!down) return;
     const k = view.fov / el.clientWidth * (view._aspect >= 1 ? 1 : 1.4);
