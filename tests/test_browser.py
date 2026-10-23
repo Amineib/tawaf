@@ -49,7 +49,7 @@ class BrowserTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.browser.close(); cls.pw.stop(); cls.server.shutdown(); cls.temp.cleanup()
+        cls.browser.close(); cls.pw.stop(); cls.server.shutdown(); cls.server.server_close(); cls.temp.cleanup()
 
     def page(self, url, mobile=False):
         context = self.browser.new_context(viewport={'width': 390, 'height': 844} if mobile else {'width': 900, 'height': 600},
@@ -67,10 +67,16 @@ class BrowserTests(unittest.TestCase):
         page.wait_for_function('!document.getElementById("bStart").disabled', timeout=180_000)
         page.click('#bStart')
         page.wait_for_function('window.__tourStarted === true', timeout=60_000)
+        # Hold W while a HUD button has focus, then advance the game clock by a fixed
+        # second. Real frames are not used: on slow CI machines the first frames can take
+        # seconds (shader compilation), so a timed key hold may see no frame at all.
+        self.assertEqual(page.evaluate('document.activeElement.tagName'), 'BUTTON')
         start = page.evaluate('[__game.player.x, __game.player.y]')
-        page.keyboard.down('KeyW'); page.wait_for_timeout(1200); page.keyboard.up('KeyW')
+        page.keyboard.down('KeyW')
+        page.evaluate('__game.sim(1)')
+        page.keyboard.up('KeyW')
         moved = page.evaluate(f'Math.hypot(__game.player.x - {start[0]}, __game.player.y - {start[1]})')
-        self.assertGreater(moved, 0.05, 'W must move the player even though a HUD button has focus')
+        self.assertGreater(moved, 1, 'W must move the player even though a HUD button has focus')
         for _ in range(80):
             state = page.evaluate(STATE)
             if state['done']:
