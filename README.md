@@ -63,6 +63,11 @@ Bismillah/takbir attribution still await precise reference verification.
 
 ## Sessions, accessibility, and recovery
 
+- On phones, the panorama occupies about half the screen, with the current step
+  and playback controls below. Settings, duas, translations, sources and tour
+  notes expand on request. The 3D tour uses a compact mission card, a menu for
+  secondary controls, and expandable captions/recitation cards. Full warning
+  messages remain visible. English and Arabic share the same responsive layout.
 - Both players save progress locally in this browser; no account is required.
   Switching back from 3D restores the guided lesson and its counters. 3D resume
   restores position, partial circuit/length progress, cue history, and elapsed time.

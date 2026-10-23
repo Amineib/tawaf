@@ -22,7 +22,7 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; background: var(--ink); color: var(--fg); font-family: var(--font); overflow: hidden; user-select: none; -webkit-user-select: none; }
 button, select { font: inherit; color: inherit; cursor: pointer; }
-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+button:focus-visible, summary:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 select { background: #20272c; color: var(--fg); border: 1px solid var(--line); border-radius: 10px; min-height: 44px; max-width: 100%; }
 canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 
@@ -40,6 +40,20 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
 .mission .dist { font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 .topbtns { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); inset-inline-end: max(14px, env(safe-area-inset-right, 0px)); display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 50%; }
+.tour-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.topbtns > #menuLabel, .mission-info > summary::marker, .toast > summary::marker { display: none; }
+.mission-info > summary, .toast > summary { list-style: none; }
+.mission-info > summary::-webkit-details-marker, .toast > summary::-webkit-details-marker { display: none; }
+.mission-info p { padding-top: 6px; }
+.toast-body { display: grid; gap: 6px; }
+.cue-hint { display: none; }
+.caption-wrap { position: relative; }
+.caption-wrap > button { display: none; }
+.intro-section { border-top: 1px solid var(--line); }
+.intro-section > summary { display: flex; align-items: center; gap: 10px; min-height: 48px; cursor: pointer; color: var(--muted); }
+.intro-section > summary::after { content: '+'; margin-inline-start: auto; }
+.intro-section[open] > summary::after { content: '−'; }
+.intro-section > div { display: grid; gap: 12px; padding-bottom: 12px; }
 .pill { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: .45em 1em; min-height: 44px; font-weight: 700; font-size: .9rem; }
 .pill[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
 
@@ -103,6 +117,54 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
   .btn-big { min-width: 120px; min-height: 58px; font-size: 1rem; } .btn-sec { min-width: 120px; }
   .topbtns { max-width: 100%; top: auto; bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + clamp(130px, 26vmin, 210px) + 12px); inset-inline-end: auto; inset-inline-start: max(14px, env(safe-area-inset-left, 0px)); }
 }
+@media (max-width: 900px) {
+  .mission { width: calc(100% - 116px); padding: 10px 12px; gap: 4px; }
+  .mission h1 { font-size: 1.05rem; text-wrap: pretty; }
+  .mission .k { font-size: .72rem; }
+  .mission .dist { font-size: .76rem; }
+  .mission .count { font-size: 1.35rem; }
+  .mission .prog { height: 4px; }
+  .mission-info > summary { cursor: pointer; padding-inline-end: 16px; position: relative; }
+  .mission-info > summary::after { content: '+'; color: var(--gold); position: absolute; inset-inline-end: 0; top: 18px; }
+  .mission-info[open] > summary::after { content: '−'; }
+  .topbtns { z-index: 3; top: max(12px, env(safe-area-inset-top, 0px)); bottom: auto; inset-inline-start: auto; inset-inline-end: 12px; max-width: none; display: block; }
+  .topbtns > #menuLabel { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; list-style: none; }
+  .topbtns > #menuLabel::-webkit-details-marker { display: none; }
+  .topbtns.is-open > #menuLabel { border-color: var(--gold); color: var(--gold); }
+  .tour-options { position: absolute; inset-inline-end: 0; top: 52px; width: 190px; display: grid; gap: 8px; padding: 12px; background: #171c20; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 8px 30px #0008; }
+  .minimap { width: 96px; border-width: 2px; }
+  .actions { gap: 7px; }
+  .actions .btn-big { min-height: 50px; min-width: 118px; border-radius: 12px; font-size: .95rem; padding: 0 14px; }
+  .actions .btn-sec { min-height: 44px; min-width: 118px; border-radius: 12px; font-size: .85rem; max-width: 190px; }
+  .feed { max-height: calc(100dvh - 260px); overflow-y: auto; gap: 6px; }
+  .toast { padding: 0; text-align: start; max-height: none; }
+  .toast > summary { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 12px; cursor: pointer; }
+  .toast > summary::after { content: '+'; color: var(--gold); margin-inline-start: auto; }
+  .toast[open] > summary::after { content: '−'; }
+  .toast .t { font-size: .9rem; }
+  .toast:not(.warn) .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cue-hint { display: inline; flex: none; color: var(--gold); font-size: .8rem; }
+  .toast-body { padding: 0 12px 12px; max-height: 38dvh; overflow-y: auto; }
+  .toast .tr, .toast .m { font-size: .9rem; }
+  .caption-wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; background: rgba(10,13,15,.86); border-radius: 12px; align-items: start; }
+  .caption-wrap .cap { background: none; text-align: start; font-size: .9rem; line-height: 1.4; margin: 8px 0; padding: 0 12px; }
+  .caption-wrap:not(.expanded) .cap { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .caption-wrap.expanded .cap { max-height: 32dvh; overflow-y: auto; }
+  .caption-wrap > button { display: block; min-width: 44px; min-height: 44px; padding: 8px; background: transparent; border: 0; color: var(--gold); font-size: .8rem; }
+  .banner { top: 45%; font-size: .9rem; max-width: calc(100% - 28px); width: max-content; text-align: center; }
+  .screen { align-items: start; padding-top: max(20px, env(safe-area-inset-top, 0px)); }
+  .card { padding: 18px; gap: 12px; }
+  .card p { font-size: .95rem; }
+  .cta { position: static; padding: 0; margin: 0; background: none; }
+}
+@media (max-width: 900px) and (max-height: 500px) {
+  .mission { width: min(320px, calc(100% - 116px)); }
+  .feed { width: min(340px, calc(100% - 180px)); left: 14px; transform: none; max-height: calc(100dvh - 135px); }
+  :root[dir="rtl"] .feed { left: auto; right: 14px; }
+  .minimap { width: 74px; }
+  .actions .btn-big { min-height: 44px; }
+  .toast-body { max-height: 35dvh; }
+}
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 <script type="importmap">
@@ -116,18 +178,21 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
 
 <div class="hud" id="hud" hidden>
   <section class="mission">
+    <details class="mission-info" id="missionInfo" open><summary>
     <div class="k"><span id="mStep"></span><span id="mDist" class="dist"></span></div>
     <h1 id="mTitle" aria-live="polite"></h1>
+    </summary>
     <p id="mGoal"></p>
+    </details>
     <div class="count" id="mCount" aria-live="polite" hidden></div>
     <div class="prog" id="mProg" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><i id="mProgFill"></i></div>
   </section>
-  <div class="topbtns">
+  <div class="topbtns" id="tourMenu"><button id="menuLabel" class="pill" aria-expanded="false" aria-controls="tourOptions">Menu</button><div class="tour-options" id="tourOptions">
     <button class="pill" id="bSound" aria-pressed="true"></button>
     <button class="pill" id="bTime"></button>
     <button class="pill" id="bPause" aria-pressed="false"></button>
     <button class="pill" id="bTour"></button>
-  </div>
+  </div></div>
   <div class="minimap"><canvas id="mini" width="420" height="420"></canvas></div>
   <div class="actions">
     <button class="btn-big" id="bAct" hidden></button>
@@ -138,14 +203,18 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
   <div class="banner" id="banner" hidden></div>
   <div class="feed" id="feed">
     <div class="toast" id="audioIssue" role="status" hidden><p id="audioIssueText"></p><button class="listen" id="retryAudio"></button></div>
-    <div class="toast" id="toast" hidden>
+    <details class="toast" id="toast" hidden open>
+      <summary>
       <div class="t" id="tTitle"></div>
+      <span class="cue-hint" id="tHint"></span>
+      </summary><div class="toast-body">
       <div class="ar" id="tAr" lang="ar"></div>
       <div class="tr" id="tTr"></div>
       <div class="m" id="tMean"></div>
       <div class="row"><button class="listen" id="tListen"></button><button class="pill" id="tOk"></button></div>
-    </div>
-    <div class="cap" id="cap" aria-live="polite" hidden></div>
+      </div>
+    </details>
+    <div class="caption-wrap" id="captionWrap" hidden><div class="cap" id="cap" aria-live="polite" hidden></div><button id="captionMore" aria-expanded="false" aria-controls="cap">More</button></div>
   </div>
   <div class="joy" id="joy" hidden><b id="joyKnob"></b></div>
 </div>
@@ -157,14 +226,17 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
     <div class="bar" id="loadBar"><i id="loadFill"></i></div>
     <p class="muted" id="loadText" role="status">Loading the scene. You can also open the text and audio lessons.</p>
     <button class="btn-sec" id="bRetry" hidden>Retry loading</button>
-    <a class="listen" id="fallbackTour" href="index.html?text">Read or listen to the guided lessons</a>
-    <label><span id="qualityLabel">Quality</span> <select id="quality"><option value="auto">Auto</option><option value="low">Low data</option><option value="high">High</option></select></label>
-    <div class="dua" id="iNiyyah"></div>
-    <div class="dua" id="iTalbiyah"></div>
-    <ul id="iHow"></ul>
+    <details class="intro-section"><summary id="ritualsLabel">Intention and Talbiyah</summary><div>
+      <div class="dua" id="iNiyyah"></div><div class="dua" id="iTalbiyah"></div>
+    </div></details>
     <div class="cta"><button class="btn-big" id="bStart" disabled></button>
     <button class="btn-sec" id="bResume" hidden></button></div>
-    <p class="muted" id="iNote"></p>
+    <details class="intro-section"><summary id="howLabel">How to move</summary><ul id="iHow"></ul></details>
+    <details class="intro-section" id="introOptions"><summary id="optionsLabel">Settings and lessons</summary><div>
+    <a class="listen" id="fallbackTour" href="index.html?text">Read or listen to the guided lessons</a>
+    <label><span id="qualityLabel">Quality</span> <select id="quality"><option value="auto">Auto</option><option value="low">Low data</option><option value="high">High</option></select></label>
+    </div></details>
+    <details class="intro-section"><summary id="introAboutLabel">About this tour</summary><p class="muted" id="iNote"></p></details>
   </div>
 </div>
 
@@ -187,6 +259,7 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
 document.getElementById('bRetry').onclick = () => location.reload();
 function showStartupFallback() {
   document.getElementById('intro').hidden = false;
+  document.getElementById('introOptions').open = true;
   document.getElementById('bRetry').hidden = false;
   document.getElementById('loadText').textContent = document.documentElement.lang === 'ar'
     ? 'تعذّر تشغيل الجولة. أعد المحاولة أو افتح دروس القراءة والاستماع.'
@@ -217,6 +290,10 @@ const EXTRA = {
   ar: { retry: 'أعد التحميل', failed: 'تعذّر تحميل المشهد. أعد المحاولة أو افتح دروس القراءة والاستماع.', lessons: 'افتح دروس القراءة والاستماع', quality: 'الجودة', auto: 'تلقائية', low: 'توفير البيانات', high: 'عالية', pause: 'إيقاف مؤقت', resume: 'متابعة', paused: 'متوقّف مؤقتًا. اضغط متابعة للاستمرار.', masa: 'جارٍ تحميل المسعى…', audio: 'تعذّر تشغيل الصوت. أعد المحاولة أو اكتم الصوت لقراءة النص.', retryAudio: 'أعد تشغيل الصوت' },
 }[LANG];
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const compactHUD = matchMedia('(max-width: 900px)');
+const mobileText = LANG === 'ar'
+  ? { menu: 'القائمة', more: 'المزيد', less: 'أقل', read: 'اقرأ', rituals: 'النية والتلبية', how: 'طريقة الحركة', about: 'عن الجولة', options: 'الإعدادات والدروس', skip: 'تسريع الباقي' }
+  : { menu: 'Menu', more: 'More', less: 'Less', read: 'Read', rituals: 'Intention and Talbiyah', how: 'How to move', about: 'About this tour', options: 'Settings and lessons', skip: 'Skip ahead' };
 let quality = ['auto', 'low', 'high'].includes(store.get('quality', 'auto')) ? store.get('quality', 'auto') : 'auto';
 const session = TourRuntime.createScope();
 let started = false, paused = false, booted = false, loopStarted = false, retryAction = null, pausedCues = [];
@@ -342,6 +419,7 @@ async function ensureWorld(name) {
   return worldLoads[name];
 }
 function loadFailure(retry) {
+  $('introOptions').open = true;
   $('loadText').textContent = EXTRA.failed; $('bRetry').hidden = false; retryAction = retry;
 }
 let skyTex = null;
@@ -500,7 +578,7 @@ const portal = new THREE.Group();
 const player = { x: 0, y: 0, yaw: 0, pitch: 0, z: 0, speed: 2.2 };
 const input = { f: 0, s: 0, run: false, guide: false, ff: false };
 const keys = {};
-addEventListener('keydown', (e) => { if (!started || paused || e.target.closest?.('button, a, select, input')) return; keys[e.code] = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = true; if (e.code === 'KeyG') toggleGuide(); });
+addEventListener('keydown', (e) => { if (!started || paused || e.target.closest?.('button, a, select, input, summary')) return; keys[e.code] = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = true; if (e.code === 'KeyG') toggleGuide(); });
 addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = false; });
 // mouse: drag to look, click locks pointer
 let drag = null;
@@ -886,7 +964,9 @@ function updateHud() {
   else if (m.id === 'sai') { c.hidden = false; c.innerHTML = `${game.sai.count} <small>/ 7</small>`; }
   else c.hidden = true;
   $('mProg').hidden = c.hidden;
-  $('bSkip').textContent = m.id === 'sai' ? T.skipSai : T.skipTawaf;
+  const skipLabel = m.id === 'sai' ? T.skipSai : T.skipTawaf;
+  $('bSkip').textContent = compactHUD.matches ? mobileText.skip : skipLabel;
+  $('bSkip').setAttribute('aria-label', skipLabel);
   $('bSkip').hidden = input.ff || !(m.id === 'tawaf' && game.tawaf.count > 0 || m.id === 'sai' && game.sai.count > 0);
   placeFeed();
   $('bAct').hidden = m.id !== 'safa'; $('bAct').textContent = T.beginSai;
@@ -896,10 +976,15 @@ function banner(text, ms = 2600) { const b = $('banner'); b.textContent = text; 
 let toastTimer = 0, toastDua = null;
 function card(title, ar, tr, mean, { listen = false, warn = false, ms = 0 } = {}) {
   const t = $('toast'); t.classList.toggle('warn', warn);
+  if (t.dataset.cue !== title + ar + mean) {
+    t.open = !compactHUD.matches || warn; t.dataset.cue = title + ar + mean;
+  }
+  if (warn) t.open = true;
   $('tTitle').textContent = title; $('tAr').textContent = ar || ''; $('tAr').hidden = !ar;
+  $('tHint').textContent = warn ? '' : mobileText.read;
   $('tTr').textContent = tr || ''; $('tTr').hidden = !tr; $('tMean').textContent = mean || ''; $('tMean').hidden = !mean;
   $('tListen').hidden = !listen; $('tListen').textContent = T.listen; $('tOk').textContent = T.ok;
-  t.hidden = false; clearTimeout(toastTimer); if (ms) toastTimer = setTimeout(() => (t.hidden = true), ms);
+  t.hidden = false; clearTimeout(toastTimer); if (ms) toastTimer = setTimeout(() => { if (!compactHUD.matches || !t.open || warn) t.hidden = true; }, ms);
   placeFeed();
 }
 function showDua(key, ms = 0) {
@@ -907,15 +992,15 @@ function showDua(key, ms = 0) {
   const title = key === 'rabbana' ? T.rabbana : key === 'bismillah' ? T.takbir : (M[game.mi]?.title[LANG] || '');
   card(title, d.ar, LANG === 'en' ? d.tr : '', LANG === 'en' ? d.en : '', { listen: true, ms });
 }
-function hideDuaSoon() { clearTimeout(toastTimer); toastTimer = setTimeout(() => ($('toast').hidden = true), 5000); }
+function hideDuaSoon() { clearTimeout(toastTimer); toastTimer = setTimeout(() => { if (!compactHUD.matches || !$('toast').open) $('toast').hidden = true; }, 5000); }
 function showDhikr(i) {
   if (!$('toast').hidden && !$('toast').classList.contains('warn') && snd.cur) return;   // do not cover a dua being recited
   const d = DHIKR[i % DHIKR.length]; toastDua = null;
   card(T.dhikr, d[0], LANG === 'en' ? d[1] : '', LANG === 'en' ? d[2] : '', { ms: 14000 });
 }
 function showWarn(title, text) { toastDua = null; card(title, '', '', text, { warn: true, ms: 6000 }); }
-function showCaption(id) { const t = NARR[id]?.[LANG]; const c = $('cap'); if (!t) { c.hidden = true; return; } c.textContent = t; c.hidden = false; placeFeed(); }
-function hideCaption() { $('cap').hidden = true; }
+function showCaption(id) { const t = NARR[id]?.[LANG]; if (!t) return hideCaption(); $('cap').textContent = t; $('cap').hidden = $('captionWrap').hidden = false; placeFeed(); }
+function hideCaption() { $('cap').hidden = $('captionWrap').hidden = true; }
 function setProg(f) {
   const percent = Math.max(0, Math.min(100, f * 100));
   $('mProgFill').style.width = percent.toFixed(1) + '%';
@@ -927,6 +1012,12 @@ function placeFeed() {
   f.style.top = innerWidth <= 900 ? Math.round(document.querySelector('.mission').getBoundingClientRect().bottom + 8) + 'px' : '';
 }
 addEventListener('resize', placeFeed);
+$('missionInfo').addEventListener('toggle', placeFeed);
+$('captionMore').onclick = () => {
+  const expanded = $('captionWrap').classList.toggle('expanded');
+  $('captionMore').setAttribute('aria-expanded', expanded);
+  $('captionMore').textContent = expanded ? mobileText.less : mobileText.more;
+};
 $('tOk').onclick = () => { $('toast').hidden = true; };
 $('tListen').onclick = () => { if (toastDua && snd.on) { snd.q.unshift('d:' + toastDua); if (snd.cur) { snd.cur = null; snd.el.pause(); } pump(); } };
 
@@ -1095,6 +1186,28 @@ $('iTitle').textContent = T.intro; $('iText').textContent = T.introText; $('load
 duaBlock($('iNiyyah'), 'niyyah', T.niyyah); duaBlock($('iTalbiyah'), 'talbiyah', T.talbiyah);
 $('iHow').innerHTML = T.how.map((h) => `<li>${h}</li>`).join(''); $('iNote').textContent = T.note;
 $('bStart').textContent = T.start;
+$('menuLabel').textContent = mobileText.menu;
+$('ritualsLabel').textContent = mobileText.rituals; $('howLabel').textContent = mobileText.how;
+$('introAboutLabel').textContent = mobileText.about; $('optionsLabel').textContent = mobileText.options;
+$('captionMore').textContent = mobileText.more;
+function setTourMenu(open) {
+  $('tourMenu').classList.toggle('is-open', open);
+  $('tourOptions').hidden = !open;
+  $('menuLabel').setAttribute('aria-expanded', open);
+}
+$('menuLabel').onclick = () => setTourMenu(!$('tourMenu').classList.contains('is-open'));
+function adaptHudLayout() {
+  setTourMenu(!compactHUD.matches); $('missionInfo').open = !compactHUD.matches;
+  if (!$('toast').classList.contains('warn')) $('toast').open = !compactHUD.matches;
+  placeFeed();
+}
+compactHUD.addEventListener('change', adaptHudLayout); adaptHudLayout();
+document.addEventListener('click', e => {
+  if (compactHUD.matches && $('tourMenu').classList.contains('is-open') && !e.target.closest('#tourMenu')) setTourMenu(false);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && compactHUD.matches && $('tourMenu').classList.contains('is-open')) { setTourMenu(false); $('menuLabel').focus(); }
+});
 $('bGuide').textContent = T.guide; $('bRun').textContent = T.run; $('bTour').textContent = T.tour;
 $('bSound').textContent = snd.on ? T.soundOn : T.soundOff; $('bSound').setAttribute('aria-pressed', snd.on);
 $('dTitle').textContent = T.doneTitle; $('dText').textContent = T.doneText; $('bAgain').textContent = T.again; $('bBack').textContent = T.back;

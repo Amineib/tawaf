@@ -4,20 +4,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kaaba area · visual review</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101715;color:#e7eee8}*{box-sizing:border-box}body{margin:0}main{max-width:1240px;margin:auto;padding:40px 24px 60px}header{max-width:850px}small{color:#b6c9bb;letter-spacing:.12em;text-transform:uppercase}h1{font-size:clamp(30px,5vw,48px);line-height:1.08;margin:12px 0 20px}p{line-height:1.65;color:#bccac0}nav{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}button,a.pill{border:1px solid #52685b;border-radius:28px;padding:12px 20px;font:inherit;color:inherit;background:transparent;cursor:pointer;text-decoration:none}button[aria-pressed=true]{background:#d7b76e;color:#171c16;border-color:#d7b76e}button:focus-visible,a:focus-visible{outline:3px solid #9de1b9;outline-offset:4px}section{display:grid;grid-template-columns:1fr 1fr;gap:24px}.view:first-child{grid-column:1/-1}.view{margin:0;background:#1b2620;border:1px solid #304437;border-radius:18px;overflow:hidden}.view img{display:block;width:100%;height:auto;aspect-ratio:1.4;object-fit:cover}.view:first-child img{aspect-ratio:1.65;object-fit:cover;object-position:center 60%}.people .view{grid-column:1/-1}.people .view img{aspect-ratio:1.6;object-fit:contain}figcaption{padding:17px 20px;display:flex;justify-content:space-between;gap:16px}figcaption span{color:#b7c8bb;font-size:14px}aside{padding:20px 24px;border-left:3px solid #d7b76e;background:#1b2620;margin:30px 0}aside p{margin:0}footer{margin-top:32px;font-size:14px;line-height:1.7;color:#b6c9bb}a{color:#d7b76e}@media(max-width:650px){main{padding:28px 14px}section{grid-template-columns:1fr;gap:16px}.view:first-child{grid-column:auto}.view:first-child img{aspect-ratio:1.4}figcaption{display:block}figcaption span{display:block;margin-top:5px}}
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101715;color:#e7eee8}*{box-sizing:border-box}body{margin:0}main{max-width:1240px;margin:auto;padding:40px 24px 60px}header{max-width:850px}small{color:#b6c9bb;letter-spacing:.12em;text-transform:uppercase}h1{font-size:clamp(30px,5vw,48px);line-height:1.08;margin:12px 0 20px}p{line-height:1.65;color:#bccac0}nav{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}button,a.pill{border:1px solid #52685b;border-radius:28px;padding:12px 20px;font:inherit;color:inherit;background:transparent;cursor:pointer;text-decoration:none}button[aria-pressed=true]{background:#d7b76e;color:#171c16;border-color:#d7b76e}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #9de1b9;outline-offset:4px}section{display:grid;grid-template-columns:1fr 1fr;gap:24px}.view:first-child{grid-column:1/-1}.view{margin:0;background:#1b2620;border:1px solid #304437;border-radius:18px;overflow:hidden}.view img{display:block;width:100%;height:auto;aspect-ratio:1.4;object-fit:cover}.view:first-child img{aspect-ratio:1.65;object-fit:cover;object-position:center 60%}.people .view{grid-column:1/-1}.people .view img{aspect-ratio:1.6;object-fit:contain}figcaption{padding:17px 20px;display:flex;justify-content:space-between;gap:16px}figcaption span{color:#b7c8bb;font-size:14px}aside{padding:20px 24px;border-left:3px solid #d7b76e;background:#1b2620;margin:30px 0}aside p{margin:0}footer{margin-top:32px;font-size:14px;line-height:1.7;color:#b6c9bb}a{color:#d7b76e}@media(max-width:650px){main{padding:28px 14px}section{grid-template-columns:1fr;gap:16px}.view:first-child{grid-column:auto}.view:first-child img{aspect-ratio:1.4}figcaption{display:block}figcaption span{display:block;margin-top:5px}}
+.review-notes{border-top:1px solid #304437;margin-top:16px}.review-notes>summary{min-height:48px;display:flex;align-items:center;cursor:pointer;color:#b6c9bb}.review-notes>summary::after{content:'+';margin-left:auto}.review-notes[open]>summary::after{content:'−'}
+@media(max-width:650px){main{padding:20px 14px 36px}h1{font-size:30px;margin:10px 0}header p{margin:0;font-size:15px}small{font-size:11px}nav{margin:20px 0}nav[aria-label="Tour previews"]{display:grid;grid-template-columns:1fr 1fr;gap:8px}a.pill{padding:12px 8px;text-align:center;font-size:14px}figcaption{padding:12px 14px;font-size:15px}figcaption span{display:none}.people .view img{aspect-ratio:1.6}h2{font-size:22px}.review-notes{font-size:14px}}
 </style>
 <main>
   <header>
-    <small>Umrah tour · first visual milestone</small>
-    <h1>Landmarks and people, seen closer</h1>
-    <p>Shared landmark models now have draped cloth, a separate door and curtain,
-    a sloping marble base, a recessed Black Stone surround and an open Maqam
-    enclosure. Eight new pilgrim silhouettes add shaped shoulders, hands,
-    footwear and varied clothing. These fixed views were rendered on a rented NVIDIA H100.</p>
+    <small>Umrah tour · visual review</small>
+    <h1>People and landmarks</h1>
+    <p>Compare the new people and Kaaba-area views.</p>
   </header>
   <nav aria-label="Tour previews">
-    <a class="pill" href="../explore.html">Walk through the 3D tour</a>
-    <a class="pill" href="../index.html">Open the panoramic tour</a>
+    <a class="pill" href="../explore.html">Walk in 3D</a>
+    <a class="pill" href="../index.html">Panoramic tour</a>
   </nav>
   <section aria-label="New pilgrim silhouettes" class="people" style="margin-bottom:24px">
     <figure class="view"><a href="people-lineup.jpg"><img src="people-lineup.jpg" alt="Eight pilgrim variants with different heights, builds, skin tones and clothing"></a><figcaption>New pilgrim silhouettes<span>Eight bodies, shared by both tours</span></figcaption></figure>
@@ -35,6 +34,13 @@
     <figure class="view"><a href="hijr-day.jpg"><img src="hijr-day.jpg" data-camera="hijr" loading="lazy" alt="The Hijr wall with softened marble coping beside the Kaaba"></a><figcaption>Hijr<span>Marble wall and coping</span></figcaption></figure>
     <figure class="view"><a href="maqam-day.jpg"><img src="maqam-day.jpg" data-camera="maqam" loading="lazy" alt="Maqam with an open gilded grille, clear enclosure and marble base"></a><figcaption>Maqam Ibrahim<span>Open grille, glass and stone base</span></figcaption></figure>
   </section>
+  <details class="review-notes"><summary>What changed</summary>
+    <p>Shared landmark models now have draped cloth, a separate door and curtain,
+    a sloping marble base, a recessed Black Stone surround and an open Maqam
+    enclosure. Eight new pilgrim silhouettes add shaped shoulders, hands,
+    footwear and varied clothing. These fixed views were rendered on a rented NVIDIA H100.</p>
+  </details>
+  <details class="review-notes"><summary>Sources and review notes</summary>
   <aside><p><strong>Work still to review.</strong> The curtain uses a CC0 photograph
   taken in 2016. Other kiswa embroidery regions remain reserved; the full 1448 AH
   configuration has not been reproduced. Landmark proportions, surrounding
@@ -47,6 +53,7 @@
     Generic stone and cloth scans: Poly Haven and ambientCG, CC0.
     Camera version: kaaba-v1. Click any image for the full fixed view.
   </footer>
+  </details>
 </main>
 <script>
 for (const button of document.querySelectorAll('[data-light]')) button.addEventListener('click', () => {

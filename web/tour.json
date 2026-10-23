@@ -1068,7 +1068,7 @@
     "text": {
       "en": {
         "intro": "Umrah in 3D",
-        "introText": "Walk through the Haram and the Mas‘a yourself. Each step of the Umrah is a mission. The minimap shows where to go, and “Guide me” walks for you.",
+        "introText": "Explore the Haram and Mas‘a at your own pace, or tap “Guide me”.",
         "loading": "Loading the Haram…",
         "ready": "Ready.",
         "start": "I am in ihram, begin",
@@ -1116,7 +1116,7 @@
       },
       "ar": {
         "intro": "العمرة ثلاثية الأبعاد",
-        "introText": "امشِ بنفسك في المسجد الحرام والمسعى. كل خطوة من العمرة مهمة. الخريطة الصغيرة تدلّك على الطريق، وزر «أرشدني» يمشي بك.",
+        "introText": "استكشف المسجد الحرام والمسعى بنفسك، أو اضغط «أرشدني».",
         "loading": "جارٍ تحميل المسجد الحرام…",
         "ready": "جاهز.",
         "start": "أنا محرم، ابدأ",
