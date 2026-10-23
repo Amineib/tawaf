@@ -15,6 +15,7 @@ import numpy as np
 import soundfile as sf
 import torch
 from duas_arabic import load, trim
+from content import narration_text
 
 REF = f"umrah_voice/ref_{sys.argv[1] if len(sys.argv) > 1 else 4}.wav"
 TASHKEEL = "tashkeel" in sys.argv[2:]
@@ -45,7 +46,12 @@ def say(model, sentence):
 
 
 def main():
-    lines = json.load(open(SRC, encoding="utf-8"))
+    lines = json.load(open(SRC, encoding="utf-8")) if TASHKEEL else narration_text('ar')
+    if TASHKEEL:
+        from tashkeel_ar import strip
+        canonical = narration_text('ar')
+        if set(lines) != set(canonical) or any(strip(lines[k]) != strip(canonical[k]) for k in lines):
+            raise ValueError('Vowelled narration is stale; review it against web/tour.json before generating audio')
     if SAMPLE:
         lines = {k: lines[k] for k in ("ihram_2", "start_2", "marwa_1")}
     os.makedirs(OUT, exist_ok=True)

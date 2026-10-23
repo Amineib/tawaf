@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "sceneVersion": "kaaba-v1",
+  "unit": "metre",
+  "cameras": [
+    {"id":"kaaba-corner","scene":"haram","position":[18,23,1.6],"target":[0,0,5.8],"lens":26},
+    {"id":"door","scene":"haram","position":[3,14,2.8],"target":[2.3,6.45,5.0],"lens":30},
+    {"id":"black-stone","scene":"haram","position":[7.7,8.3,1.6],"target":[5.9,6.5,1.5],"lens":48},
+    {"id":"hijr","scene":"haram","position":[-22,12,1.6],"target":[-8,0,3.5],"lens":25},
+    {"id":"maqam","scene":"haram","position":[5.5,21,1.6],"target":[2,17,1.25],"lens":40}
+  ]
+}

@@ -245,8 +245,8 @@ def marble(name, base=(0.86, 0.85, 0.82), vein=(0.62, 0.62, 0.62),
     """Polished white marble with tile seams. Uses a scanned texture set
     (tex key) when present, otherwise procedural veining."""
     if tex and tex_path(tex, 'color'):
-        m = principled(name, base, rough=rough, coat=0.2)
-        col = pbr_layer(m, tex, tex_size, normal_strength=0.35, rough_mul=0.6, rough_add=0.02)
+        m = principled(name, base, rough=rough, coat=0.0)
+        col = pbr_layer(m, tex, tex_size, normal_strength=0.12, rough_mul=0.19, rough_add=0.28)
         if seams:
             nt = m.node_tree; N, L = nt.nodes, nt.links
             tc = N.new('ShaderNodeTexCoord')
@@ -505,64 +505,9 @@ def rock(name, size, loc, mat, seed=1, coll=None):
 
 # ---------------------------------------------------------------- pilgrims
 
-def make_pilgrim_meshes(coll):
-    """Faceless, low-poly pilgrims. Returns list of (object, weight)."""
-    white = random_color_mat('Ihram', [(0.80, 0.80, 0.78), (0.86, 0.86, 0.84), (0.74, 0.74, 0.72), (0.83, 0.82, 0.79)], sheen=0.6)
-    black = random_color_mat('Abaya', [(0.015, 0.015, 0.017), (0.03, 0.028, 0.03), (0.06, 0.06, 0.07)], sheen=0.5)
-    beige = random_color_mat('Abaya2', [(0.55, 0.50, 0.44), (0.30, 0.32, 0.36), (0.80, 0.80, 0.78)], sheen=0.5)
-    skin = random_color_mat('Skin', [(0.62, 0.42, 0.30), (0.42, 0.27, 0.18), (0.23, 0.14, 0.09), (0.70, 0.52, 0.40), (0.52, 0.34, 0.22)], rough=0.55, sheen=0.1)
-
-    def body(robe_mat, head_mat, covered, cap=False):
-        bm = bmesh.new()
-        bmesh.ops.create_cone(bm, cap_ends=True, segments=12, radius1=0.26, radius2=0.17, depth=1.32)
-        bmesh.ops.translate(bm, verts=bm.verts, vec=(0, 0, 0.66))
-        r = bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=8, radius=1.0)
-        for v in r['verts']:
-            v.co = Vector((v.co.x * 0.25, v.co.y * 0.15, v.co.z * 0.11 + 1.36))
-        # arms hanging at the sides
-        for sx in (-1, 1):
-            r = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.05, radius2=0.065, depth=0.66)
-            for v in r['verts']:
-                v.co = Vector((v.co.x + sx * (0.235 + 0.04 * (0.33 - v.co.z)), v.co.y, v.co.z + 1.05))
-        # head
-        hr = 0.125 if covered else 0.105
-        r = bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=8, radius=hr)
-        head_verts = r['verts']
-        for v in head_verts:
-            v.co.z += 1.56 if covered else 1.585
-        nfaces_body = len(bm.faces)
-        if covered:
-            r = bmesh.ops.create_uvsphere(bm, u_segments=10, v_segments=6, radius=1.0)
-            for v in r['verts']:
-                v.co = Vector((v.co.x * 0.065, v.co.y * 0.03 + 0.105, v.co.z * 0.08 + 1.565))
-        bm.faces.ensure_lookup_table()
-        for f in bm.faces:
-            f.material_index = 0
-        head_set = set(head_verts)
-        for f in bm.faces:
-            if all(v in head_set for v in f.verts):
-                f.material_index = 0 if covered else 1
-        if covered:
-            # last created sphere = plain face oval (no features, by design)
-            for f in list(bm.faces)[-60:]:
-                if all(v.co.y > 0.06 for v in f.verts) and all(v.co.z > 1.47 for v in f.verts):
-                    f.material_index = 1
-        return bm
-
-    out = []
-    variants = [
-        ('pilgrim_man', white, False, 5),
-        ('pilgrim_woman_w', white, True, 2),
-        ('pilgrim_woman_b', black, True, 3),
-        ('pilgrim_woman_c', beige, True, 1),
-    ]
-    for name, robe, covered, w in variants:
-        bm = body(robe, skin, covered)
-        o = obj_from_bm(name, bm, [robe, skin], coll, smooth=True)
-        o.hide_render = True
-        o.hide_viewport = True
-        out.append((o, w))
-    return out
+def make_pilgrim_meshes(coll, realtime=False):
+    from pilgrims import make
+    return make(coll, realtime=realtime)
 
 
 def pick(variants, rnd):
@@ -739,6 +684,8 @@ def render_settings(res_x, samples, exposure=0.0):
                 c.device = 'GPU'
                 print('Cycles device:', kind, [d.name for d in gpus], flush=True)
                 break
+        if c.device != 'GPU':
+            raise RuntimeError(f'Requested {want} GPU is unavailable; refusing a silent CPU render')
     c.samples = samples
     c.use_adaptive_sampling = True
     c.adaptive_threshold = 0.03

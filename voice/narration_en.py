@@ -12,6 +12,7 @@ import numpy as np
 import soundfile as sf
 import torch
 from duas_arabic import load, trim
+from content import narration_text
 
 REF = f"umrah_voice/ref_{sys.argv[1] if len(sys.argv) > 1 else 1}.wav"
 OUT = "umrah_voice/narration_en"
@@ -39,7 +40,7 @@ def say(model, sentence):
 
 
 def main():
-    lines = json.load(open("umrah_voice/narration_en.json"))
+    lines = narration_text('en')
     os.makedirs(OUT, exist_ok=True)
     model = load()
     sr = model.sr

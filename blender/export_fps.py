@@ -40,18 +40,17 @@ def tex_file(key, kind, tint=None, desat=0.0, name=None):
     if not src:
         return None
     out = os.path.join(OUT, 'tex', f'{name or key}_{kind}.jpg')
-    if not os.path.exists(out):
-        im = Image.open(src).convert('RGB').resize((TEXRES, TEXRES), Image.LANCZOS)
-        if kind == 'color' and (tint or desat):
-            import numpy as np
-            a = np.asarray(im).astype('float32') / 255.0
-            if desat:
-                g = a.mean(axis=2, keepdims=True)
-                a = a * (1 - desat) + g * desat
-            if tint:
-                a = a * np.array(tint, dtype='float32')
-            im = Image.fromarray((a.clip(0, 1) * 255).astype('uint8'))
-        im.save(out, quality=85)
+    im = Image.open(src).convert('RGB').resize((TEXRES, TEXRES), Image.LANCZOS)
+    if kind == 'color' and (tint or desat):
+        import numpy as np
+        a = np.asarray(im).astype('float32') / 255.0
+        if desat:
+            g = a.mean(axis=2, keepdims=True)
+            a = a * (1 - desat) + g * desat
+        if tint:
+            a = a * np.array(tint, dtype='float32')
+        im = Image.fromarray((a.clip(0, 1) * 255).astype('uint8'))
+    im.save(out, quality=85)
     return out
 
 
@@ -87,9 +86,11 @@ def lattice_tex(name, line=0.08, border=None, cells=4, size=512):
 # ------------------------------------------------------------------ materials
 
 def new_mat(name, color=(0.8, 0.8, 0.8), rough=0.5, metal=0.0, emission=None, estrength=0.0,
-            img=None, nrm=None, nstrength=0.5, alpha=1.0):
+            img=None, nrm=None, nstrength=0.5, alpha=1.0, roughmap=None, role=None):
     m = bpy.data.materials.new('X_' + name)
     m.use_nodes = True
+    if role:
+        m['umrahRole'] = role
     nt = m.node_tree
     b = nt.nodes['Principled BSDF']
     b.inputs['Base Color'].default_value = (*color, 1)
@@ -110,10 +111,35 @@ def new_mat(name, color=(0.8, 0.8, 0.8), rough=0.5, metal=0.0, emission=None, es
         nm.inputs['Strength'].default_value = nstrength
         nt.links.new(t.outputs['Color'], nm.inputs['Color'])
         nt.links.new(nm.outputs['Normal'], b.inputs['Normal'])
+    if roughmap:
+        t = nt.nodes.new('ShaderNodeTexImage')
+        t.image = bpy.data.images.load(roughmap, check_existing=True)
+        t.image.colorspace_settings.name = 'Non-Color'
+        channels = nt.nodes.new('ShaderNodeSeparateColor')
+        nt.links.new(t.outputs['Color'], channels.inputs['Color'])
+        nt.links.new(channels.outputs['Green'], b.inputs['Roughness'])
+        nt.links.new(channels.outputs['Blue'], b.inputs['Metallic'])
     if alpha < 1.0:
         b.inputs['Alpha'].default_value = alpha
-        m.blend_method = 'BLEND' if hasattr(m, 'blend_method') else None
+        if hasattr(m, 'surface_render_method'):
+            m.surface_render_method = 'DITHERED'
+        elif hasattr(m, 'blend_method'):
+            m.blend_method = 'BLEND'
     return m
+
+
+def rough_file(key, low=.2, high=.8):
+    """Bake the scalar remap, which glTF cannot express as a node graph."""
+    src = common.tex_path(key, 'rough')
+    if not src:
+        return None
+    out = os.path.join(OUT, 'tex', f'{key}_orm_{low}_{high}.jpg')
+    # Scalar variation needs less resolution than visible colour or silk normals.
+    res = 256 if key == 'satin' else 512
+    im = Image.open(src).convert('L').resize((res, res), Image.Resampling.LANCZOS)
+    rough = im.point([round(255*low + v*(high-low)) for v in range(256)])
+    Image.merge('RGB',(Image.new('L',im.size,255),rough,Image.new('L',im.size,0))).save(out,quality=88)
+    return out
 
 
 def spec_for(name):
@@ -122,22 +148,22 @@ def spec_for(name):
     T = lambda key, **kw: (tex_file(key, 'color', **kw), tex_file(key, 'normal'))
     if n in ('Mataf marble', 'Masa marble'):
         c, nr = T('marble_white')
-        return (lambda: new_mat(n, rough=0.22, img=c, nrm=nr, nstrength=0.25)), 2.4
+        return (lambda: new_mat(n, rough=0.38, img=c, nrm=nr, nstrength=0.12, roughmap=rough_file('marble_white',.28,.47), role='floor')), 2.4
     if n in ('Arcade marble', 'Masa wall'):
         c, nr = T('marble_warm')
-        return (lambda: new_mat(n, rough=0.35, img=c, nrm=nr, nstrength=0.3)), 2.0
+        return (lambda: new_mat(n, rough=0.44, img=c, nrm=nr, nstrength=0.2, roughmap=rough_file('marble_warm',.33,.58), role='marble')), 2.0
     if n == 'Granite':
         c, nr = T('granite', tint=(0.45, 0.42, 0.42))
-        return (lambda: new_mat(n, rough=0.25, img=c, nrm=nr)), 1.2
+        return (lambda: new_mat(n, rough=0.32, img=c, nrm=nr, roughmap=rough_file('granite',.23,.46), role='stone')), 1.2
     if n in ('Cream stone', 'Ceiling'):
         c, nr = T('stucco', tint=(0.95, 0.88, 0.76) if n == 'Cream stone' else (1.0, 0.97, 0.92))
-        return (lambda: new_mat(n, rough=0.7, img=c, nrm=nr, nstrength=0.4)), 4.0
+        return (lambda: new_mat(n, rough=0.7, img=c, nrm=nr, nstrength=0.22, roughmap=rough_file('stucco',.58,.87), role='plaster')), 4.0
     if n == 'Rock':
         c, nr = T('rock', tint=(0.42, 0.36, 0.32), desat=0.35)
-        return (lambda: new_mat(n, rough=0.85, img=c, nrm=nr, nstrength=1.0)), 2.5
+        return (lambda: new_mat(n, rough=0.85, img=c, nrm=nr, nstrength=0.7, roughmap=rough_file('rock',.65,.95), role='rock')), 2.5
     if n == 'Kiswa':
         c, nr = (None, tex_file('satin', 'normal'))
-        return (lambda: new_mat(n, color=(0.012, 0.012, 0.013), rough=0.75, nrm=nr, nstrength=0.4)), 0.25
+        return (lambda: new_mat(n, color=(0.008, 0.008, 0.009), rough=0.75, nrm=nr, nstrength=0.32, roughmap=rough_file('satin',.62,.86), role='cloth')), 0.25
     if n == 'Hizam':
         return (lambda: new_mat(n, color=(1, 1, 1), rough=0.4, metal=0.6, img=lattice_tex('hizam', 0.07, 0.14, 2))), 0.95
     if n in ('Panel ornament', 'Sitara'):
@@ -152,6 +178,17 @@ def spec_for(name):
 
 def copy_simple(m):
     """Principled-only material: keep its constant values, drop node graphs."""
+    if m.get('umrahRole') == 'contact':
+        mat=new_mat(m.name,color=(0,0,0),rough=1,alpha=.99,role='contact')
+        nt=mat.node_tree;tex=nt.nodes.new('ShaderNodeTexImage')
+        tex.image=bpy.data.images.load(m['umrahTexture'],check_existing=True)
+        nt.links.new(tex.outputs['Alpha'],nt.nodes['Principled BSDF'].inputs['Alpha'])
+        return mat
+    if m.get('umrahRole') == 'embroidery':
+        source=Image.open(m['umrahTexture']).convert('RGB')
+        source.thumbnail((2048,2048),Image.Resampling.LANCZOS)
+        path=os.path.join(OUT,'tex','sitara-2016.jpg');source.save(path,quality=91)
+        return new_mat(m.name,color=(1,1,1),rough=.62,metal=.55,img=path,role='embroidery')
     b = m.node_tree.nodes.get('Principled BSDF') if m.use_nodes else None
     em = None
     out = m.node_tree.nodes.get('Material Output') if m.use_nodes else None
@@ -166,7 +203,8 @@ def copy_simple(m):
     g = lambda k: b.inputs[k].default_value
     es = g('Emission Strength')
     return new_mat(m.name, color=tuple(g('Base Color')[:3]), rough=g('Roughness'), metal=g('Metallic'),
-                   emission=tuple(g('Emission Color')[:3]) if es > 0 else None, estrength=es)
+                   emission=tuple(g('Emission Color')[:3]) if es > 0 else None, estrength=es,
+                   alpha=g('Alpha'), role=m.get('umrahRole'))
 
 
 def box_uv(me, size):
@@ -194,6 +232,8 @@ def box_uv(me, size):
 
 def prepare():
     sc = bpy.context.scene
+    sc['sceneVersion'] = bs.LAYOUT['sceneVersion']
+    sc['reviewStatus'] = 'pending'
     # drop lights, cameras, pilgrims
     for o in list(bpy.data.objects):
         if o.type in ('LIGHT', 'CAMERA'):
@@ -223,8 +263,21 @@ def prepare():
             me.materials[i] = nm
             if size:
                 sizes.append(size)
-        if sizes:
+        if sizes and not me.get('umrahUV'):
             box_uv(me, min(sizes))
+    # Small unique gold profiles share one draw call per material, while the
+    # repeated architecture below retains its linked data and GPU instancing.
+    gold_groups = {}
+    for o in list(bpy.data.collections['Kaaba'].objects) if bpy.data.collections.get('Kaaba') else []:
+        if o.type == 'MESH' and len(o.data.materials) == 1 and o.data.materials[0].get('umrahRole') == 'gold':
+            gold_groups.setdefault(o.data.materials[0].name, []).append(o)
+    for objects in gold_groups.values():
+        if len(objects) < 2: continue
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in objects: o.select_set(True)
+        bpy.context.view_layer.objects.active=objects[0]
+        bpy.ops.object.join()
+        objects[0].name='Landmark gold details'
     # group linked duplicates under empties for GPU instancing
     groups = {}
     for o in bpy.data.objects:
@@ -247,8 +300,8 @@ def prepare():
 
 def export(path, selection=False):
     kw = dict(filepath=path, export_format='GLB', export_apply=True, export_cameras=False,
-              export_lights=False, export_image_format='JPEG', export_yup=True,
-              use_renderable=not selection, use_selection=selection)
+              export_lights=False, export_image_format='AUTO', export_yup=True,
+              use_renderable=not selection, use_selection=selection, export_extras=True, export_attributes=True)
     for k, v in (('export_gpu_instances', True), ('export_jpeg_quality', 82)):
         kw[k] = v
     try:
@@ -266,7 +319,7 @@ if __name__ == '__main__':
     # pilgrims: the four faceless variants, one mesh each, at the origin
     common.reset()
     coll = common.collection('Pilgrims')
-    vs = common.make_pilgrim_meshes(coll)
+    vs = common.make_pilgrim_meshes(coll, realtime=True)
     for o, w in vs:
         o.hide_render = False; o.hide_viewport = False
         for i, m in enumerate(o.data.materials):

@@ -22,11 +22,13 @@ import bpy
 from mathutils import Vector
 from common import *
 
-KX, KY, KH = 5.85, 6.45, 13.1          # Kaaba half-widths and height
-BLACK_STONE = (KX + 0.12, KY + 0.12, 1.5)
+LAYOUT = json.load(open(os.path.join(os.path.dirname(__file__), 'layout.json')))
+KAABA = LAYOUT['haram']['kaaba']
+KX, KY, KH = KAABA['halfWidth'], KAABA['halfDepth'], KAABA['height']
+BLACK_STONE = tuple(LAYOUT['haram']['blackStone'])
 YEMENI = (KX + 0.1, -KY - 0.1, 1.5)
-MAQAM = (2.0, 17.0, 0.0)
-EYE = 1.6
+MAQAM = tuple(LAYOUT['haram']['maqam'])
+EYE = LAYOUT['eyeHeight']
 
 
 # =================================================================== HARAM
@@ -63,55 +65,26 @@ def build_haram():
     # wider ground under the city
     g = box('Ground', (2000, 2000, 1), (0, 0, -0.52), principled('Ground', (0.55, 0.5, 0.44), rough=0.9), arch)
 
-    # ---- Kaaba
-    kaaba = box('Kaaba', (2 * KX, 2 * KY, KH), (0, 0, KH / 2), kiswa_black(), kc)
-    sh = box('Shadharwan', (2 * KX + 0.7, 2 * KY + 0.7, 0.32), (0, 0, 0.16), wall_m, kc)
-    roof = box('Roof parapet', (2 * KX + 0.04, 2 * KY + 0.04, 0.25), (0, 0, KH + 0.12), principled('Roof', (0.05, 0.05, 0.05), rough=0.6), kc)
-    band_h = 0.95
-    band = box('Hizam band', (2 * KX + 0.03, 2 * KY + 0.03, band_h), (0, 0, KH * 0.68), gold_ornament('Hizam', 0.07, band_h / 2, 2.6), kc)
-    # gold panels under the band (abstract ornaments)
-    pan_m = gold_ornament('Panel ornament', 0.10, None, 4.0)
-    for side in range(4):
-        horiz = side in (0, 2)
-        n = 4
-        for i in range(n):
-            t = (i + 0.5) / n * 2 - 1
-            if horiz:
-                y = KY + 0.03 if side == 0 else -KY - 0.03
-                loc = (t * (KX - 1.2), y, KH * 0.68 - 1.6)
-                box(f'Panel{side}{i}', (0.9, 0.04, 1.6), loc, pan_m, kc)
-            else:
-                x = KX + 0.03 if side == 1 else -KX - 0.03
-                loc = (x, t * (KY - 1.2), KH * 0.68 - 1.6)
-                box(f'Panel{side}{i}', (0.04, 0.9, 1.6), loc, pan_m, kc)
-    # door curtain (sitara) on the north-east (+y) wall, near the Black Stone corner
-    box('Door curtain', (3.4, 0.08, 6.0), (2.3, KY + 0.06, 2.1 + 3.0), gold_ornament('Sitara', 0.16, None, 3.0), kc)
-    box('Door threshold', (2.2, 0.3, 0.12), (2.3, KY + 0.18, 2.1), gold_m, kc)
-    # Mizab (golden waterspout) over Hijr Ismail
-    box('Mizab', (2.4, 0.35, 0.3), (-KX - 1.2, 0, KH - 0.3), gold_m, kc)
-    # Black Stone in its silver frame
-    bpy.ops.mesh.primitive_torus_add(major_radius=0.33, minor_radius=0.08, major_segments=32, minor_segments=10)
-    t = bpy.context.object; t.name = 'Black Stone frame'; t.data.materials.append(silver_m)
-    for c in t.users_collection: c.objects.unlink(t)
-    kc.objects.link(t)
-    t.location = BLACK_STONE
-    t.rotation_mode = 'QUATERNION'; t.rotation_quaternion = Vector((1, 1, 0)).to_track_quat('Z', 'Y')
-    t.scale = (1, 1.25, 1)
-    bs = sphere('Black Stone', 0.27, BLACK_STONE, blackstone_m, (1, 1, 1), kc)
-    bs.rotation_mode = 'QUATERNION'; bs.rotation_quaternion = t.rotation_quaternion; bs.scale = (1, 1.2, 0.35)
-
-    # ---- Hijr Ismail (semicircular wall, part of the Kaaba)
-    arc_wall('Hijr Ismail', -KX, 0, 8.4, 6.6, math.radians(105), math.radians(255), 1.4, 1.3, wall_m, coll=kc)
-
-    # ---- Maqam Ibrahim
-    mx, my, _ = MAQAM
-    cylinder('Maqam base', 0.95, 0.55, (mx, my, 0), stone_m, segs=8, coll=kc, smooth=False)
-    cylinder('Maqam cage', 0.72, 1.7, (mx, my, 0.55), gold_ornament('Maqam lattice', 0.2, None, 7.0), segs=8, coll=kc, smooth=False)
-    sphere('Maqam dome', 0.72, (mx, my, 2.25), gold_m, (1, 1, 0.75), kc)
-    cylinder('Maqam finial', 0.05, 0.55, (mx, my, 2.75), gold_m, segs=8, coll=kc)
+    # Shared landmark masters feed both panorama and real-time derivatives.
+    import landmarks
+    landmarks.build(KX, KY, KH, MAQAM, kc, wall_m, stone_m)
+    contact_path = os.environ.get('UMRAH_CONTACT', os.path.join(os.path.dirname(__file__), '..', 'fps', 'contact.png'))
+    if contact_path and os.path.isfile(contact_path):
+        contact = principled('Static contact shading', (0, 0, 0), rough=1)
+        contact['umrahRole'] = 'contact'
+        contact['umrahTexture'] = os.path.abspath(contact_path)
+        nt=contact.node_tree; tex=nt.nodes.new('ShaderNodeTexImage')
+        tex.image=bpy.data.images.load(contact_path)
+        nt.links.new(tex.outputs['Alpha'],nt.nodes['Principled BSDF'].inputs['Alpha'])
+        if hasattr(contact,'surface_render_method'): contact.surface_render_method='DITHERED'
+        elif hasattr(contact,'blend_method'): contact.blend_method='BLEND'
+        bpy.ops.mesh.primitive_plane_add(size=56,location=(0,0,.009))
+        patch=bpy.context.object;patch.name='Mataf baked contact shading'
+        patch.data.materials.append(contact);patch.data['umrahUV']=True
 
     # ---- Mataf arcades: 4 levels, pointed arches, around r=48
-    R, NB, LH = 48.0, 52, 8.0
+    arcade = LAYOUT['haram']['arcade']
+    R, NB, LH = arcade['radius'], arcade['bays'], arcade['levelHeight']
     for lvl in range(4):
         z0 = lvl * LH
         bm = bmesh.new()
@@ -350,8 +323,8 @@ def haram_cameras_spec():
 
 # =================================================================== MAS'A
 
-SAFA_X, MARWA_X = 0.0, 400.0
-GREEN = (150.0, 205.0)
+SAFA_X, MARWA_X = LAYOUT['masa']['safa'], LAYOUT['masa']['marwa']
+GREEN = tuple(LAYOUT['masa']['green'])
 
 
 def build_masa():
@@ -365,13 +338,16 @@ def build_masa():
     rock_m = textured('Rock', 'rock', 2.5, fallback=(0.30, 0.24, 0.19), rough=0.85, normal_strength=1.0, tint=(0.42, 0.36, 0.32), desat=0.35)
     rail_m = principled('Brass rail', (0.85, 0.66, 0.36), rough=0.3, metal=1.0)
     glass_m = principled('Glass', (0.9, 0.95, 0.95), rough=0.02)
+    glass_m['umrahRole'] = 'glass'
+    glass_m.node_tree.nodes['Principled BSDF'].inputs['Alpha'].default_value = .18
     glass_m.node_tree.nodes['Principled BSDF'].inputs['Transmission Weight'].default_value = 1.0
     light_m = emissive('Ceiling light', (1.0, 0.92, 0.80), 12.0)
     green_m = emissive('Green lights', (0.1, 1.0, 0.3), 8.0)
     dark_m = principled('Shade', (0.2, 0.19, 0.18), rough=0.8)
     sign_m = principled('Sign', (0.05, 0.25, 0.15), rough=0.5, emission=(0.05, 0.25, 0.15), estrength=0.3)
 
-    X0, X1, HW, H = -30, 430, 22, 12
+    X0, X1 = SAFA_X - 30, MARWA_X + 30
+    HW, H = LAYOUT['masa']['halfWidth'], LAYOUT['masa']['height']
     box('Floor', (X1 - X0, 2 * HW, 0.2), ((X0 + X1) / 2, 0, -0.1), floor_m, arch)
     # ceiling: main span + plates around a round opening over each hill
     box('Ceiling', (MARWA_X - 28, 2 * HW, 0.8), (MARWA_X / 2, 0, H + 0.4), ceil_m, arch)

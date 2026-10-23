@@ -1,0 +1,135 @@
+{
+  "sceneVersion": "kaaba-v1",
+  "crowdVersion": "profiled-eight-v2",
+  "renderedOn": "2026-10-23",
+  "gpu": "NVIDIA H100 PCIe",
+  "blender": "5.0.1",
+  "python": "3.11.14",
+  "pillow": "11.3.0",
+  "numpy": "1.26.4",
+  "cyclesDevice": "CUDA",
+  "verifiedFiles": 51,
+  "panoramas": {
+    "count": 13,
+    "resolution": [
+      4096,
+      2048
+    ],
+    "samples": 64
+  },
+  "comparisonViews": {
+    "count": 10,
+    "resolution": [
+      1400,
+      1000
+    ],
+    "samples": 64
+  },
+  "crowdReviewViews": {
+    "count": 2,
+    "resolution": [
+      1600,
+      1000
+    ],
+    "samples": 64
+  },
+  "cloudWorkerDeleted": true,
+  "workers": [
+    {
+      "run": "visual-v1",
+      "createdAt": "2026-10-23T07:17:58.922180+00:00",
+      "deleted": true,
+      "deletionVerifiedAt": "2026-10-23T07:55:15.504436+00:00",
+      "gpuHourlyRateUsd": 2.0,
+      "estimatedGpuCostUpperBoundUsd": 1.25
+    },
+    {
+      "run": "visual-v1-uvfix",
+      "createdAt": "2026-10-23T08:13:13.757249+00:00",
+      "deleted": true,
+      "deletionVerifiedAt": "2026-10-23T09:04:41.298583+00:00",
+      "gpuHourlyRateUsd": 2.0,
+      "estimatedGpuCostUpperBoundUsd": 1.72
+    }
+  ],
+  "estimatedGpuCostUpperBoundUsd": 2.97,
+  "costNote": "Elapsed creation-to-deletion-verification estimates at the GPU rate, covering both workers including draft/repair renders. Not an invoice or an estimate of other provider charges.",
+  "archiveSha256": "864b6a553a1167f11cd1ee86a96d3b978b7c80ce4d14e8c3ac5bdc439c0e4b91",
+  "deliveryModels": [
+    {
+      "file": "haram.glb",
+      "bytes": 7769724,
+      "uniqueTriangles": 132462,
+      "meshes": 153,
+      "materials": 26,
+      "textures": 16,
+      "estimatedTextureMiB": 68.67,
+      "materialRoles": [
+        "cloth",
+        "contact",
+        "embroidery",
+        "floor",
+        "glass",
+        "gold",
+        "marble",
+        "plaster",
+        "silver",
+        "stone"
+      ],
+      "extensions": [
+        "EXT_mesh_gpu_instancing",
+        "KHR_materials_emissive_strength",
+        "KHR_mesh_quantization"
+      ]
+    },
+    {
+      "file": "masa.glb",
+      "bytes": 2360588,
+      "uniqueTriangles": 32856,
+      "meshes": 48,
+      "materials": 11,
+      "textures": 12,
+      "estimatedTextureMiB": 48.0,
+      "materialRoles": [
+        "floor",
+        "glass",
+        "marble",
+        "plaster",
+        "rock"
+      ],
+      "extensions": [
+        "EXT_mesh_gpu_instancing",
+        "KHR_materials_emissive_strength",
+        "KHR_mesh_quantization"
+      ]
+    },
+    {
+      "file": "pilgrims.glb",
+      "bytes": 352392,
+      "uniqueTriangles": 15396,
+      "meshes": 8,
+      "materials": 24,
+      "textures": 0,
+      "estimatedTextureMiB": 0.0,
+      "materialRoles": [
+        "pilgrimCloth",
+        "pilgrimDetail",
+        "pilgrimSkin"
+      ],
+      "extensions": []
+    }
+  ],
+  "sourceFilesSha256": {
+    "blender/landmarks.py": "e153dc6fe4e0c72e18052649cf9427082d122318a6abdccd32d58f00f09f8c6f",
+    "blender/pilgrims.py": "47abc015ca579910eb6954f8655212e734fd5cb1d1f551750bec259f6d8f43a8",
+    "blender/common.py": "3e22b03d2c42c1dc82f7eecb5a677fdac117025db911b7e1f9673f8e46e92759",
+    "blender/export_fps.py": "f9b55006e031d2e37cf41a2b47bed90a2888f20521ccd90347cb9d8c54684914",
+    "blender/build_scene.py": "66051dcb1a206b633a4d5a2fbab4947eddeb844c1dc3c6a051b3dd24511a3ca3",
+    "blender/layout.json": "3ecda2e39a38115ab2f982979fb25ed56c4dda7ac11897628488ea41f0afb660",
+    "blender/visual-cameras.json": "05cd419b76fc3a3e75283e53d611123ba7db3ff55c64c2b5aadfec57befb7211",
+    "blender/render_comparisons.py": "67c378e956073b7dda815e295d7ca0bbcf801241c774f59560da6f650aa996d8",
+    "blender/render_people.py": "4b64425b18adf109e44198d9a4a51c69722faaa9c85fb0f267d16db6d021f80a",
+    "gpu/render_visuals.sh": "70905e0db466ebc69c219b9c4c114f678174e645dd007ecd3abad3e47bd5b145",
+    "web/crowd.js": "21dc23bd3f44b8ac8d958416e629b245895542c572b7fc96e6b961f0433437c2"
+  }
+}

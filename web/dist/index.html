@@ -1,6 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Learn Umrah step by step with English and Arabic narration, duas, and guided practice.">
 <title>Umrah Step by Step</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,13 +31,18 @@
   color-scheme: dark;
 }
 html, body { height: 100%; }
-body { background: var(--ink); color: var(--fg); font-family: var(--font); font-size: var(--t-body); line-height: 1.5; overflow: hidden; }
+body { margin: 0; background: var(--ink); color: var(--fg); font-family: var(--font); font-size: var(--t-body); line-height: 1.5; overflow: hidden; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-button { font: inherit; color: inherit; }
+button, select { font: inherit; color: inherit; }
+select { background: var(--raise); border: 1px solid var(--line); border-radius: 10px; min-height: 44px; max-width: 100%; }
+.quality-label { font-size: var(--t-small); display: flex; gap: 8px; align-items: center; }
 button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
 .app { display: grid; grid-template-columns: 1fr minmax(380px, 460px); height: 100%; }
+.app.text-only { grid-template-columns: 1fr; grid-template-rows: 130px minmax(0, 1fr); }
+.text-only .scene { cursor: default; }
+.text-only .quality-label, .text-only #timeSeg { display: none; }
 @media (max-width: 860px) {
   .app { grid-template-columns: 1fr; grid-template-rows: minmax(220px, 40%) 1fr; }
 }
@@ -63,13 +69,21 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold);
 .scene-top > * { pointer-events: auto; }
 .chip { background: rgba(16, 20, 23, .8); border: 1px solid var(--line); border-radius: 999px; padding: .35em .9em; font-size: var(--t-small); }
 .chip strong { color: var(--gold); }
-.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: var(--t-small); background: var(--ink); transition: opacity .5s; }
+.loading { position: absolute; inset: 64px 12px auto; display: grid; justify-items: center; gap: 8px; padding: 12px; border-radius: 12px; color: var(--fg); font-size: var(--t-small); background: var(--ink); transition: opacity .5s; }
+.loading button { min-height: 44px; background: var(--raise); border: 1px solid var(--gold); border-radius: 10px; padding: 6px 16px; cursor: pointer; }
 .loading.gone { opacity: 0; pointer-events: none; }
 .drag-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: var(--t-small); color: var(--fg); background: rgba(16,20,23,.7); padding: .3em .9em; border-radius: 999px; pointer-events: none; transition: opacity .6s; }
 
 /* ---------- guide panel */
 .guide { background: var(--panel); border-inline-start: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.guide-scroll { display: contents; }
 @media (max-width: 860px) { .guide { border-inline-start: 0; border-top: 1px solid var(--line); } }
+@media (max-width: 860px) {
+  .app { grid-template-rows: minmax(140px, 30%) minmax(0, 1fr); }
+  .guide-scroll { display: block; flex: 1; min-height: 0; overflow-y: auto; }
+  .guide .guide-body { overflow: visible; }
+}
+@media (max-width: 480px) { .scene-top .chip { display: none; } .scene-top { justify-content: flex-end; } }
 .guide-head { padding-block: 18px 10px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 10px; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -81,9 +95,10 @@ a.btn-3d { display: inline-flex; align-items: center; text-decoration: none; bac
 .scene-top .chip { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; }
 
 .progress { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
-.progress button { height: 8px; border-radius: 4px; border: 0; background: var(--line); cursor: pointer; padding: 0; }
-.progress button.done { background: rgba(214, 173, 94, .5); }
-.progress button.now { background: var(--gold); }
+.progress button { height: 44px; border: 0; background: transparent; cursor: pointer; padding: 18px 0; }
+.progress button::before { content: ''; display: block; height: 8px; border-radius: 4px; background: var(--line); }
+.progress button.done::before { background: rgba(214, 173, 94, .5); }
+.progress button.now::before { background: var(--gold); }
 
 .eyebrow { font-size: var(--t-small); color: var(--muted); letter-spacing: .04em; }
 .eyebrow b { color: var(--gold); font-weight: 700; }
@@ -106,7 +121,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
 .dua .ar { font-family: var(--arabic); font-size: var(--t-arabic); line-height: 1.9; direction: rtl; text-align: right; color: var(--fg); }
 .dua .tr { font-style: italic; color: var(--gold); line-height: 1.45; }
 .dua .mean { color: var(--fg); line-height: 1.45; }
-.dua .src { font-size: var(--t-small); color: var(--muted); }
+.dua .src { font-size: var(--t-small); color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
 
 .counter { background: var(--raise); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 10px 14px; align-items: center; transition: box-shadow .4s, border-color .4s; }
 .counter.pulse { border-color: var(--green); box-shadow: 0 0 0 3px rgba(95, 211, 138, .25); }
@@ -162,10 +177,11 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
       </div>
     </div>
     <div class="drag-hint" id="dragHint"></div>
-    <div class="loading" id="loading">Loading the scene…</div>
+    <div class="loading" id="loading" role="status"><span id="loadingText">Loading the scene…</span><button id="retryPano" hidden>Retry scene</button></div>
   </section>
 
   <section class="guide" aria-label="Guide">
+    <div class="guide-scroll" id="guideScroll">
     <div class="guide-head">
       <div class="toolbar">
         <div class="seg" role="group" aria-label="Language">
@@ -180,6 +196,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
           <button id="time-day" data-time="day"></button>
           <button id="time-night" data-time="night"></button>
         </div>
+        <label class="quality-label"><span id="qualityLabel">Quality</span><select id="quality"><option value="auto">Auto</option><option value="low">Low data</option><option value="high">High</option></select></label>
       </div>
       <div class="progress" id="progress"></div>
       <div class="eyebrow" id="eyebrow"></div>
@@ -189,6 +206,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
     <div class="guide-body" id="body">
       <div class="step-meta"><div class="step-dots" id="stepDots"></div><span id="stepCount"></span></div>
       <p class="step-text" id="stepText" aria-live="polite"></p>
+      <div id="audioStatus" role="status" hidden><p id="audioError"></p><button class="btn-listen" id="retryAudio"></button></div>
       <div class="dua" id="dua" hidden>
         <div class="dua-top">
           <button class="btn-listen" id="btnListen" hidden><svg viewBox="0 0 24 24" aria-hidden="true" id="icoListen"><path d="M7 4v16l13-8z"/></svg><span id="lListen"></span></button>
@@ -205,6 +223,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
         <div class="note" id="cNote"></div>
       </div>
       <p class="disclaimer" id="disclaimer"></p>
+    </div>
     </div>
 
     <div class="controls">
@@ -223,777 +242,12 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
   </div>
 </div>
 
+<script src="lib/runtime.js"></script>
+<script src="lib/content.js"></script>
+<script src="lib/assets.js"></script>
+<script src="lib/illus.js"></script>
 <script>
-/* Umrah guided tour — script (English + Arabic).
-   Each station = one 360° scene; each step = where the camera looks + what is said.
-   DUAS[k].ar is the Arabic text of the dua itself; DUAS[k].en is its English meaning.
-   PROTOTYPE CONTENT — to be reviewed by a qualified scholar before any public release. */
-
-const DUAS = {
- "niyyah": {
-  "ar": "لَبَّيْكَ اللَّهُمَّ عُمْرَةً",
-  "tr": "Labbayka Allāhumma ʿumrah",
-  "en": "Here I am, O Allah, for Umrah."
- },
- "ishtirat": {
-  "ar": "اللَّهُمَّ مَحِلِّي حَيْثُ حَبَسْتَنِي",
-  "tr": "Allāhumma maḥillī ḥaythu ḥabastanī",
-  "en": "O Allah, I will leave ihram wherever You hold me back.",
-  "src": {
-   "en": "Hadith, Bukhari & Muslim",
-   "ar": "حديث، رواه البخاري ومسلم"
-  }
- },
- "talbiyah": {
-  "ar": "لَبَّيْكَ اللَّهُمَّ لَبَّيْكَ، لَبَّيْكَ لَا شَرِيكَ لَكَ لَبَّيْكَ، إِنَّ الْحَمْدَ وَالنِّعْمَةَ لَكَ وَالْمُلْكَ، لَا شَرِيكَ لَكَ",
-  "tr": "Labbayka Allāhumma labbayk, labbayka lā sharīka laka labbayk, inna l-ḥamda wa n-niʿmata laka wa l-mulk, lā sharīka lak",
-  "en": "Here I am, O Allah, here I am. Here I am, You have no partner, here I am. All praise, all blessings and all sovereignty belong to You. You have no partner.",
-  "src": {
-   "en": "Hadith, Bukhari & Muslim",
-   "ar": "حديث، رواه البخاري ومسلم"
-  }
- },
- "enter": {
-  "ar": "بِسْمِ اللَّهِ، وَالصَّلَاةُ وَالسَّلَامُ عَلَى رَسُولِ اللَّهِ، اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ",
-  "tr": "Bismillāh, waṣ-ṣalātu was-salāmu ʿalā rasūlillāh, Allāhumma ftaḥ lī abwāba raḥmatik",
-  "en": "In the name of Allah, and peace and blessings be upon the Messenger of Allah. O Allah, open for me the gates of Your mercy.",
-  "src": {
-   "en": "Hadith, Muslim & Ibn Majah",
-   "ar": "حديث، رواه مسلم وابن ماجه"
-  }
- },
- "bismillah": {
-  "ar": "بِسْمِ اللَّهِ وَاللَّهُ أَكْبَرُ",
-  "tr": "Bismillāh, wallāhu akbar",
-  "en": "In the name of Allah, and Allah is the Greatest.",
-  "src": {"en": "Ibn Umar at the Black Stone, Ahmad & al-Bayhaqi", "ar": "أثر ابن عمر عند استلام الحجر، رواه أحمد والبيهقي"}
- },
- "rabbana": {
-  "ar": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
-  "tr": "Rabbanā ātinā fid-dunyā ḥasanatan wa fil-ākhirati ḥasanatan wa qinā ʿadhāban-nār",
-  "en": "Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire.",
-  "src": {
-   "en": "Quran 2:201",
-   "ar": "سورة البقرة، الآية ٢٠١"
-  }
- },
- "maqam": {
-  "ar": "وَاتَّخِذُوا مِن مَّقَامِ إِبْرَاهِيمَ مُصَلًّى",
-  "tr": "Wattakhidhū min maqāmi Ibrāhīma muṣallā",
-  "en": "And take the station of Ibrahim as a place of prayer.",
-  "src": {
-   "en": "Quran 2:125",
-   "ar": "سورة البقرة، الآية ١٢٥"
-  }
- },
- "safa_verse": {
-  "ar": "إِنَّ الصَّفَا وَالْمَرْوَةَ مِن شَعَائِرِ اللَّهِ — أَبْدَأُ بِمَا بَدَأَ اللَّهُ بِهِ",
-  "tr": "Innaṣ-Ṣafā wal-Marwata min shaʿāʾirillāh — abdaʾu bimā badaʾa Allāhu bih",
-  "en": "Indeed, Safa and Marwah are among the symbols of Allah. I begin with what Allah began with.",
-  "src": {
-   "en": "Quran 2:158, then hadith of Jabir (Muslim)",
-   "ar": "سورة البقرة، الآية ١٥٨، ثم حديث جابر (مسلم)"
-  }
- },
- "safa_dhikr": {
-  "ar": "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ، أَنْجَزَ وَعْدَهُ، وَنَصَرَ عَبْدَهُ، وَهَزَمَ الْأَحْزَابَ وَحْدَهُ",
-  "tr": "Lā ilāha illā Allāhu waḥdahu lā sharīka lah, lahul-mulku wa lahul-ḥamd, wa huwa ʿalā kulli shayʾin qadīr. Lā ilāha illā Allāhu waḥdah, anjaza waʿdah, wa naṣara ʿabdah, wa hazamal-aḥzāba waḥdah",
-  "en": "There is no god but Allah alone, without partner. His is the dominion and the praise, and He has power over all things. There is no god but Allah alone. He fulfilled His promise, gave victory to His servant, and alone defeated the confederates.",
-  "src": {
-   "en": "Hadith of Jabir, Muslim",
-   "ar": "حديث جابر، رواه مسلم"
-  }
- }
-};
-
-const LABELS = {
- "kaaba": {
-  "en": "Kaaba",
-  "ar": "الكعبة"
- },
- "black_stone": {
-  "en": "Black Stone",
-  "ar": "الحجر الأسود"
- },
- "yemeni": {
-  "en": "Yemeni Corner",
-  "ar": "الركن اليماني"
- },
- "door": {
-  "en": "Door of the Kaaba",
-  "ar": "باب الكعبة"
- },
- "hijr": {
-  "en": "Hijr Ismail",
-  "ar": "حِجر إسماعيل"
- },
- "mizab": {
-  "en": "Golden waterspout",
-  "ar": "الميزاب"
- },
- "maqam": {
-  "en": "Maqam Ibrahim",
-  "ar": "مقام إبراهيم"
- },
- "start_light": {
-  "en": "Green start light",
-  "ar": "ضوء البداية الأخضر"
- },
- "clock": {
-  "en": "Clock tower",
-  "ar": "برج الساعة"
- },
- "zamzam": {
-  "en": "Zamzam water",
-  "ar": "ماء زمزم"
- },
- "gate": {
-  "en": "Gates",
-  "ar": "الأبواب"
- },
- "safa_rock": {
-  "en": "Hill of Safa",
-  "ar": "جبل الصفا"
- },
- "marwa_rock": {
-  "en": "Hill of Marwah",
-  "ar": "جبل المروة"
- },
- "to_marwa": {
-  "en": "Towards Marwah",
-  "ar": "نحو المروة"
- },
- "to_safa": {
-  "en": "Towards Safa",
-  "ar": "نحو الصفا"
- },
- "green_lights": {
-  "en": "Green lights",
-  "ar": "الأضواء الخضراء"
- },
- "green_end": {
-  "en": "End of green lights",
-  "ar": "نهاية الأضواء الخضراء"
- }
-};
-
-const STATIONS = [
- {
-  "id": "ihram",
-  "pano": "entry",
-  "card": true,
-  "labels": [],
-  "title": {
-   "en": "Entering ihram at the Miqat",
-   "ar": "الإحرام من الميقات"
-  },
-  "place": {
-   "en": "Before you arrive",
-   "ar": "قبل الوصول"
-  },
-  "steps": [
-   {
-    "look": "kaaba",
-    "fov": 95,
-    "illus": "prep",
-    "en": "Before you reach the Miqat, the boundary where ihram begins, take a full bath and trim your nails. Men may perfume their body, but not their clothes.",
-    "ar": "قبل أن تصل إلى الميقات، وهو الحدّ الذي يبدأ منه الإحرام، اغتسل وقلّم أظافرك. ويجوز للرجل أن يتطيّب في بدنه دون ثيابه."
-   },
-   {
-    "look": "kaaba",
-    "fov": 95,
-    "illus": "clothes",
-    "en": "Men wear two white unstitched cloths and sandals. Women wear their usual modest clothes, with the face and hands uncovered.",
-    "ar": "يلبس الرجل إزارًا ورداءً أبيضين غير مخيطين، ونعلين. وتلبس المرأة ثيابها المحتشمة المعتادة، مع كشف الوجه والكفّين."
-   },
-   {
-    "look": "kaaba",
-    "fov": 95,
-    "dua": "niyyah",
-    "illus": "niyyah",
-    "en": "At the Miqat, make your intention for Umrah. If you are flying, the crew announces the Miqat, so be ready before take-off.",
-    "ar": "عند الميقات، انوِ العمرة. وإن كنت مسافرًا بالطائرة، فإن الطاقم يعلن عن الميقات، فكن مستعدًّا قبل الإقلاع."
-   },
-   {
-    "look": "kaaba",
-    "fov": 95,
-    "dua": "ishtirat",
-    "illus": "ishtirat",
-    "en": "If you fear that illness may stop you, you may add this condition. It is a mercy for older and sick pilgrims.",
-    "ar": "إن خشيت أن يمنعك مرض من إتمام العمرة، فلك أن تشترط هذا الشرط. وهو تيسير لكبار السن والمرضى."
-   },
-   {
-    "look": "kaaba",
-    "fov": 95,
-    "dua": "talbiyah",
-    "illus": "talbiyah",
-    "en": "Now repeat the Talbiyah often until you reach the Kaaba. Men say it aloud, women softly.",
-    "ar": "ثم أكثِر من التلبية حتى تصل إلى الكعبة. يرفع بها الرجال أصواتهم، وتخفضها النساء."
-   },
-   {
-    "look": "kaaba",
-    "fov": 95,
-    "illus": "avoid",
-    "en": "While in ihram, avoid perfume, cutting hair or nails, and marital relations. Men do not cover their head.",
-    "ar": "وفي الإحرام اجتنب الطيب، وأخذ شيء من الشعر أو الأظافر، والجماع. ولا يغطّي الرجل رأسه."
-   }
-  ]
- },
- {
-  "id": "enter",
-  "pano": "entry",
-  "labels": [
-   "kaaba",
-   "zamzam",
-   "gate"
-  ],
-  "title": {
-   "en": "Entering the Haram",
-   "ar": "دخول المسجد الحرام"
-  },
-  "place": {
-   "en": "Masjid al-Haram",
-   "ar": "المسجد الحرام"
-  },
-  "steps": [
-   {
-    "look": "gate",
-    "fov": 85,
-    "en": "Every gate of the Haram has a number and a name. Note them down or take a photo before you enter. This is your meeting point if you are separated from your group.",
-    "ar": "لكل باب من أبواب الحرم رقم واسم. دوّنهما أو التقط لهما صورة قبل الدخول، فهذا مكان لقائك إن افترقت عن مجموعتك."
-   },
-   {
-    "look": "kaaba",
-    "fov": 85,
-    "dua": "enter",
-    "en": "Enter with your right foot first and say the supplication for entering the mosque.",
-    "ar": "ادخل برجلك اليمنى، وقل دعاء دخول المسجد."
-   },
-   {
-    "look": "kaaba",
-    "fov": 45,
-    "en": "This is the Kaaba. Take your time. Make any supplication you wish, in your own language.",
-    "ar": "هذه هي الكعبة المشرّفة. تمهّل، وادعُ بما شئت، وبلغتك أنت."
-   },
-   {
-    "look": "zamzam",
-    "fov": 75,
-    "en": "Zamzam water is available in coolers all around the mosque. Drink and rest whenever you need. Umrah has no time limit.",
-    "ar": "ماء زمزم متوفّر في برّادات حول المسجد كله. اشرب واسترح متى احتجت، فليس للعمرة وقت محدّد."
-   },
-   {
-    "look": "kaaba",
-    "fov": 70,
-    "en": "Make sure you have wudu before Tawaf. Stop saying the Talbiyah when you begin.",
-    "ar": "تأكّد أنك على وضوء قبل الطواف، واقطع التلبية عند بدء الطواف."
-   }
-  ]
- },
- {
-  "id": "start",
-  "pano": "start",
-  "counter": "tawaf",
-  "labels": [
-   "black_stone",
-   "door",
-   "start_light",
-   "maqam"
-  ],
-  "title": {
-   "en": "Starting Tawaf at the Black Stone",
-   "ar": "بدء الطواف عند الحجر الأسود"
-  },
-  "place": {
-   "en": "Tawaf · the Mataf",
-   "ar": "الطواف – صحن المطاف"
-  },
-  "steps": [
-   {
-    "look": "black_stone",
-    "dpitch": 6,
-    "fov": 55,
-    "en": "Walk to the corner of the Kaaba with the Black Stone, set in a silver frame. Tawaf starts and ends here.",
-    "ar": "توجّه إلى ركن الكعبة الذي فيه الحجر الأسود، في إطاره الفضّي. من هنا يبدأ الطواف وإليه ينتهي."
-   },
-   {
-    "look": "start_light",
-    "fov": 70,
-    "en": "Behind you, a green light on the mosque wall marks the starting line. Use it to see where each circuit begins.",
-    "ar": "خلفك ضوء أخضر على جدار المسجد يحدّد خطّ البداية. استعن به لتعرف أين يبدأ كل شوط."
-   },
-   {
-    "look": "black_stone",
-    "dpitch": 6,
-    "fov": 55,
-    "dua": "bismillah",
-    "en": "Men uncover the right shoulder for this Tawaf. Face the Black Stone, raise your right hand towards it, and say these words. Do not push to kiss or touch it. Pointing is enough.",
-    "ar": "يكشف الرجل كتفه الأيمن في هذا الطواف. استقبل الحجر الأسود، وأشر إليه بيدك اليمنى، وقل هذه الكلمات. ولا تزاحم لتقبيله أو لمسه، فالإشارة تكفي."
-   },
-   {
-    "look": "kaaba",
-    "dyaw": 25,
-    "fov": 85,
-    "en": "Now walk counter-clockwise, keeping the Kaaba on your left. Men walk briskly in the first three circuits if they are able.",
-    "ar": "والآن طُف عكس اتجاه عقارب الساعة، والكعبة عن يسارك. ويُسرع الرجال في الأشواط الثلاثة الأولى إن استطاعوا."
-   },
-   {
-    "look": "door",
-    "fov": 60,
-    "en": "You will pass the door of the Kaaba, behind a gold-embroidered curtain. There is no fixed supplication for each circuit. Make dua, remember Allah, or recite Quran, in any language.",
-    "ar": "ستمرّ بباب الكعبة خلف ستارة مطرّزة بالذهب. ليس لكل شوط دعاء مخصوص، فادعُ واذكر الله أو اقرأ القرآن، بأي لغة."
-   },
-   {
-    "look": "black_stone",
-    "dpitch": 6,
-    "fov": 70,
-    "highlight": "counter",
-    "en": "Each time you come back to the Black Stone line, one circuit is complete. Tap the counter so you never lose count.",
-    "ar": "كلما عدت إلى خط الحجر الأسود اكتمل شوط. اضغط على العدّاد حتى لا يفوتك العدد."
-   }
-  ]
- },
- {
-  "id": "hijr",
-  "pano": "hijr",
-  "counter": "tawaf",
-  "labels": [
-   "hijr",
-   "mizab",
-   "kaaba"
-  ],
-  "title": {
-   "en": "Around the Hijr Ismail",
-   "ar": "حول حِجر إسماعيل"
-  },
-  "place": {
-   "en": "Tawaf · north-west side",
-   "ar": "الطواف – الجهة الشمالية الغربية"
-  },
-  "steps": [
-   {
-    "look": "hijr",
-    "dpitch": 4,
-    "fov": 70,
-    "en": "This low, curved wall is the Hijr Ismail. The area inside is part of the Kaaba, so walk around the outside of the wall.",
-    "ar": "هذا الجدار المنخفض المقوّس هو حِجر إسماعيل. وما بداخله من الكعبة، فطُف من خارج الجدار."
-   },
-   {
-    "look": "mizab",
-    "fov": 50,
-    "en": "Above it, the golden waterspout carries rainwater from the roof of the Kaaba.",
-    "ar": "وفوقه الميزاب الذهبي الذي ينزل منه ماء المطر من سطح الكعبة."
-   },
-   {
-    "look": "kaaba",
-    "dyaw": -60,
-    "fov": 90,
-    "en": "If you are tired, move towards the outer part of the courtyard or to an upper floor. The circuits are longer, but the crowd is lighter.",
-    "ar": "إن شعرت بالتعب، فابتعد نحو أطراف الصحن أو اصعد إلى أحد الطوابق. الأشواط أطول، لكن الزحام أخفّ."
-   },
-   {
-    "look": "kaaba",
-    "fov": 80,
-    "en": "If you lose your group, do not stop or walk against the crowd. Finish your circuit and go to your meeting gate.",
-    "ar": "إن فقدت مجموعتك، فلا تتوقّف ولا تمشِ عكس الزحام. أكمل شوطك ثم اذهب إلى باب اللقاء."
-   }
-  ]
- },
- {
-  "id": "yemeni",
-  "pano": "yemeni",
-  "counter": "tawaf",
-  "labels": [
-   "yemeni",
-   "black_stone",
-   "clock"
-  ],
-  "title": {
-   "en": "The Yemeni Corner",
-   "ar": "الركن اليماني"
-  },
-  "place": {
-   "en": "Tawaf · south side",
-   "ar": "الطواف – الجهة الجنوبية"
-  },
-  "steps": [
-   {
-    "look": "yemeni",
-    "dpitch": 6,
-    "fov": 55,
-    "en": "This is the Yemeni Corner, the last corner before the Black Stone. Touch it with your right hand only if it is easy. If you cannot, simply walk on, without pointing.",
-    "ar": "هذا هو الركن اليماني، آخر ركن قبل الحجر الأسود. المسه بيدك اليمنى إن تيسّر، وإلا فامضِ دون إشارة."
-   },
-   {
-    "look": "black_stone",
-    "dyaw": -8,
-    "dpitch": 8,
-    "fov": 65,
-    "dua": "rabbana",
-    "en": "Between the Yemeni Corner and the Black Stone, say this verse.",
-    "ar": "وبين الركن اليماني والحجر الأسود قل هذه الآية."
-   },
-   {
-    "look": "clock",
-    "dpitch": -25,
-    "fov": 95,
-    "en": "The tall clock tower stands behind this side of the mosque. It helps you find your direction from almost anywhere.",
-    "ar": "برج الساعة الشاهق يقع خلف هذه الجهة من المسجد، ويساعدك على معرفة الاتجاه من أي مكان تقريبًا."
-   },
-   {
-    "look": "black_stone",
-    "dpitch": 6,
-    "fov": 70,
-    "highlight": "counter",
-    "en": "Continue until you complete seven circuits, ending at the Black Stone. Then men cover their right shoulder again.",
-    "ar": "أكمل سبعة أشواط تنتهي عند الحجر الأسود، ثم يغطّي الرجال كتفهم الأيمن."
-   }
-  ]
- },
- {
-  "id": "maqam",
-  "pano": "maqam",
-  "labels": [
-   "maqam",
-   "kaaba",
-   "zamzam"
-  ],
-  "title": {
-   "en": "Prayer at Maqam Ibrahim",
-   "ar": "الصلاة عند مقام إبراهيم"
-  },
-  "place": {
-   "en": "After Tawaf",
-   "ar": "بعد الطواف"
-  },
-  "steps": [
-   {
-    "look": "maqam",
-    "fov": 55,
-    "dua": "maqam",
-    "en": "This golden structure is the Maqam Ibrahim, the station of the Prophet Ibrahim. Go behind it and recite this verse.",
-    "ar": "هذا البناء الذهبي هو مقام إبراهيم عليه السلام. قف خلفه واقرأ هذه الآية."
-   },
-   {
-    "look": "kaaba",
-    "fov": 70,
-    "en": "Pray two short rak’ahs. It is recommended to recite Al-Kafirun in the first and Al-Ikhlas in the second. If it is crowded, pray anywhere in the mosque.",
-    "ar": "صلِّ ركعتين خفيفتين، ويُستحب أن تقرأ في الأولى سورة الكافرون وفي الثانية سورة الإخلاص. وإن كان المكان مزدحمًا فصلِّ في أي مكان من المسجد."
-   },
-   {
-    "look": "zamzam",
-    "fov": 80,
-    "en": "Then drink Zamzam water and ask Allah for whatever you wish.",
-    "ar": "ثم اشرب من ماء زمزم، وادعُ الله بما تشاء."
-   },
-   {
-    "look": "kaaba",
-    "dyaw": -40,
-    "fov": 90,
-    "en": "Next comes the Sa’i. Follow the signs to the Mas’a and the hill of Safa.",
-    "ar": "بعد ذلك يأتي السعي. اتبع اللوحات المؤدية إلى المسعى وجبل الصفا."
-   }
-  ]
- },
- {
-  "id": "safa",
-  "pano": "safa",
-  "counter": "sai",
-  "labels": [
-   "safa_rock",
-   "to_marwa"
-  ],
-  "title": {
-   "en": "Beginning Sa’i at Safa",
-   "ar": "بدء السعي من الصفا"
-  },
-  "place": {
-   "en": "Sa’i · the Mas’a",
-   "ar": "السعي – المسعى"
-  },
-  "steps": [
-   {
-    "look": "safa_rock",
-    "fov": 70,
-    "dua": "safa_verse",
-    "en": "This rock is the hill of Safa, where Sa’i begins. As you approach it the first time, recite this.",
-    "ar": "هذه الصخرة هي جبل الصفا، ومنه يبدأ السعي. وعند اقترابك منه أول مرة اقرأ هذا."
-   },
-   {
-    "look": "safa_rock",
-    "dpitch": 10,
-    "fov": 80,
-    "dua": "safa_dhikr",
-    "en": "Face the direction of the Kaaba and raise your hands as in supplication. Say Allahu Akbar three times, then these words. Repeat three times, with your own dua in between.",
-    "ar": "استقبل جهة الكعبة، وارفع يديك كهيئة الدعاء. كبّر ثلاثًا، ثم قل هذا الذكر. كرّره ثلاث مرات، وادعُ بما شئت بينها."
-   },
-   {
-    "look": "to_marwa",
-    "fov": 80,
-    "en": "Now walk towards Marwah. Keep to the lane going in your direction and follow the signs above you.",
-    "ar": "والآن امشِ نحو المروة. الزم المسار الخاص باتجاهك واتبع اللوحات فوقك."
-   },
-   {
-    "look": "to_marwa",
-    "dyaw": -30,
-    "dpitch": -8,
-    "fov": 85,
-    "en": "Sa’i does not require wudu, and you may stop to rest. If walking is difficult, you may use a wheelchair.",
-    "ar": "لا يُشترط الوضوء للسعي، ويجوز لك أن تستريح. وإن صعب عليك المشي فلك أن تستعمل كرسيًّا متحرّكًا."
-   }
-  ]
- },
- {
-  "id": "green",
-  "pano": "green",
-  "counter": "sai",
-  "labels": [
-   "green_lights",
-   "to_marwa"
-  ],
-  "title": {
-   "en": "Between the green lights",
-   "ar": "بين العلمين الأخضرين"
-  },
-  "place": {
-   "en": "Sa’i · middle section",
-   "ar": "السعي – المنتصف"
-  },
-  "steps": [
-   {
-    "look": "green_lights",
-    "fov": 80,
-    "en": "These green lights mark the stretch where Hajar ran in search of water for her son Ismail.",
-    "ar": "هذه الأضواء الخضراء تحدّد المسافة التي سعت فيها هاجر بحثًا عن الماء لابنها إسماعيل."
-   },
-   {
-    "look": "to_marwa",
-    "dpitch": -6,
-    "fov": 85,
-    "en": "Men walk quickly between the green lights if they are able. Women walk at their normal pace.",
-    "ar": "يُسرع الرجال بين الضوءين الأخضرين إن استطاعوا، وتمشي النساء مشيًا عاديًّا."
-   },
-   {
-    "look": "to_marwa",
-    "dyaw": 40,
-    "fov": 85,
-    "en": "There is no fixed supplication here. Ask Allah for whatever you need, in your own words.",
-    "ar": "ليس هنا دعاء مخصوص، فاسأل الله ما تحتاج بكلماتك أنت."
-   }
-  ]
- },
- {
-  "id": "marwa",
-  "pano": "marwa",
-  "counter": "sai",
-  "labels": [
-   "marwa_rock",
-   "to_safa"
-  ],
-  "title": {
-   "en": "Arriving at Marwah",
-   "ar": "الوصول إلى المروة"
-  },
-  "place": {
-   "en": "Sa’i · the Mas’a",
-   "ar": "السعي – المسعى"
-  },
-  "steps": [
-   {
-    "look": "marwa_rock",
-    "fov": 70,
-    "dua": "safa_dhikr",
-    "en": "This is Marwah. Reaching it completes one length. Face the Kaaba and repeat the same remembrance as at Safa, without the verse.",
-    "ar": "هذه هي المروة. ببلوغها يكتمل شوط واحد. استقبل الكعبة وكرّر الذكر نفسه الذي قلته على الصفا، دون الآية."
-   },
-   {
-    "look": "to_safa",
-    "fov": 80,
-    "en": "Returning to Safa is length two. Seven lengths in total, Safa to Marwah and back, ending here at Marwah.",
-    "ar": "والعودة إلى الصفا شوط ثانٍ. والمجموع سبعة أشواط بين الصفا والمروة، تنتهي هنا عند المروة."
-   },
-   {
-    "look": "marwa_rock",
-    "dyaw": 30,
-    "fov": 85,
-    "highlight": "counter",
-    "en": "Use the counter. Tap once each time you reach a hill.",
-    "ar": "استعمل العدّاد، واضغط مرة واحدة كلما بلغت أحد الجبلين."
-   }
-  ]
- },
- {
-  "id": "done",
-  "pano": "marwa",
-  "card": true,
-  "labels": [],
-  "title": {
-   "en": "Shaving or shortening the hair",
-   "ar": "الحلق أو التقصير"
-  },
-  "place": {
-   "en": "End of Umrah",
-   "ar": "نهاية العمرة"
-  },
-  "steps": [
-   {
-    "look": "marwa_rock",
-    "fov": 90,
-    "illus": "halq",
-    "en": "Men shave the whole head, which is best, or shorten the hair evenly. Women cut about a fingertip’s length from the end of their hair.",
-    "ar": "يحلق الرجل رأسه كله، وهو الأفضل، أو يقصّر شعره من جميع رأسه. وتقصّ المرأة من أطراف شعرها قدر أنملة."
-   },
-   {
-    "look": "marwa_rock",
-    "fov": 90,
-    "illus": "complete",
-    "en": "Your Umrah is complete, and the restrictions of ihram are lifted. May Allah accept it from you.",
-    "ar": "وبهذا تمّت عمرتك، وحلّ لك ما كان محظورًا في الإحرام. تقبّل الله منك."
-   }
-  ]
- }
-];
-
-/* Step illustrations for the stations that have no place to look at (before arrival, end of Umrah).
-   Flat, faceless figures on the dark scene; one SVG per step, labels in EN / AR. */
-const ILLUS_TEXT = {
-  en: {
-    bath: ['Full bath'], nails: ['Trim nails'], perfume: ['Perfume', 'on the body only'],
-    men: 'Men', women: 'Women', miqat: 'Miqat',
-    avoid_perfume: ['Perfume'], avoid_hair: ['Cutting hair', 'or nails'], avoid_marital: ['Marital', 'relations'], avoid_head: ['Covering', 'the head (men)'],
-    shave: ['Men', 'Shave (best)'], shorten: ['Men', 'Shorten evenly'], women_cut: ['Women', 'A fingertip’s length'],
-    accept: 'May Allah accept it from you', aloud: 'aloud', softly: 'softly',
-  },
-  ar: {
-    bath: ['الاغتسال'], nails: ['تقليم الأظافر'], perfume: ['الطيب', 'في البدن فقط'],
-    men: 'الرجال', women: 'النساء', miqat: 'الميقات',
-    avoid_perfume: ['الطيب'], avoid_hair: ['قص الشعر', 'أو الأظافر'], avoid_marital: ['الجماع'], avoid_head: ['تغطية الرأس', '(للرجال)'],
-    shave: ['الرجال', 'الحلق (أفضل)'], shorten: ['الرجال', 'التقصير'], women_cut: ['النساء', 'قدر أنملة'],
-    accept: 'تقبّل الله منك', aloud: 'جهرًا', softly: 'سرًّا',
-  },
-};
-
-const ILLUS = (() => {
-  const C = { ivory: '#f2eee6', ivory2: '#dcd6ca', gold: '#d6ad5e', muted: '#8d8576', skin: '#b88a68', raise: 'rgba(32,39,44,.92)',
-              line: 'rgba(255,255,255,.16)', blue: '#8cc4e8', red: '#e8826a', green: '#5fd38a', sand: '#c9b79c', dark: '#0b0b0c' };
-  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-  let AR = false;
-  const font = () => AR ? `font-family="Noto Naskh Arabic, Geeza Pro, serif" direction="rtl"` : `font-family="Atkinson Hyperlegible, system-ui, sans-serif"`;
-  const text = (x, y, s, size = 18, fill = C.ivory, weight = 700) =>
-    `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" font-weight="${weight}" fill="${fill}" ${font()}>${esc(s)}</text>`;
-  const arabic = (x, y, s, size = 22, fill = C.gold) =>
-    `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" fill="${fill}" font-family="Amiri, Noto Naskh Arabic, serif" direction="rtl">${esc(s)}</text>`;
-  const svg = (inner) => `<svg viewBox="0 0 480 320" role="img" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
-  const shadow = (x, y, w = 34) => `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="6" fill="rgba(0,0,0,.35)"/>`;
-
-  /* ---- icons, centred on (0,0), roughly 90 units tall */
-  const I = {
-    shower: () => `<path d="M-34,-44 H2 V-30" fill="none" stroke="${C.muted}" stroke-width="6" stroke-linecap="round"/>
-      <path d="M-18,-30 H22 L15,-18 H-11 Z" fill="${C.ivory2}"/>
-      ${[[-10, -4], [2, 2], [14, -6], [-4, 18], [8, 24], [20, 12], [-14, 32], [2, 40]].map(([x, y]) => `<path d="M${x},${y - 7} q4,6 0,9 q-4,-3 0,-9z" fill="${C.blue}"/>`).join('')}`,
-    clipper: () => `<g transform="rotate(-18)"><rect x="-38" y="-2" width="70" height="12" rx="6" fill="${C.ivory2}"/>
-      <rect x="-38" y="-14" width="70" height="10" rx="5" fill="${C.ivory}"/>
-      <path d="M-30,-18 Q4,-44 34,-22" fill="none" stroke="${C.gold}" stroke-width="6" stroke-linecap="round"/>
-      <circle cx="-30" cy="-16" r="4" fill="${C.gold}"/><rect x="26" y="-10" width="10" height="16" rx="2" fill="${C.muted}"/></g>`,
-    bottle: () => `<rect x="-24" y="-12" width="48" height="52" rx="12" fill="${C.gold}" opacity=".9"/>
-      <rect x="-14" y="-6" width="10" height="34" rx="5" fill="#fff" opacity=".25"/>
-      <rect x="-8" y="-26" width="16" height="14" fill="${C.ivory2}"/><rect x="-12" y="-38" width="24" height="12" rx="3" fill="${C.ivory}"/>
-      <path d="M22,-34 l4,-4 M28,-28 l6,-1 M24,-44 l1,-6" stroke="${C.ivory}" stroke-width="3" stroke-linecap="round"/>`,
-    scissors: () => `<circle cx="-14" cy="26" r="10" fill="none" stroke="${C.gold}" stroke-width="6"/><circle cx="14" cy="26" r="10" fill="none" stroke="${C.gold}" stroke-width="6"/>
-      <path d="M-8,16 L16,-40 M8,16 L-16,-40" stroke="${C.ivory}" stroke-width="7" stroke-linecap="round"/><circle cx="0" cy="-3" r="3.5" fill="${C.muted}"/>`,
-    rings: () => `<circle cx="-12" cy="6" r="20" fill="none" stroke="${C.gold}" stroke-width="6"/><circle cx="12" cy="6" r="20" fill="none" stroke="${C.gold}" stroke-width="6"/>
-      <path d="M-12,-24 l6,8 h-12 z" fill="${C.ivory}"/>`,
-    cap: () => `<path d="M-36,14 A36,34 0 0 1 36,14 Z" fill="${C.ivory2}"/><rect x="-40" y="12" width="80" height="10" rx="5" fill="${C.ivory}"/>
-      <path d="M-20,-8 Q0,-18 20,-8 M-28,4 Q0,-6 28,4" fill="none" stroke="${C.muted}" stroke-width="2"/>`,
-    razor: () => `<rect x="-30" y="-36" width="60" height="16" rx="4" fill="${C.ivory}"/><rect x="-26" y="-22" width="52" height="4" fill="${C.muted}"/>
-      <rect x="-6" y="-18" width="12" height="58" rx="6" fill="${C.gold}"/>${[0, 10, 20, 30].map((y) => `<rect x="-6" y="${y - 4}" width="12" height="3" fill="rgba(0,0,0,.25)"/>`).join('')}`,
-    strand: () => `<path d="M-8,-44 C-22,-20 10,-6 -6,14 C-16,26 -2,34 -6,40" fill="none" stroke="#3b2a20" stroke-width="12" stroke-linecap="round"/>
-      <path d="M-8,-44 C-22,-20 10,-6 -6,14 C-16,26 -2,34 -6,40" fill="none" stroke="#6b4a36" stroke-width="5" stroke-linecap="round"/>
-      <path d="M-30,30 H26" stroke="${C.gold}" stroke-width="3" stroke-dasharray="6 5"/><path d="M18,30 v12 M18,42 h-6 M18,30 h-6" stroke="${C.ivory}" stroke-width="3" fill="none"/>`,
-  };
-  const cross = () => `<circle r="42" fill="none" stroke="${C.red}" stroke-width="6"/><path d="M-30,30 L30,-30" stroke="${C.red}" stroke-width="6" stroke-linecap="round"/>`;
-
-  /* tile: rounded card with an icon and one or two label lines */
-  function tile(x, y, w, h, icon, label, { crossed = false, scale = 1 } = {}) {
-    const lines = Array.isArray(label) ? label : [label];
-    const short = h < 200;
-    const iy = h * (short ? 0.34 : 0.4);
-    const ly = h - 18 - (lines.length - 1) * 22;
-    return `<g transform="translate(${x},${y})"><rect width="${w}" height="${h}" rx="18" fill="${C.raise}" stroke="${C.line}"/>
-      <g transform="translate(${w / 2},${iy}) scale(${short ? scale * 0.86 : scale * 1.15})">${icon}${crossed ? cross() : ''}</g>
-      ${lines.map((l, i) => text(w / 2, ly + i * 22, l, i ? 16 : 21, i ? C.ivory2 : C.ivory, i ? 400 : 700)).join('')}</g>`;
-  }
-
-  /* faceless figures, feet at (0,0) */
-  const man = (x, y, s = 1, extra = '') => `<g transform="translate(${x},${y}) scale(${s})">${shadow(0, 0, 30)}
-    <rect x="-17" y="-16" width="11" height="14" rx="4" fill="${C.skin}"/><rect x="6" y="-16" width="11" height="14" rx="4" fill="${C.skin}"/>
-    <path d="M-20,-1 h16 M4,-1 h16" stroke="#5a3b28" stroke-width="5" stroke-linecap="round"/>
-    <path d="M-30,-80 H30 L34,-16 H-34 Z" fill="${C.ivory2}"/><path d="M-30,-60 L30,-42" stroke="${C.muted}" stroke-width="1.5" opacity=".6"/>
-    <path d="M-28,-124 Q0,-132 28,-124 L38,-72 Q0,-62 -38,-72 Z" fill="${C.ivory}"/>
-    <path d="M-12,-120 L24,-74" stroke="${C.muted}" stroke-width="1.5" opacity=".5"/>
-    <circle cx="-38" cy="-70" r="7" fill="${C.skin}"/><circle cx="38" cy="-70" r="7" fill="${C.skin}"/>
-    <rect x="-6" y="-134" width="12" height="10" fill="${C.skin}"/><circle cx="0" cy="-146" r="16" fill="${C.skin}"/>${extra}</g>`;
-  const woman = (x, y, s = 1, extra = '') => `<g transform="translate(${x},${y}) scale(${s})">${shadow(0, 0, 32)}
-    <path d="M-12,-4 h8 M4,-4 h8" stroke="#3a2a20" stroke-width="6" stroke-linecap="round"/>
-    <path d="M-22,-122 Q0,-130 22,-122 L40,-6 H-40 Z" fill="${C.sand}"/>
-    <path d="M-22,-118 L-36,-64 M22,-118 L36,-64" stroke="${C.sand}" stroke-width="16" stroke-linecap="round"/>
-    <circle cx="-37" cy="-58" r="6.5" fill="${C.skin}"/><circle cx="37" cy="-58" r="6.5" fill="${C.skin}"/>
-    <path d="M-20,-124 Q0,-110 20,-124 L16,-150 Q0,-172 -16,-150 Z" fill="#8e7f69"/>
-    <circle cx="0" cy="-146" r="18" fill="#8e7f69"/><ellipse cx="0" cy="-142" rx="10.5" ry="13" fill="${C.skin}"/>${extra}</g>`;
-  const kaaba = (x, y, s = 1, glow = false) => `<g transform="translate(${x},${y}) scale(${s})">
-    ${glow ? `<ellipse cx="18" cy="-46" rx="110" ry="80" fill="url(#glow)"/>` : ''}
-    <ellipse cx="18" cy="4" rx="76" ry="9" fill="rgba(0,0,0,.4)"/>
-    <path d="M-44,-100 L-8,-118 L82,-118 L46,-100 Z" fill="#2a2a2e"/>
-    <path d="M46,-100 L82,-118 L82,-18 L46,0 Z" fill="#17171a"/>
-    <rect x="-44" y="-100" width="90" height="100" fill="${C.dark}"/>
-    <rect x="-44" y="-80" width="90" height="9" fill="${C.gold}"/><path d="M46,-80 L82,-98 L82,-89 L46,-71 Z" fill="#a8843f"/>
-    <rect x="22" y="-46" width="16" height="34" fill="${C.gold}"/></g>`;
-  const bubble = (x, y, w, s, size = 22) => `<g transform="translate(${x},${y})"><rect x="${-w / 2}" y="-26" width="${w}" height="44" rx="22" fill="${C.raise}" stroke="rgba(214,173,94,.6)"/>
-    <path d="M-10,18 L-20,32 L4,18 Z" fill="${C.raise}"/>${arabic(0, 5, s, size)}</g>`;
-  const defs = `<defs><radialGradient id="glow"><stop offset="0" stop-color="#d6ad5e" stop-opacity=".45"/><stop offset="1" stop-color="#d6ad5e" stop-opacity="0"/></radialGradient></defs>`;
-
-  return {
-    prep: (L) => svg(tile(12, 30, 144, 260, I.shower(), L.bath) + tile(168, 30, 144, 260, I.clipper(), L.nails) + tile(324, 30, 144, 260, I.bottle(), L.perfume)),
-    clothes: (L) => svg(`<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
-      <path d="M240,40 V290" stroke="${C.line}" stroke-width="2"/>
-      ${man(126, 262, 1.18)}${woman(354, 262, 1.18)}
-      ${text(126, 298, L.men, 19, C.gold)}${text(354, 298, L.women, 19, C.gold)}`),
-    niyyah: (L) => svg(`${defs}<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
-      <path d="M24,250 H456" stroke="${C.muted}" stroke-width="2"/>
-      <path d="M40,150 Q120,128 180,118" fill="none" stroke="${C.ivory2}" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
-      <g transform="translate(205,112) rotate(-8)"><ellipse rx="40" ry="8" fill="${C.ivory}"/><path d="M-6,-2 L-22,-30 H-12 L10,-2 Z M-6,2 L-22,30 H-12 L10,2 Z" fill="${C.ivory2}"/>
-        <path d="M-36,-2 L-44,-18 H-38 L-28,-2 Z" fill="${C.ivory2}"/><circle cx="30" cy="-2" r="2" fill="${C.muted}"/></g>
-      <path d="M300,62 V250" stroke="${C.gold}" stroke-width="4" stroke-dasharray="10 8"/>
-      <rect x="248" y="34" width="104" height="30" rx="15" fill="${C.gold}"/>${text(300, 55, L.miqat, 17, '#1a1408')}
-      ${kaaba(408, 250, 0.42, true)}
-      ${bubble(150, 196, 220, 'لَبَّيْكَ اللَّهُمَّ عُمْرَةً')}`),
-    ishtirat: () => svg(`<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
-      ${man(150, 286, 1.1, `<path d="M44,-70 L54,0" stroke="#7a5a3a" stroke-width="5" stroke-linecap="round"/><path d="M38,-72 h10" stroke="#7a5a3a" stroke-width="5" stroke-linecap="round"/>`)}
-      <g transform="translate(330,170)"><path d="M0,-58 L46,-40 V2 C46,34 22,52 0,62 C-22,52 -46,34 -46,2 V-40 Z" fill="rgba(95,211,138,.16)" stroke="${C.green}" stroke-width="4"/>
-        <path d="M0,24 C-26,6 -24,-18 -10,-20 C-4,-21 0,-16 0,-12 C0,-16 4,-21 10,-20 C24,-18 26,6 0,24 Z" fill="${C.green}"/></g>
-      ${bubble(240, 60, 300, 'اللَّهُمَّ مَحِلِّي حَيْثُ حَبَسْتَنِي', 21)}`),
-    talbiyah: (L) => svg(`${defs}<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
-      <path d="M24,268 H456" stroke="${C.muted}" stroke-width="2"/>
-      <path d="M150,276 Q260,252 360,262" fill="none" stroke="${C.gold}" stroke-width="3" stroke-dasharray="2 10" stroke-linecap="round"/>
-      ${man(84, 268, 0.95)}${woman(176, 268, 0.82)}
-      ${[0, 1, 2].map((i) => `<path d="M${110 + i * 9},${118 - i * 2} q${10 + i * 6},${16} 0,${32 + i * 4}" fill="none" stroke="${C.gold}" stroke-width="3" stroke-linecap="round" opacity="${1 - i * .25}"/>`).join('')}
-      <path d="M196,${144} q8,12 0,24" fill="none" stroke="${C.gold}" stroke-width="3" stroke-linecap="round" opacity=".5"/>
-      ${text(84, 298, L.aloud, 15, C.ivory2, 400)}${text(176, 298, L.softly, 15, C.ivory2, 400)}
-      ${kaaba(392, 262, 0.62, true)}
-      ${bubble(246, 66, 260, 'لَبَّيْكَ اللَّهُمَّ لَبَّيْكَ')}`),
-    avoid: (L) => svg(tile(12, 12, 222, 142, I.bottle(), L.avoid_perfume, { crossed: true, scale: .72 }) +
-      tile(246, 12, 222, 142, I.scissors(), L.avoid_hair, { crossed: true, scale: .72 }) +
-      tile(12, 166, 222, 142, I.rings(), L.avoid_marital, { crossed: true, scale: .72 }) +
-      tile(246, 166, 222, 142, I.cap(), L.avoid_head, { crossed: true, scale: .72 })),
-    halq: (L) => svg(tile(12, 30, 144, 260, I.razor(), L.shave) + tile(168, 30, 144, 260, I.scissors(), L.shorten) + tile(324, 30, 144, 260, I.strand(), L.women_cut)),
-    complete: (L) => svg(`${defs}<rect x="12" y="20" width="456" height="290" rx="22" fill="${C.raise}" stroke="${C.line}"/>
-      ${kaaba(222, 222, 1.2, true)}
-      <g transform="translate(352,92)"><circle r="26" fill="${C.green}"/><path d="M-12,0 L-3,10 L14,-10" fill="none" stroke="#07160d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g>
-      ${text(240, 280, L.accept, 21, C.gold)}`),
-    setLang(ar) { AR = ar; },
-  };
-})();
-
-const VIEWS = {"entry": {"kaaba": [0.0, 5.6], "black_stone": [-5.6, -0.1], "yemeni": [-6.6, -0.1], "door": [-1.3, 4.0], "hijr": [13.3, -0.6], "mizab": [7.0, 11.1], "maqam": [1.5, 0.0], "start_light": [-58.2, 2.9], "clock": [-48.0, 51.3], "zamzam": [0.0, -5.9], "gate": [117.3, 11.2]}, "hijr": {"kaaba": [9.3, 16.2], "black_stone": [-8.4, -0.2], "yemeni": [21.5, -0.2], "door": [-9.5, 9.2], "hijr": [33.7, -6.3], "mizab": [14.9, 43.8], "maqam": [-34.5, 0.0], "start_light": [-30.4, 1.5], "clock": [43.2, 52.8], "zamzam": [-58.0, -1.2], "gate": [-72.7, 2.2]}, "maqam": {"kaaba": [-3.2, 15.0], "black_stone": [-24.9, -0.4], "yemeni": [-17.6, -0.2], "door": [-9.6, 14.1], "hijr": [29.1, -1.3], "mizab": [15.3, 26.9], "maqam": [-2.4, 0.0], "start_light": [-123.4, 2.7], "clock": [-52.4, 53.0], "zamzam": [-177.5, -2.2], "gate": [166.7, 3.3]}, "start": {"kaaba": [-1.4, 17.4], "black_stone": [0.0, -0.7], "yemeni": [-27.7, -0.3], "door": [12.8, 16.8], "hijr": [19.1, -1.2], "mizab": [11.6, 26.3], "maqam": [69.7, 0.0], "start_light": [-179.2, 3.0], "clock": [-87.1, 54.0], "zamzam": [128.2, -1.7], "gate": [121.5, 2.7]}, "yemeni": {"kaaba": [1.5, 19.0], "black_stone": [30.0, -0.3], "yemeni": [0.0, -0.8], "door": [19.5, 9.8], "hijr": [-20.2, -1.3], "mizab": [-12.4, 27.9], "maqam": [27.8, 0.0], "start_light": [71.8, 1.8], "clock": [179.9, 55.3], "zamzam": [42.1, -1.0], "gate": [36.6, 1.9]}, "green": {"safa_rock": [178.1, 0.3], "marwa_rock": [1.4, 0.0], "to_marwa": [0.0, 0.1], "to_safa": [175.9, 0.1], "green_lights": [0.0, 25.3], "green_end": [0.0, 11.3], "divider": [177.1, -0.9]}, "marwa": {"safa_rock": [-179.4, 0.1], "marwa_rock": [-12.5, 0.0], "to_marwa": [-73.3, 2.2], "to_safa": [179.7, 0.1], "green_lights": [-177.2, 2.9], "green_end": [-177.0, 2.2], "divider": [-178.7, -0.2]}, "safa": {"safa_rock": [167.5, 2.8], "marwa_rock": [0.6, 0.0], "to_marwa": [-0.3, 0.1], "to_safa": [106.7, 2.2], "green_lights": [-0.6, 3.2], "green_end": [-0.6, 2.1], "divider": [0.9, -0.6]}};
+const { duas: DUAS, labels: LABELS, stations: STATIONS, views: VIEWS } = TourContent;
 
 const UI = {
   en: { play: 'Play', pause: 'Pause', resume: 'Resume', prev: 'Previous', next: 'Next', stations: 'All steps', station: 'Station', of: 'of', step: 'Step',
@@ -1008,31 +262,46 @@ const UI = {
         disclaimer: 'نسخة تجريبية. المشاهد ثلاثية الأبعاد إعادة بناء مبسّطة للمساعدة على التوجّه، وليست نموذجًا دقيقًا. الأحكام وفق الأقوال الأكثر تداولًا، وقد يرشدك مرشد مجموعتك أو أهل العلم إلى غير ذلك. السرد وبعض الأدعية بأصوات مولَّدة بالذكاء الاصطناعي، أما الآيات القرآنية فبصوت الشيخ مشاري راشد العفاسي، عبر AlQuran Cloud (Islamic Network)، وتوقيت الكلمات من Quran.com. الأدعية: تسجيلات حصن المسلم من hisnmuslim.com.' },
 };
 
-const store = {
-  get(k, d) { try { const v = localStorage.getItem('umrah:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem('umrah:' + k, JSON.stringify(v)); } catch {} },
+const store = TourRuntime.createStore({ getItem: (key) => localStorage.getItem(key), setItem: (key, value) => localStorage.setItem(key, value) });
+const navigation = TourRuntime.createScope(), playback = TourRuntime.createScope(), panorama = TourRuntime.createScope();
+const savedLesson = TourRuntime.guidedState(store.get('guided', null), STATIONS);
+function saveLesson() { store.set('guided', TourRuntime.guidedSnapshot(state, STATIONS)); }
+const recoveryText = {
+  en: { retry: 'Retry scene', failed: 'The scene could not load. You can keep reading or listening, or retry.', no3d: '3D is unavailable. All lessons, duas, and audio still work.', quality: 'Quality', auto: 'Auto', low: 'Low data', high: 'High', audio: 'Audio could not play. You can keep reading or retry.', retryAudio: 'Retry audio' },
+  ar: { retry: 'أعد تحميل المشهد', failed: 'تعذّر تحميل المشهد. يمكنك متابعة القراءة والاستماع أو إعادة المحاولة.', no3d: 'العرض ثلاثي الأبعاد غير متاح. يمكنك متابعة الدروس والأدعية والاستماع.', quality: 'الجودة', auto: 'تلقائية', low: 'توفير البيانات', high: 'عالية', audio: 'تعذّر تشغيل الصوت. يمكنك متابعة القراءة أو إعادة المحاولة.', retryAudio: 'أعد تشغيل الصوت' },
 };
+let sceneError = null;
+function showSceneError(kind) {
+  sceneError = kind;
+  $('loadingText').textContent = recoveryText[state.lang][kind];
+  $('retryPano').hidden = kind === 'no3d';
+  $('loading').hidden = false;
+  $('loading').classList.remove('gone');
+}
 
 const state = {
   lang: (() => { const l = store.get('lang', (navigator.language || 'en').startsWith('ar') ? 'ar' : 'en'); return l === 'ar' ? 'ar' : 'en'; })(),
-  size: store.get('size', 1),
+  size: [1, 1.18].includes(store.get('size', 1)) ? store.get('size', 1) : 1,
   night: store.get('night', true),
-  s: 0, k: 0, playing: false, started: false,
-  counts: { tawaf: 0, sai: 0 },
+  ...savedLesson, playing: false,
+  quality: ['auto', 'low', 'high'].includes(store.get('quality', 'auto')) ? store.get('quality', 'auto') : 'auto',
 };
 const $ = (id) => document.getElementById(id);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* =================================================================== 360 viewer (WebGL2) */
 const canvas = $('gl');
-const gl = canvas.getContext('webgl2', { antialias: false, premultipliedAlpha: false });
+const gl = (() => { try { return new URLSearchParams(location.search).has('text') ? null : canvas.getContext('webgl2', { antialias: false, premultipliedAlpha: false }); } catch { return null; } })();
 const view = { yaw: 0, pitch: 0, fov: 80 };
 let tex = [null, null], mix = 0, curPano = null;
-const texCache = {};
+let glAvailable = !!gl;
+const texCache = TourRuntime.createResourceCache(6, (texture) => gl?.deleteTexture(texture));
+const textureKeys = () => [curPano, 'hd/' + curPano, ...tex.filter(Boolean).map((texture) => texture._cacheKey)];
+function wantsHD() { return state.quality === 'high' || (state.quality === 'auto' && !matchMedia('(pointer: coarse)').matches && !navigator.connection?.saveData); }
 let prog, uni = {};
 
 function initGL() {
-  if (!gl) { $('loading').textContent = 'This device cannot show 3D scenes (WebGL2 missing).'; return false; }
+  if (!gl) return false;
   const vs = `#version 300 es
   in vec2 p; out vec2 v; void main(){ v = p; gl_Position = vec4(p, 0., 1.); }`;
   const fs = `#version 300 es
@@ -1052,10 +321,10 @@ function initGL() {
     o = vec4(mix(a, b, mixv), 1.);
   }`;
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; };
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
   prog = gl.createProgram();
   gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
-  gl.linkProgram(prog); gl.useProgram(prog);
+  gl.linkProgram(prog); if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('Scene renderer could not initialize'); gl.useProgram(prog);
   const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
@@ -1064,57 +333,77 @@ function initGL() {
   return true;
 }
 
-const HD = ["entry", "entry_night", "green", "hijr", "hijr_night", "maqam", "maqam_night", "marwa", "safa", "start", "start_night", "yemeni", "yemeni_night"];
-const NIGHT = ["entry", "hijr", "maqam", "start", "yemeni"];    // scenes that also exist at night
+function initializeScene() { try { return initGL(); } catch (error) { console.warn('Scene unavailable:', error.message); return false; } }
+const HD = TourAssets.hd;
+const NIGHT = TourAssets.night;    // scenes that also exist at night
 function panoFor(st) { return state.night && NIGHT.includes(st.pano) ? st.pano + '_night' : st.pano; }          // scenes that have a 4K version
 const maxTex = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 0;
 function loadPano(name, hd = false) {
+  if (!glAvailable) return Promise.reject(new Error('3D unavailable'));
   const key = (hd ? 'hd/' : '') + name;
-  if (texCache[key]) return texCache[key];
-  texCache[key] = new Promise((res, rej) => {
+  return texCache.get(key, () => new Promise((resolve, reject) => {
     const img = new Image();
+    const timeout = setTimeout(() => { img.onload = img.onerror = null; img.src = ''; reject(new Error('Scene load timed out')); }, 15000);
     img.onload = () => {
-      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      clearTimeout(timeout);
+      if (!glAvailable) return reject(new Error('3D unavailable'));
+      const texture = gl.createTexture(); texture._cacheKey = key;
+      gl.bindTexture(gl.TEXTURE_2D, texture); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      res(t);
+      resolve(texture);
     };
-    img.onerror = () => { delete texCache[key]; rej(new Error('Could not load ' + name)); };
+    img.onerror = () => { clearTimeout(timeout); reject(new Error('Could not load ' + name)); };
     img.src = (hd ? 'pano4k/' : 'pano/') + name + '.jpg';
-  });
-  return texCache[key];
+  }), textureKeys);
 }
-/* After the quick 2K image is up, fetch the 4K one and swap it in silently. */
-function upgradePano(name) {
-  if (!HD.includes(name) || maxTex < 4096) return;
-  loadPano(name, true).then((t) => { if (curPano === name && mix === 0) tex[0] = t; }).catch(() => {});
+function upgradePano(name, token) {
+  if (!wantsHD() || !HD.includes(name) || maxTex < 4096) return;
+  loadPano(name, true).then((texture) => {
+    if (panorama.current(token) && curPano === name && mix === 0) tex[0] = texture;
+    texCache.trim(textureKeys());
+  }).catch(() => {});
 }
-
 async function showPano(name) {
-  if (name === curPano) return;
-  const first = !curPano;
-  curPano = name;
-  if (first) $('loading').classList.remove('gone');
-  let t;
-  try { t = await loadPano(name); } catch (e) { $('loading').textContent = e.message; return; }
-  if (curPano !== name) return;
+  if (!glAvailable) { showSceneError('no3d'); return false; }
+  if (name === curPano && tex[0]) return true;
+  const token = panorama.next(), first = !tex[0];
+  curPano = name; mix = 0; tex[1] = null;
+  sceneError = null; $('retryPano').hidden = true; $('loadingText').textContent = UI[state.lang].loading;
+  $('loading').hidden = false;
+  $('loading').classList.remove('gone');
+  let texture;
+  try { texture = await loadPano(name); }
+  catch {
+    if (panorama.current(token)) { curPano = null; showSceneError('failed'); }
+    return false;
+  }
+  if (!panorama.current(token)) return false;
   $('loading').classList.add('gone');
-  if (first || reduceMotion) { tex[0] = t; mix = 0; upgradePano(name); return; }
-  tex[1] = t; const t0 = performance.now();
-  await new Promise((done) => {
-    const tick = (now) => { mix = Math.min(1, (now - t0) / 900); if (mix < 1) requestAnimationFrame(tick); else done(); };
-    requestAnimationFrame(tick);
-  });
-  tex[0] = t; tex[1] = null; mix = 0;
-  upgradePano(name);
+  $('loading').hidden = true;
+  if (!first && !reduceMotion) {
+    tex[1] = texture; const began = performance.now();
+    const finished = await new Promise((resolve) => {
+      const tick = (now) => {
+        if (!panorama.current(token)) return resolve(false);
+        mix = Math.min(1, (now - began) / 900);
+        if (mix < 1) requestAnimationFrame(tick); else resolve(true);
+      };
+      requestAnimationFrame(tick);
+    });
+    if (!finished) return false;
+  }
+  if (!panorama.current(token)) return false;
+  tex[0] = texture; tex[1] = null; mix = 0;
+  texCache.trim(textureKeys()); upgradePano(name, token);
+  return true;
 }
 
 function resize() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, state.quality === 'low' ? 1 : wantsHD() ? 2 : 1.25);
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
@@ -1124,7 +413,7 @@ function resize() {
 const D2R = Math.PI / 180;
 function frame() {
   resize();
-  if (gl && tex[0]) {
+  if (glAvailable && tex[0]) {
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[0]);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tex[1] || tex[0]);
@@ -1157,7 +446,7 @@ let hotspotEls = [];
 function buildHotspots() {
   const st = STATIONS[state.s];
   $('hotspots').replaceChildren();
-  hotspotEls = (st.card ? [] : st.labels).map((key) => {
+  hotspotEls = (st.card || !glAvailable ? [] : st.labels).map((key) => {
     const el = document.createElement('div'); el.className = 'hotspot';
     el.innerHTML = '<span></span><i></i><b></b>';
     el.querySelector('span').textContent = LABELS[key][state.lang];
@@ -1226,31 +515,40 @@ function pickVoice(lang) {
 }
 if (synth) synth.onvoiceschanged = () => {};
 
-const AUDIO = ["bismillah", "enter", "ishtirat", "maqam", "niyyah", "rabbana", "safa_dhikr", "safa_verse", "talbiyah"];
-const NARR_EN = ["done_0", "done_1", "enter_0", "enter_1", "enter_2", "enter_3", "enter_4", "green_0", "green_1", "green_2", "hijr_0", "hijr_1", "hijr_2", "hijr_3", "ihram_0", "ihram_1", "ihram_2", "ihram_3", "ihram_4", "ihram_5", "maqam_0", "maqam_1", "maqam_2", "maqam_3", "marwa_0", "marwa_1", "marwa_2", "meaning_bismillah", "meaning_enter", "meaning_ishtirat", "meaning_maqam", "meaning_niyyah", "meaning_rabbana", "meaning_safa_dhikr", "meaning_safa_verse", "meaning_talbiyah", "safa_0", "safa_1", "safa_2", "safa_3", "start_0", "start_1", "start_2", "start_3", "start_4", "start_5", "yemeni_0", "yemeni_1", "yemeni_2", "yemeni_3"];
-const NARR_AR = ["done_0", "done_1", "enter_0", "enter_1", "enter_2", "enter_3", "enter_4", "green_0", "green_1", "green_2", "hijr_0", "hijr_1", "hijr_2", "hijr_3", "ihram_0", "ihram_1", "ihram_2", "ihram_3", "ihram_4", "ihram_5", "maqam_0", "maqam_1", "maqam_2", "maqam_3", "marwa_0", "marwa_1", "marwa_2", "safa_0", "safa_1", "safa_2", "safa_3", "start_0", "start_1", "start_2", "start_3", "start_4", "start_5", "yemeni_0", "yemeni_1", "yemeni_2", "yemeni_3"];
+const AUDIO = TourAssets.audio;
+const NARR_EN = TourAssets.narration.en;
+const NARR_AR = TourAssets.narration.ar;
 /* Who recorded each dua clip: 'alafasy' (Quran verses), 'hisn' (Hisn al-Muslim), otherwise synthetic. */
-const AUDIO_CREDIT = Object.assign({ maqam: 'reciter', rabbana: 'reciter' }, {"talbiyah": "hisn", "enter": "hisn", "safa_dhikr": "hisn", "bismillah": "hisn"}, { safa_verse: 'mixed' });
+const AUDIO_CREDIT = Object.assign({ maqam: 'reciter', rabbana: 'reciter' }, { talbiyah: 'hisn', enter: 'hisn', bismillah: 'hisn', safa_dhikr: 'hisn' }, { safa_verse: 'mixed' });
 const num = (n) => String(n);   // Western digits: clearer for Maghreb readers, and Arabic-Indic ٠ looks like a dot
 const sep = () => state.lang === 'ar' ? ' – ' : ' · ';
 const player = new Audio();
 player.preload = 'auto';
+function audioFailed(retry) {
+  stopSpeech(); setPlaying(false);
+  $('audioError').textContent = recoveryText[state.lang].audio;
+  $('retryAudio').textContent = recoveryText[state.lang].retryAudio;
+  $('retryAudio').onclick = retry; $('audioStatus').hidden = false;
+}
+function retryStepAudio() { state.started = true; setPlaying(true); runStep(); }
 function playDua(key, done) {
   const id = runId;
+  const wasPlaying = state.playing;
+  const failed = () => { if (id === runId) audioFailed(wasPlaying ? retryStepAudio : () => { $('audioStatus').hidden = true; playDua(key); }); };
   if (!AUDIO.includes(key)) { done && done(); return; }
   player.onended = () => { setListen(false); if (id === runId && done) done(); };
-  player.onerror = () => { setListen(false); if (id === runId && done) done(); };
+  player.onerror = failed;
   player.src = 'audio/' + key + '.mp3';
   player.currentTime = 0;
   setListen(true);
-  player.play().catch(() => { setListen(false); if (id === runId && done) done(); });
+  player.play().catch(failed);
 }
 function playFile(url, done) {
   const id = runId;
   player.onended = () => { if (id === runId) done(); };
-  player.onerror = () => { if (id === runId) done(); };
+  player.onerror = () => { if (id === runId) audioFailed(retryStepAudio); };
   player.src = url; player.currentTime = 0;
-  player.play().catch(() => { if (id === runId) done(); });
+  player.play().catch(() => { if (id === runId) audioFailed(retryStepAudio); });
 }
 /* Speak one line: a recorded voice when we have it, otherwise the browser voice. */
 function speakLine(lineId, text, done) {
@@ -1286,7 +584,7 @@ function speak(text, done) {
   };
   next();
 }
-function stopSpeech() { runId++; clearTimeout(timer); if (synth) synth.cancel(); stopDua(); $('stepText').classList.remove('speaking'); }
+function stopSpeech() { playback.next(); runId++; clearTimeout(timer); if (synth) synth.cancel(); stopDua(); $('stepText').classList.remove('speaking'); $('audioStatus').hidden = true; }
 
 /* =================================================================== flow */
 function setPlaying(p) {
@@ -1299,17 +597,21 @@ function setPlaying(p) {
 
 function runStep() {
   if (!state.playing) return;
+  stopSpeech();
+  const token = playback.token();
   const st = STATIONS[state.s], step = st.steps[state.k];
   $('stepText').classList.add('speaking');
   if (step.highlight === 'counter') pulseCounter();
   const begin = performance.now();
   const L = state.lang;
   const finish = () => {
+    if (!playback.current(token)) return;
     $('stepText').classList.remove('speaking');
     const wait = Math.max(900, 1700 - (performance.now() - begin));
-    timer = setTimeout(() => { if (state.playing) advance(1, true); }, wait);
+    playback.later(token, () => { if (state.playing) advance(1, true); }, wait);
   };
   speakLine(st.id + '_' + state.k, step[L], () => {
+    if (!playback.current(token)) return;
     if (!step.dua) return finish();
     const id = runId;
     playDua(step.dua, () => {
@@ -1321,26 +623,26 @@ function runStep() {
 }
 
 async function go(s, k, { auto = false } = {}) {
-  stopSpeech();
-  const prevPano = STATIONS[state.s]?.pano;
+  const token = navigation.next();
+  stopSpeech(); tween = null;
   const changed = s !== state.s;
-  state.s = s; state.k = k;
+  state.s = s; state.k = k; saveLesson();
   const st = STATIONS[s];
-  render();
-  if (changed || !curPano) buildHotspots();
-  const target = stepTarget(st, st.steps[k]);
-  if (panoFor(st) !== curPano) {
-    const firstLoad = !curPano;
-    const p = showPano(panoFor(st));
-    if (firstLoad) { lookAt(target, 0); await p; }
-    else { await p; lookAt(target, 0); }
-  } else {
-    lookAt(target, auto || changed ? 1700 : 900);
-  }
+  render(); buildHotspots();
   $('scene').classList.toggle('card', !!st.card);
-  // preload the next scene
-  const nx = STATIONS[s + 1]; if (nx) loadPano(panoFor(nx)).catch(() => {});
-  if (state.playing) setTimeout(runStep, changed ? 500 : 250);
+  const target = stepTarget(st, st.steps[k]);
+  const needsPano = panoFor(st) !== curPano || !tex[0];
+  if (needsPano) {
+    lookAt(target, 0);
+    await showPano(panoFor(st));
+    if (!navigation.current(token)) return;
+    lookAt(target, 0);
+  } else lookAt(target, auto || changed ? 1700 : 900);
+  if (!navigation.current(token)) return;
+  // Avoid speculative downloads on low-data connections and devices.
+  const next = STATIONS[s + 1];
+  if (glAvailable && wantsHD() && next) loadPano(panoFor(next)).catch(() => {});
+  if (state.playing) playback.later(playback.token(), runStep, changed ? 500 : 250);
 }
 
 function advance(dir, auto = false) {
@@ -1363,8 +665,8 @@ function renderCounter() {
   $('cAdd').textContent = L.add; $('cUndo').textContent = L.undo;
   $('cAdd').disabled = n >= 7; $('cUndo').disabled = n <= 0;
 }
-$('cAdd').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.min(7, state.counts[t] + 1); renderCounter(); };
-$('cUndo').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.max(0, state.counts[t] - 1); renderCounter(); };
+$('cAdd').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.min(7, state.counts[t] + 1); saveLesson(); renderCounter(); };
+$('cUndo').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.max(0, state.counts[t] - 1); saveLesson(); renderCounter(); };
 
 /* =================================================================== render */
 function drawIllus() {
@@ -1385,6 +687,8 @@ function render() {
   document.documentElement.lang = state.lang;
   document.documentElement.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.style.setProperty('--scale', state.size);
+  $('app').classList.toggle('text-only', !glAvailable);
+  $('dragHint').hidden = !glAvailable || !!st.card;
   for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === state.lang);
   for (const b of document.querySelectorAll('[data-size]')) b.setAttribute('aria-pressed', +b.dataset.size === state.size);
   $('timeSeg').hidden = !NIGHT.length;
@@ -1396,6 +700,7 @@ function render() {
     const b = document.createElement('button');
     b.className = i < state.s ? 'done' : i === state.s ? 'now' : '';
     b.setAttribute('aria-label', `${L.station} ${i + 1}: ${x.title[state.lang]}`);
+    if (i === state.s) b.setAttribute('aria-current', 'step');
     b.onclick = () => go(i, 0);
     return b;
   }));
@@ -1410,7 +715,11 @@ function render() {
   if (d) {
     $('duaAr').textContent = d.ar; $('duaTr').textContent = d.tr; $('duaMean').textContent = d.en;
     $('duaTr').hidden = $('duaMean').hidden = state.lang === 'ar';
-    $('duaSrc').textContent = d.src ? d.src[state.lang] : ''; $('duaSrc').hidden = !d.src;
+    $('duaSrc').replaceChildren(...(d.references || []).map((ref) => {
+      const link = document.createElement('a'); link.href = ref.url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = ref.label; link.style.color = 'inherit'; return link;
+    }));
+    if (!$('duaSrc').childNodes.length) $('duaSrc').textContent = d.src?.[state.lang] || '';
+    $('duaSrc').hidden = !$('duaSrc').textContent;
     const has = AUDIO.includes(step.dua);
     $('btnListen').hidden = !has; $('lSynth').hidden = !has; $('lSynth').textContent = L[AUDIO_CREDIT[step.dua] || 'synth'];
     setListen(!player.paused && player.src.endsWith('/' + step.dua + '.mp3'));
@@ -1423,23 +732,28 @@ function render() {
   $('disclaimer').textContent = L.disclaimer;
   $('dragHint').textContent = L.drag;
   drawIllus();
-  $('loading').textContent = L.loading;
+  const R = recoveryText[state.lang];
+  $('loadingText').textContent = sceneError ? R[sceneError] : L.loading;
+  $('retryPano').textContent = R.retry; $('qualityLabel').textContent = R.quality;
+  $('quality').value = state.quality;
+  for (const option of $('quality').options) option.textContent = R[option.value];
   $('sheetTitle').textContent = L.stations; $('sheetClose').textContent = L.close;
   $('stationList').replaceChildren(...STATIONS.map((x, i) => {
     const li = document.createElement('li'); const b = document.createElement('button');
     b.innerHTML = `<span class="n">${num(i + 1)}</span><span><span class="t"></span><small></small></span>`;
     b.querySelector('.t').textContent = x.title[state.lang]; b.querySelector('small').textContent = x.place[state.lang];
     if (i === state.s) b.setAttribute('aria-current', 'true');
-    b.onclick = () => { $('sheet').hidden = true; go(i, 0); };
+    b.onclick = () => { closeSheet(); go(i, 0); };
     li.appendChild(b); return li;
   }));
   $('body').scrollTop = 0;
+  $('guideScroll').scrollTop = 0;
 }
 
 /* =================================================================== wiring */
 $('btnPlay').onclick = () => {
   if (state.playing) { stopSpeech(); setPlaying(false); return; }
-  state.started = true; setPlaying(true); hideHint(); runStep();
+  state.started = true; saveLesson(); setPlaying(true); hideHint(); runStep();
 };
 $('btnListen').onclick = () => {
   if (!player.paused) { stopDua(); return; }
@@ -1454,22 +768,44 @@ for (const b of document.querySelectorAll('[data-lang]')) b.onclick = () => {
 };
 for (const b of document.querySelectorAll('[data-time]')) b.onclick = () => {
   state.night = b.dataset.time === 'night'; store.set('night', state.night); render();
-  const p = panoFor(STATIONS[state.s]); if (p !== curPano) showPano(p);
+  go(state.s, state.k);
 };
 for (const b of document.querySelectorAll('[data-size]')) b.onclick = () => { state.size = +b.dataset.size; store.set('size', state.size); render(); };
-$('btnStations').onclick = () => { $('sheet').hidden = false; $('stationList').querySelector('[aria-current]')?.focus(); };
-$('sheetClose').onclick = () => { $('sheet').hidden = true; };
-$('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
+function closeSheet() { $('sheet').hidden = true; $('app').inert = false; $('btnStations').focus(); }
+$('btnStations').onclick = () => {
+  if (state.playing) { stopSpeech(); setPlaying(false); }
+  $('sheet').hidden = false; $('app').inert = true;
+  $('stationList').querySelector('[aria-current]')?.focus();
+};
+$('sheetClose').onclick = closeSheet;
+$('sheet').onclick = (e) => { if (e.target.id === 'sheet') closeSheet(); };
+$('quality').onchange = () => { state.quality = $('quality').value; store.set('quality', state.quality); curPano = null; go(state.s, state.k); };
+$('retryPano').onclick = () => { curPano = null; go(state.s, state.k); };
 document.addEventListener('keydown', (e) => {
-  if (!$('sheet').hidden) { if (e.key === 'Escape') $('sheet').hidden = true; return; }
-  if (e.target.closest('button') && (e.key === ' ' || e.key === 'Enter')) return;
+  if (!$('sheet').hidden) {
+    if (e.key === 'Escape') { e.preventDefault(); closeSheet(); }
+    if (e.key === 'Tab') {
+      const buttons = [...$('sheet').querySelectorAll('button')];
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    return;
+  }
+  if (e.target.closest('button, a, select, input, textarea')) return;
   if (e.key === ' ') { e.preventDefault(); $('btnPlay').click(); }
-  if (e.key === 'ArrowRight') advance(1);
-  if (e.key === 'ArrowLeft') advance(-1);
+  if (e.key === 'ArrowRight') advance(state.lang === 'ar' ? -1 : 1);
+  if (e.key === 'ArrowLeft') advance(state.lang === 'ar' ? 1 : -1);
 });
+window.addEventListener('pagehide', saveLesson);
+canvas.addEventListener('webglcontextlost', (event) => {
+  event.preventDefault(); glAvailable = false; panorama.next(); texCache.clear(); tex = [null, null]; curPano = null; showSceneError('no3d');
+});
+canvas.addEventListener('webglcontextrestored', () => { glAvailable = initializeScene(); curPano = null; go(state.s, state.k); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && state.playing) { stopSpeech(); setPlaying(false); } });
 
-if (initGL()) requestAnimationFrame(frame);
+glAvailable = initializeScene();
+if (glAvailable) requestAnimationFrame(frame);
 render();
-go(0, 0);
+go(state.s, state.k);
 </script>

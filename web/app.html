@@ -1,6 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Learn Umrah step by step with English and Arabic narration, duas, and guided practice.">
 <title>Umrah Step by Step</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,13 +31,18 @@
   color-scheme: dark;
 }
 html, body { height: 100%; }
-body { background: var(--ink); color: var(--fg); font-family: var(--font); font-size: var(--t-body); line-height: 1.5; overflow: hidden; }
+body { margin: 0; background: var(--ink); color: var(--fg); font-family: var(--font); font-size: var(--t-body); line-height: 1.5; overflow: hidden; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-button { font: inherit; color: inherit; }
+button, select { font: inherit; color: inherit; }
+select { background: var(--raise); border: 1px solid var(--line); border-radius: 10px; min-height: 44px; max-width: 100%; }
+.quality-label { font-size: var(--t-small); display: flex; gap: 8px; align-items: center; }
 button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
 .app { display: grid; grid-template-columns: 1fr minmax(380px, 460px); height: 100%; }
+.app.text-only { grid-template-columns: 1fr; grid-template-rows: 130px minmax(0, 1fr); }
+.text-only .scene { cursor: default; }
+.text-only .quality-label, .text-only #timeSeg { display: none; }
 @media (max-width: 860px) {
   .app { grid-template-columns: 1fr; grid-template-rows: minmax(220px, 40%) 1fr; }
 }
@@ -63,13 +69,21 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold);
 .scene-top > * { pointer-events: auto; }
 .chip { background: rgba(16, 20, 23, .8); border: 1px solid var(--line); border-radius: 999px; padding: .35em .9em; font-size: var(--t-small); }
 .chip strong { color: var(--gold); }
-.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: var(--t-small); background: var(--ink); transition: opacity .5s; }
+.loading { position: absolute; inset: 64px 12px auto; display: grid; justify-items: center; gap: 8px; padding: 12px; border-radius: 12px; color: var(--fg); font-size: var(--t-small); background: var(--ink); transition: opacity .5s; }
+.loading button { min-height: 44px; background: var(--raise); border: 1px solid var(--gold); border-radius: 10px; padding: 6px 16px; cursor: pointer; }
 .loading.gone { opacity: 0; pointer-events: none; }
 .drag-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: var(--t-small); color: var(--fg); background: rgba(16,20,23,.7); padding: .3em .9em; border-radius: 999px; pointer-events: none; transition: opacity .6s; }
 
 /* ---------- guide panel */
 .guide { background: var(--panel); border-inline-start: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.guide-scroll { display: contents; }
 @media (max-width: 860px) { .guide { border-inline-start: 0; border-top: 1px solid var(--line); } }
+@media (max-width: 860px) {
+  .app { grid-template-rows: minmax(140px, 30%) minmax(0, 1fr); }
+  .guide-scroll { display: block; flex: 1; min-height: 0; overflow-y: auto; }
+  .guide .guide-body { overflow: visible; }
+}
+@media (max-width: 480px) { .scene-top .chip { display: none; } .scene-top { justify-content: flex-end; } }
 .guide-head { padding-block: 18px 10px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 10px; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -81,9 +95,10 @@ a.btn-3d { display: inline-flex; align-items: center; text-decoration: none; bac
 .scene-top .chip { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; }
 
 .progress { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
-.progress button { height: 8px; border-radius: 4px; border: 0; background: var(--line); cursor: pointer; padding: 0; }
-.progress button.done { background: rgba(214, 173, 94, .5); }
-.progress button.now { background: var(--gold); }
+.progress button { height: 44px; border: 0; background: transparent; cursor: pointer; padding: 18px 0; }
+.progress button::before { content: ''; display: block; height: 8px; border-radius: 4px; background: var(--line); }
+.progress button.done::before { background: rgba(214, 173, 94, .5); }
+.progress button.now::before { background: var(--gold); }
 
 .eyebrow { font-size: var(--t-small); color: var(--muted); letter-spacing: .04em; }
 .eyebrow b { color: var(--gold); font-weight: 700; }
@@ -106,7 +121,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
 .dua .ar { font-family: var(--arabic); font-size: var(--t-arabic); line-height: 1.9; direction: rtl; text-align: right; color: var(--fg); }
 .dua .tr { font-style: italic; color: var(--gold); line-height: 1.45; }
 .dua .mean { color: var(--fg); line-height: 1.45; }
-.dua .src { font-size: var(--t-small); color: var(--muted); }
+.dua .src { font-size: var(--t-small); color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
 
 .counter { background: var(--raise); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 10px 14px; align-items: center; transition: box-shadow .4s, border-color .4s; }
 .counter.pulse { border-color: var(--green); box-shadow: 0 0 0 3px rgba(95, 211, 138, .25); }
@@ -162,10 +177,11 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
       </div>
     </div>
     <div class="drag-hint" id="dragHint"></div>
-    <div class="loading" id="loading">Loading the scene…</div>
+    <div class="loading" id="loading" role="status"><span id="loadingText">Loading the scene…</span><button id="retryPano" hidden>Retry scene</button></div>
   </section>
 
   <section class="guide" aria-label="Guide">
+    <div class="guide-scroll" id="guideScroll">
     <div class="guide-head">
       <div class="toolbar">
         <div class="seg" role="group" aria-label="Language">
@@ -180,6 +196,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
           <button id="time-day" data-time="day"></button>
           <button id="time-night" data-time="night"></button>
         </div>
+        <label class="quality-label"><span id="qualityLabel">Quality</span><select id="quality"><option value="auto">Auto</option><option value="low">Low data</option><option value="high">High</option></select></label>
       </div>
       <div class="progress" id="progress"></div>
       <div class="eyebrow" id="eyebrow"></div>
@@ -189,6 +206,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
     <div class="guide-body" id="body">
       <div class="step-meta"><div class="step-dots" id="stepDots"></div><span id="stepCount"></span></div>
       <p class="step-text" id="stepText" aria-live="polite"></p>
+      <div id="audioStatus" role="status" hidden><p id="audioError"></p><button class="btn-listen" id="retryAudio"></button></div>
       <div class="dua" id="dua" hidden>
         <div class="dua-top">
           <button class="btn-listen" id="btnListen" hidden><svg viewBox="0 0 24 24" aria-hidden="true" id="icoListen"><path d="M7 4v16l13-8z"/></svg><span id="lListen"></span></button>
@@ -205,6 +223,7 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
         <div class="note" id="cNote"></div>
       </div>
       <p class="disclaimer" id="disclaimer"></p>
+    </div>
     </div>
 
     <div class="controls">
@@ -223,9 +242,12 @@ h1 { font-size: var(--t-title); line-height: 1.2; margin: 0; text-wrap: balance;
   </div>
 </div>
 
+<script src="lib/runtime.js"></script>
+<script src="lib/content.js"></script>
+<script src="lib/assets.js"></script>
+<script src="lib/illus.js"></script>
 <script>
-/*@CONTENT@*/
-const VIEWS = /*@VIEWS@*/;
+const { duas: DUAS, labels: LABELS, stations: STATIONS, views: VIEWS } = TourContent;
 
 const UI = {
   en: { play: 'Play', pause: 'Pause', resume: 'Resume', prev: 'Previous', next: 'Next', stations: 'All steps', station: 'Station', of: 'of', step: 'Step',
@@ -240,31 +262,46 @@ const UI = {
         disclaimer: 'نسخة تجريبية. المشاهد ثلاثية الأبعاد إعادة بناء مبسّطة للمساعدة على التوجّه، وليست نموذجًا دقيقًا. الأحكام وفق الأقوال الأكثر تداولًا، وقد يرشدك مرشد مجموعتك أو أهل العلم إلى غير ذلك. السرد وبعض الأدعية بأصوات مولَّدة بالذكاء الاصطناعي، أما الآيات القرآنية فبصوت الشيخ مشاري راشد العفاسي، عبر AlQuran Cloud (Islamic Network)، وتوقيت الكلمات من Quran.com. الأدعية: تسجيلات حصن المسلم من hisnmuslim.com.' },
 };
 
-const store = {
-  get(k, d) { try { const v = localStorage.getItem('umrah:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem('umrah:' + k, JSON.stringify(v)); } catch {} },
+const store = TourRuntime.createStore({ getItem: (key) => localStorage.getItem(key), setItem: (key, value) => localStorage.setItem(key, value) });
+const navigation = TourRuntime.createScope(), playback = TourRuntime.createScope(), panorama = TourRuntime.createScope();
+const savedLesson = TourRuntime.guidedState(store.get('guided', null), STATIONS);
+function saveLesson() { store.set('guided', TourRuntime.guidedSnapshot(state, STATIONS)); }
+const recoveryText = {
+  en: { retry: 'Retry scene', failed: 'The scene could not load. You can keep reading or listening, or retry.', no3d: '3D is unavailable. All lessons, duas, and audio still work.', quality: 'Quality', auto: 'Auto', low: 'Low data', high: 'High', audio: 'Audio could not play. You can keep reading or retry.', retryAudio: 'Retry audio' },
+  ar: { retry: 'أعد تحميل المشهد', failed: 'تعذّر تحميل المشهد. يمكنك متابعة القراءة والاستماع أو إعادة المحاولة.', no3d: 'العرض ثلاثي الأبعاد غير متاح. يمكنك متابعة الدروس والأدعية والاستماع.', quality: 'الجودة', auto: 'تلقائية', low: 'توفير البيانات', high: 'عالية', audio: 'تعذّر تشغيل الصوت. يمكنك متابعة القراءة أو إعادة المحاولة.', retryAudio: 'أعد تشغيل الصوت' },
 };
+let sceneError = null;
+function showSceneError(kind) {
+  sceneError = kind;
+  $('loadingText').textContent = recoveryText[state.lang][kind];
+  $('retryPano').hidden = kind === 'no3d';
+  $('loading').hidden = false;
+  $('loading').classList.remove('gone');
+}
 
 const state = {
   lang: (() => { const l = store.get('lang', (navigator.language || 'en').startsWith('ar') ? 'ar' : 'en'); return l === 'ar' ? 'ar' : 'en'; })(),
-  size: store.get('size', 1),
+  size: [1, 1.18].includes(store.get('size', 1)) ? store.get('size', 1) : 1,
   night: store.get('night', true),
-  s: 0, k: 0, playing: false, started: false,
-  counts: { tawaf: 0, sai: 0 },
+  ...savedLesson, playing: false,
+  quality: ['auto', 'low', 'high'].includes(store.get('quality', 'auto')) ? store.get('quality', 'auto') : 'auto',
 };
 const $ = (id) => document.getElementById(id);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* =================================================================== 360 viewer (WebGL2) */
 const canvas = $('gl');
-const gl = canvas.getContext('webgl2', { antialias: false, premultipliedAlpha: false });
+const gl = (() => { try { return new URLSearchParams(location.search).has('text') ? null : canvas.getContext('webgl2', { antialias: false, premultipliedAlpha: false }); } catch { return null; } })();
 const view = { yaw: 0, pitch: 0, fov: 80 };
 let tex = [null, null], mix = 0, curPano = null;
-const texCache = {};
+let glAvailable = !!gl;
+const texCache = TourRuntime.createResourceCache(6, (texture) => gl?.deleteTexture(texture));
+const textureKeys = () => [curPano, 'hd/' + curPano, ...tex.filter(Boolean).map((texture) => texture._cacheKey)];
+function wantsHD() { return state.quality === 'high' || (state.quality === 'auto' && !matchMedia('(pointer: coarse)').matches && !navigator.connection?.saveData); }
 let prog, uni = {};
 
 function initGL() {
-  if (!gl) { $('loading').textContent = 'This device cannot show 3D scenes (WebGL2 missing).'; return false; }
+  if (!gl) return false;
   const vs = `#version 300 es
   in vec2 p; out vec2 v; void main(){ v = p; gl_Position = vec4(p, 0., 1.); }`;
   const fs = `#version 300 es
@@ -284,10 +321,10 @@ function initGL() {
     o = vec4(mix(a, b, mixv), 1.);
   }`;
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; };
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
   prog = gl.createProgram();
   gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
-  gl.linkProgram(prog); gl.useProgram(prog);
+  gl.linkProgram(prog); if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('Scene renderer could not initialize'); gl.useProgram(prog);
   const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
@@ -296,57 +333,77 @@ function initGL() {
   return true;
 }
 
-const HD = /*@HD@*/;
-const NIGHT = /*@NIGHT@*/;    // scenes that also exist at night
+function initializeScene() { try { return initGL(); } catch (error) { console.warn('Scene unavailable:', error.message); return false; } }
+const HD = TourAssets.hd;
+const NIGHT = TourAssets.night;    // scenes that also exist at night
 function panoFor(st) { return state.night && NIGHT.includes(st.pano) ? st.pano + '_night' : st.pano; }          // scenes that have a 4K version
 const maxTex = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 0;
 function loadPano(name, hd = false) {
+  if (!glAvailable) return Promise.reject(new Error('3D unavailable'));
   const key = (hd ? 'hd/' : '') + name;
-  if (texCache[key]) return texCache[key];
-  texCache[key] = new Promise((res, rej) => {
+  return texCache.get(key, () => new Promise((resolve, reject) => {
     const img = new Image();
+    const timeout = setTimeout(() => { img.onload = img.onerror = null; img.src = ''; reject(new Error('Scene load timed out')); }, 15000);
     img.onload = () => {
-      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      clearTimeout(timeout);
+      if (!glAvailable) return reject(new Error('3D unavailable'));
+      const texture = gl.createTexture(); texture._cacheKey = key;
+      gl.bindTexture(gl.TEXTURE_2D, texture); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      res(t);
+      resolve(texture);
     };
-    img.onerror = () => { delete texCache[key]; rej(new Error('Could not load ' + name)); };
+    img.onerror = () => { clearTimeout(timeout); reject(new Error('Could not load ' + name)); };
     img.src = (hd ? 'pano4k/' : 'pano/') + name + '.jpg';
-  });
-  return texCache[key];
+  }), textureKeys);
 }
-/* After the quick 2K image is up, fetch the 4K one and swap it in silently. */
-function upgradePano(name) {
-  if (!HD.includes(name) || maxTex < 4096) return;
-  loadPano(name, true).then((t) => { if (curPano === name && mix === 0) tex[0] = t; }).catch(() => {});
+function upgradePano(name, token) {
+  if (!wantsHD() || !HD.includes(name) || maxTex < 4096) return;
+  loadPano(name, true).then((texture) => {
+    if (panorama.current(token) && curPano === name && mix === 0) tex[0] = texture;
+    texCache.trim(textureKeys());
+  }).catch(() => {});
 }
-
 async function showPano(name) {
-  if (name === curPano) return;
-  const first = !curPano;
-  curPano = name;
-  if (first) $('loading').classList.remove('gone');
-  let t;
-  try { t = await loadPano(name); } catch (e) { $('loading').textContent = e.message; return; }
-  if (curPano !== name) return;
+  if (!glAvailable) { showSceneError('no3d'); return false; }
+  if (name === curPano && tex[0]) return true;
+  const token = panorama.next(), first = !tex[0];
+  curPano = name; mix = 0; tex[1] = null;
+  sceneError = null; $('retryPano').hidden = true; $('loadingText').textContent = UI[state.lang].loading;
+  $('loading').hidden = false;
+  $('loading').classList.remove('gone');
+  let texture;
+  try { texture = await loadPano(name); }
+  catch {
+    if (panorama.current(token)) { curPano = null; showSceneError('failed'); }
+    return false;
+  }
+  if (!panorama.current(token)) return false;
   $('loading').classList.add('gone');
-  if (first || reduceMotion) { tex[0] = t; mix = 0; upgradePano(name); return; }
-  tex[1] = t; const t0 = performance.now();
-  await new Promise((done) => {
-    const tick = (now) => { mix = Math.min(1, (now - t0) / 900); if (mix < 1) requestAnimationFrame(tick); else done(); };
-    requestAnimationFrame(tick);
-  });
-  tex[0] = t; tex[1] = null; mix = 0;
-  upgradePano(name);
+  $('loading').hidden = true;
+  if (!first && !reduceMotion) {
+    tex[1] = texture; const began = performance.now();
+    const finished = await new Promise((resolve) => {
+      const tick = (now) => {
+        if (!panorama.current(token)) return resolve(false);
+        mix = Math.min(1, (now - began) / 900);
+        if (mix < 1) requestAnimationFrame(tick); else resolve(true);
+      };
+      requestAnimationFrame(tick);
+    });
+    if (!finished) return false;
+  }
+  if (!panorama.current(token)) return false;
+  tex[0] = texture; tex[1] = null; mix = 0;
+  texCache.trim(textureKeys()); upgradePano(name, token);
+  return true;
 }
 
 function resize() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, state.quality === 'low' ? 1 : wantsHD() ? 2 : 1.25);
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
@@ -356,7 +413,7 @@ function resize() {
 const D2R = Math.PI / 180;
 function frame() {
   resize();
-  if (gl && tex[0]) {
+  if (glAvailable && tex[0]) {
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[0]);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tex[1] || tex[0]);
@@ -389,7 +446,7 @@ let hotspotEls = [];
 function buildHotspots() {
   const st = STATIONS[state.s];
   $('hotspots').replaceChildren();
-  hotspotEls = (st.card ? [] : st.labels).map((key) => {
+  hotspotEls = (st.card || !glAvailable ? [] : st.labels).map((key) => {
     const el = document.createElement('div'); el.className = 'hotspot';
     el.innerHTML = '<span></span><i></i><b></b>';
     el.querySelector('span').textContent = LABELS[key][state.lang];
@@ -458,31 +515,40 @@ function pickVoice(lang) {
 }
 if (synth) synth.onvoiceschanged = () => {};
 
-const AUDIO = /*@AUDIO@*/;
-const NARR_EN = /*@NARR@*/;
-const NARR_AR = /*@NARR_AR@*/;
+const AUDIO = TourAssets.audio;
+const NARR_EN = TourAssets.narration.en;
+const NARR_AR = TourAssets.narration.ar;
 /* Who recorded each dua clip: 'alafasy' (Quran verses), 'hisn' (Hisn al-Muslim), otherwise synthetic. */
-const AUDIO_CREDIT = Object.assign({ maqam: 'reciter', rabbana: 'reciter' }, /*@HISN@*/, { safa_verse: 'mixed' });
+const AUDIO_CREDIT = Object.assign({ maqam: 'reciter', rabbana: 'reciter' }, { talbiyah: 'hisn', enter: 'hisn', bismillah: 'hisn', safa_dhikr: 'hisn' }, { safa_verse: 'mixed' });
 const num = (n) => String(n);   // Western digits: clearer for Maghreb readers, and Arabic-Indic ٠ looks like a dot
 const sep = () => state.lang === 'ar' ? ' – ' : ' · ';
 const player = new Audio();
 player.preload = 'auto';
+function audioFailed(retry) {
+  stopSpeech(); setPlaying(false);
+  $('audioError').textContent = recoveryText[state.lang].audio;
+  $('retryAudio').textContent = recoveryText[state.lang].retryAudio;
+  $('retryAudio').onclick = retry; $('audioStatus').hidden = false;
+}
+function retryStepAudio() { state.started = true; setPlaying(true); runStep(); }
 function playDua(key, done) {
   const id = runId;
+  const wasPlaying = state.playing;
+  const failed = () => { if (id === runId) audioFailed(wasPlaying ? retryStepAudio : () => { $('audioStatus').hidden = true; playDua(key); }); };
   if (!AUDIO.includes(key)) { done && done(); return; }
   player.onended = () => { setListen(false); if (id === runId && done) done(); };
-  player.onerror = () => { setListen(false); if (id === runId && done) done(); };
+  player.onerror = failed;
   player.src = 'audio/' + key + '.mp3';
   player.currentTime = 0;
   setListen(true);
-  player.play().catch(() => { setListen(false); if (id === runId && done) done(); });
+  player.play().catch(failed);
 }
 function playFile(url, done) {
   const id = runId;
   player.onended = () => { if (id === runId) done(); };
-  player.onerror = () => { if (id === runId) done(); };
+  player.onerror = () => { if (id === runId) audioFailed(retryStepAudio); };
   player.src = url; player.currentTime = 0;
-  player.play().catch(() => { if (id === runId) done(); });
+  player.play().catch(() => { if (id === runId) audioFailed(retryStepAudio); });
 }
 /* Speak one line: a recorded voice when we have it, otherwise the browser voice. */
 function speakLine(lineId, text, done) {
@@ -518,7 +584,7 @@ function speak(text, done) {
   };
   next();
 }
-function stopSpeech() { runId++; clearTimeout(timer); if (synth) synth.cancel(); stopDua(); $('stepText').classList.remove('speaking'); }
+function stopSpeech() { playback.next(); runId++; clearTimeout(timer); if (synth) synth.cancel(); stopDua(); $('stepText').classList.remove('speaking'); $('audioStatus').hidden = true; }
 
 /* =================================================================== flow */
 function setPlaying(p) {
@@ -531,17 +597,21 @@ function setPlaying(p) {
 
 function runStep() {
   if (!state.playing) return;
+  stopSpeech();
+  const token = playback.token();
   const st = STATIONS[state.s], step = st.steps[state.k];
   $('stepText').classList.add('speaking');
   if (step.highlight === 'counter') pulseCounter();
   const begin = performance.now();
   const L = state.lang;
   const finish = () => {
+    if (!playback.current(token)) return;
     $('stepText').classList.remove('speaking');
     const wait = Math.max(900, 1700 - (performance.now() - begin));
-    timer = setTimeout(() => { if (state.playing) advance(1, true); }, wait);
+    playback.later(token, () => { if (state.playing) advance(1, true); }, wait);
   };
   speakLine(st.id + '_' + state.k, step[L], () => {
+    if (!playback.current(token)) return;
     if (!step.dua) return finish();
     const id = runId;
     playDua(step.dua, () => {
@@ -553,26 +623,26 @@ function runStep() {
 }
 
 async function go(s, k, { auto = false } = {}) {
-  stopSpeech();
-  const prevPano = STATIONS[state.s]?.pano;
+  const token = navigation.next();
+  stopSpeech(); tween = null;
   const changed = s !== state.s;
-  state.s = s; state.k = k;
+  state.s = s; state.k = k; saveLesson();
   const st = STATIONS[s];
-  render();
-  if (changed || !curPano) buildHotspots();
-  const target = stepTarget(st, st.steps[k]);
-  if (panoFor(st) !== curPano) {
-    const firstLoad = !curPano;
-    const p = showPano(panoFor(st));
-    if (firstLoad) { lookAt(target, 0); await p; }
-    else { await p; lookAt(target, 0); }
-  } else {
-    lookAt(target, auto || changed ? 1700 : 900);
-  }
+  render(); buildHotspots();
   $('scene').classList.toggle('card', !!st.card);
-  // preload the next scene
-  const nx = STATIONS[s + 1]; if (nx) loadPano(panoFor(nx)).catch(() => {});
-  if (state.playing) setTimeout(runStep, changed ? 500 : 250);
+  const target = stepTarget(st, st.steps[k]);
+  const needsPano = panoFor(st) !== curPano || !tex[0];
+  if (needsPano) {
+    lookAt(target, 0);
+    await showPano(panoFor(st));
+    if (!navigation.current(token)) return;
+    lookAt(target, 0);
+  } else lookAt(target, auto || changed ? 1700 : 900);
+  if (!navigation.current(token)) return;
+  // Avoid speculative downloads on low-data connections and devices.
+  const next = STATIONS[s + 1];
+  if (glAvailable && wantsHD() && next) loadPano(panoFor(next)).catch(() => {});
+  if (state.playing) playback.later(playback.token(), runStep, changed ? 500 : 250);
 }
 
 function advance(dir, auto = false) {
@@ -595,8 +665,8 @@ function renderCounter() {
   $('cAdd').textContent = L.add; $('cUndo').textContent = L.undo;
   $('cAdd').disabled = n >= 7; $('cUndo').disabled = n <= 0;
 }
-$('cAdd').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.min(7, state.counts[t] + 1); renderCounter(); };
-$('cUndo').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.max(0, state.counts[t] - 1); renderCounter(); };
+$('cAdd').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.min(7, state.counts[t] + 1); saveLesson(); renderCounter(); };
+$('cUndo').onclick = () => { const t = STATIONS[state.s].counter; state.counts[t] = Math.max(0, state.counts[t] - 1); saveLesson(); renderCounter(); };
 
 /* =================================================================== render */
 function drawIllus() {
@@ -617,6 +687,8 @@ function render() {
   document.documentElement.lang = state.lang;
   document.documentElement.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.style.setProperty('--scale', state.size);
+  $('app').classList.toggle('text-only', !glAvailable);
+  $('dragHint').hidden = !glAvailable || !!st.card;
   for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === state.lang);
   for (const b of document.querySelectorAll('[data-size]')) b.setAttribute('aria-pressed', +b.dataset.size === state.size);
   $('timeSeg').hidden = !NIGHT.length;
@@ -628,6 +700,7 @@ function render() {
     const b = document.createElement('button');
     b.className = i < state.s ? 'done' : i === state.s ? 'now' : '';
     b.setAttribute('aria-label', `${L.station} ${i + 1}: ${x.title[state.lang]}`);
+    if (i === state.s) b.setAttribute('aria-current', 'step');
     b.onclick = () => go(i, 0);
     return b;
   }));
@@ -642,7 +715,11 @@ function render() {
   if (d) {
     $('duaAr').textContent = d.ar; $('duaTr').textContent = d.tr; $('duaMean').textContent = d.en;
     $('duaTr').hidden = $('duaMean').hidden = state.lang === 'ar';
-    $('duaSrc').textContent = d.src ? d.src[state.lang] : ''; $('duaSrc').hidden = !d.src;
+    $('duaSrc').replaceChildren(...(d.references || []).map((ref) => {
+      const link = document.createElement('a'); link.href = ref.url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = ref.label; link.style.color = 'inherit'; return link;
+    }));
+    if (!$('duaSrc').childNodes.length) $('duaSrc').textContent = d.src?.[state.lang] || '';
+    $('duaSrc').hidden = !$('duaSrc').textContent;
     const has = AUDIO.includes(step.dua);
     $('btnListen').hidden = !has; $('lSynth').hidden = !has; $('lSynth').textContent = L[AUDIO_CREDIT[step.dua] || 'synth'];
     setListen(!player.paused && player.src.endsWith('/' + step.dua + '.mp3'));
@@ -655,23 +732,28 @@ function render() {
   $('disclaimer').textContent = L.disclaimer;
   $('dragHint').textContent = L.drag;
   drawIllus();
-  $('loading').textContent = L.loading;
+  const R = recoveryText[state.lang];
+  $('loadingText').textContent = sceneError ? R[sceneError] : L.loading;
+  $('retryPano').textContent = R.retry; $('qualityLabel').textContent = R.quality;
+  $('quality').value = state.quality;
+  for (const option of $('quality').options) option.textContent = R[option.value];
   $('sheetTitle').textContent = L.stations; $('sheetClose').textContent = L.close;
   $('stationList').replaceChildren(...STATIONS.map((x, i) => {
     const li = document.createElement('li'); const b = document.createElement('button');
     b.innerHTML = `<span class="n">${num(i + 1)}</span><span><span class="t"></span><small></small></span>`;
     b.querySelector('.t').textContent = x.title[state.lang]; b.querySelector('small').textContent = x.place[state.lang];
     if (i === state.s) b.setAttribute('aria-current', 'true');
-    b.onclick = () => { $('sheet').hidden = true; go(i, 0); };
+    b.onclick = () => { closeSheet(); go(i, 0); };
     li.appendChild(b); return li;
   }));
   $('body').scrollTop = 0;
+  $('guideScroll').scrollTop = 0;
 }
 
 /* =================================================================== wiring */
 $('btnPlay').onclick = () => {
   if (state.playing) { stopSpeech(); setPlaying(false); return; }
-  state.started = true; setPlaying(true); hideHint(); runStep();
+  state.started = true; saveLesson(); setPlaying(true); hideHint(); runStep();
 };
 $('btnListen').onclick = () => {
   if (!player.paused) { stopDua(); return; }
@@ -686,22 +768,44 @@ for (const b of document.querySelectorAll('[data-lang]')) b.onclick = () => {
 };
 for (const b of document.querySelectorAll('[data-time]')) b.onclick = () => {
   state.night = b.dataset.time === 'night'; store.set('night', state.night); render();
-  const p = panoFor(STATIONS[state.s]); if (p !== curPano) showPano(p);
+  go(state.s, state.k);
 };
 for (const b of document.querySelectorAll('[data-size]')) b.onclick = () => { state.size = +b.dataset.size; store.set('size', state.size); render(); };
-$('btnStations').onclick = () => { $('sheet').hidden = false; $('stationList').querySelector('[aria-current]')?.focus(); };
-$('sheetClose').onclick = () => { $('sheet').hidden = true; };
-$('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
+function closeSheet() { $('sheet').hidden = true; $('app').inert = false; $('btnStations').focus(); }
+$('btnStations').onclick = () => {
+  if (state.playing) { stopSpeech(); setPlaying(false); }
+  $('sheet').hidden = false; $('app').inert = true;
+  $('stationList').querySelector('[aria-current]')?.focus();
+};
+$('sheetClose').onclick = closeSheet;
+$('sheet').onclick = (e) => { if (e.target.id === 'sheet') closeSheet(); };
+$('quality').onchange = () => { state.quality = $('quality').value; store.set('quality', state.quality); curPano = null; go(state.s, state.k); };
+$('retryPano').onclick = () => { curPano = null; go(state.s, state.k); };
 document.addEventListener('keydown', (e) => {
-  if (!$('sheet').hidden) { if (e.key === 'Escape') $('sheet').hidden = true; return; }
-  if (e.target.closest('button') && (e.key === ' ' || e.key === 'Enter')) return;
+  if (!$('sheet').hidden) {
+    if (e.key === 'Escape') { e.preventDefault(); closeSheet(); }
+    if (e.key === 'Tab') {
+      const buttons = [...$('sheet').querySelectorAll('button')];
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    return;
+  }
+  if (e.target.closest('button, a, select, input, textarea')) return;
   if (e.key === ' ') { e.preventDefault(); $('btnPlay').click(); }
-  if (e.key === 'ArrowRight') advance(1);
-  if (e.key === 'ArrowLeft') advance(-1);
+  if (e.key === 'ArrowRight') advance(state.lang === 'ar' ? -1 : 1);
+  if (e.key === 'ArrowLeft') advance(state.lang === 'ar' ? 1 : -1);
 });
+window.addEventListener('pagehide', saveLesson);
+canvas.addEventListener('webglcontextlost', (event) => {
+  event.preventDefault(); glAvailable = false; panorama.next(); texCache.clear(); tex = [null, null]; curPano = null; showSceneError('no3d');
+});
+canvas.addEventListener('webglcontextrestored', () => { glAvailable = initializeScene(); curPano = null; go(state.s, state.k); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && state.playing) { stopSpeech(); setPlaying(false); } });
 
-if (initGL()) requestAnimationFrame(frame);
+glAvailable = initializeScene();
+if (glAvailable) requestAnimationFrame(frame);
 render();
-go(0, 0);
+go(state.s, state.k);
 </script>

@@ -1,29 +1,67 @@
-# Umrah tour — Blender scene generator
+# Umrah tour scene pipeline
 
-Two procedural scenes, generated 100% from Python (no downloaded models or textures):
+`build_scene.py` produces the Haram and Mas'a; `export_fps.py` derives instanced
+glTF models from the same masters. These remain instructional reconstructions.
 
-- **haram** — Kaaba (kiswa, gold band, door curtain, Black Stone in its silver frame, waterspout), Hijr Ismail, Maqam Ibrahim, 4-level arcades with domes, minarets, the clock tower complex, Zamzam coolers, ~2,000 faceless pilgrims walking counter-clockwise.
-- **masa** — the Mas'a gallery: Safa and Marwah rocks under domes, lanes and dividers, the green-light section, pilgrims walking both directions.
+The first visual milestone rebuilds the Kaaba area. `landmarks.py` contains draped
+cloth, the sloping shadharwan, a separate gold door and traced open curtain,
+recessed Black Stone/silver surround, Hijr coping and open Maqam enclosure.
+`layout.json` supplies the browser and Blender with the same coordinate frame.
 
-Each camera is a 360° equirectangular camera placed at a tour station.
+The curtain's photographed Arabic comes from a documented CC0 source in
+`artwork/`; the remaining kiswa embroidery is reserved, pending accurate artwork
+and review. Read [the reference ledger](../docs/visual-reference-ledger.md).
+Other architecture remains schematic. `pilgrims.py` supplies eight lightweight
+adult silhouettes with profiled clothing, hands, footwear and varied builds.
+Tagged arm/calf/foot vertices drive instanced walking in `web/crowd.js`; the same
+poses are baked into panorama crowds. Faces remain deliberately simple.
 
-## Render
+## Heavy rendering: rented H100
+
+Use `gpu/render_visuals.sh` on the isolated Hyperstack worker. It runs a static
+contact bake (no pilgrims), glTF export, two crowd studio views, ten fixed
+day/night landmark views, ten 4K Haram panoramas and three 4K Mas'a panoramas.
+The worker uses Python 3.11, `bpy==5.0.1`,
+`Pillow==11.3.0`, `numpy==1.26.4`, `UMRAH_DEVICE=CUDA`. A missing requested GPU
+is an error; there is no silent CPU fallback.
+
+Creation, restricted SSH, credential handling, output retrieval and deletion are
+documented in the root README. No VM credentials belong in source archives.
+
+## Source assets and derivatives
 
 ```bash
-pip install bpy            # Blender as a Python module (5.x), or use Blender's own Python
-python build_scene.py haram out 2048 32          # all Haram cameras, 2048x1024, 32 samples
-python build_scene.py masa  out 2048 32
-python build_scene.py haram out 8192 128 start   # one camera in 8K
+python3 blender/fetch_assets.py 2k assets
 ```
 
-Outputs `out/<scene>.blend` (open it in Blender to edit by hand), `out/<camera>.jpg`, and
-`out/<scene>_views.json` (yaw/pitch of every point of interest, used by the web player to aim the camera and place labels).
+Downloads CC0 material scans and skies. The actual locations are recorded in the
+reference ledger. `assets/` is a reproducible local cache, excluded from Git.
 
-On a Mac with Apple Silicon, open the `.blend` in Blender and switch Cycles to **GPU (Metal)** for much faster 4K/8K renders.
+```bash
+UMRAH_ASSETS=assets python3 blender/export_fps.py fps assets
+python3 blender/check_assets.py fps --strict
+```
 
-## Where to take it next
+`fps/contact.png` is the saved GPU bake used by default. Override its location
+with `UMRAH_CONTACT`, or set that variable to an empty string while rebaking.
+Texture colour, normal and packed metallic/roughness channels survive export;
+material-role extras tell the browser which meshes represent cloth, glass and
+contact shading. Dedicated landmark UVs are preserved. Small metal profiles are
+batched, while repeated architecture uses `EXT_mesh_gpu_instancing`.
 
-- Replace the abstract gold pattern on the kiswa with properly sourced calligraphy artwork.
-- Swap primitive meshes for hero models (Kaaba, Maqam, arcade columns) as they are made.
-- Pilgrims are deliberately faceless and simple; keep it that way, but add cloth folds and walking poses.
-- Coordinates: Kaaba at origin; Black Stone corner at (+x, +y). Everything is in metres.
+Export to a separate raw folder when producing delivery assets, then run
+`bash blender/optimize_models.sh <raw-folder> fps`. The pinned glTF Transform
+postprocess quantizes vertex storage while preserving instancing and artwork UVs.
+`python3 blender/check_assets.py fps --strict --delivery` enforces the final
+8.6 MB Haram, 3.3 MB Mas'a and 900 KB crowd payload limits. It also checks curtain
+orientation and the custom gait attributes. This postprocess is small CPU work;
+all baking and image rendering runs on the rented H100.
+
+For building `.blend` source files without rendering:
+
+```bash
+UMRAH_ASSETS=assets python3 blender/build_scene.py haram out 2048 64 none
+```
+
+`visual-cameras.json` fixes review framing. `render_comparisons.py` renders those
+views on the GPU. Normal tour camera metadata is emitted with the panoramas.

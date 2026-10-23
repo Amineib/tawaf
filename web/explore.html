@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Umrah 3D Explore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,10 +20,11 @@
 :root[dir="rtl"] { --font: "Noto Naskh Arabic", "Geeza Pro", "Atkinson Hyperlegible", serif; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { margin: 0; height: 100%; background: var(--ink); color: var(--fg); font-family: var(--font); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
-button { font: inherit; color: inherit; cursor: pointer; }
+html, body { margin: 0; height: 100%; background: var(--ink); color: var(--fg); font-family: var(--font); overflow: hidden; user-select: none; -webkit-user-select: none; }
+button, select { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+select { background: #20272c; color: var(--fg); border: 1px solid var(--line); border-radius: 10px; min-height: 44px; max-width: 100%; }
+canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 
 .hud { position: fixed; inset: 0; pointer-events: none;
   padding: max(12px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); }
@@ -55,7 +56,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 .feed { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom, 0px));
   width: min(520px, calc(100% - 2 * clamp(130px, 26vmin, 210px) - 90px)); display: grid; gap: 8px; pointer-events: none !important; }
 .feed > * { pointer-events: auto; }
-.toast { background: var(--panel); border: 1px solid rgba(214,173,94,.6);
+.toast { max-height: 48vh; overflow-y: auto; background: var(--panel); border: 1px solid rgba(214,173,94,.6);
   border-radius: 16px; padding: 14px 16px; display: grid; gap: 6px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.55); }
 .toast .x { position: absolute; }
 .cap { background: rgba(10, 13, 15, .84); border-radius: 12px; padding: 10px 14px; font-size: 1.05rem; line-height: 1.45; text-align: center; text-wrap: pretty; }
@@ -92,6 +93,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 .fade.on { opacity: 1; }
 .cross { position: fixed; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: rgba(255,255,255,.7); pointer-events: none; }
 @media (max-width: 900px) {
+  .topbtns { max-width: calc(100% - 28px); top: auto; bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + clamp(130px, 26vmin, 210px) + 12px); inset-inline-end: auto; inset-inline-start: max(14px, env(safe-area-inset-left, 0px)); }
   .feed { bottom: auto; top: calc(max(12px, env(safe-area-inset-top, 0px)) + 150px); width: calc(100% - 28px); }
   .toast { padding: 10px 12px; } .toast .ar { font-size: 1.35rem; line-height: 1.6; } .toast .m { font-size: .92rem; }
   .cap { font-size: .95rem; padding: 8px 12px; }
@@ -113,16 +115,17 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 <div class="fade" id="fade"></div>
 
 <div class="hud" id="hud" hidden>
-  <section class="mission" aria-live="polite">
+  <section class="mission">
     <div class="k"><span id="mStep"></span><span id="mDist" class="dist"></span></div>
-    <h1 id="mTitle"></h1>
+    <h1 id="mTitle" aria-live="polite"></h1>
     <p id="mGoal"></p>
-    <div class="count" id="mCount" hidden></div>
-    <div class="prog" id="mProg" hidden><i id="mProgFill"></i></div>
+    <div class="count" id="mCount" aria-live="polite" hidden></div>
+    <div class="prog" id="mProg" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><i id="mProgFill"></i></div>
   </section>
   <div class="topbtns">
     <button class="pill" id="bSound" aria-pressed="true"></button>
     <button class="pill" id="bTime"></button>
+    <button class="pill" id="bPause" aria-pressed="false"></button>
     <button class="pill" id="bTour"></button>
   </div>
   <div class="minimap"><canvas id="mini" width="420" height="420"></canvas></div>
@@ -134,6 +137,7 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
   </div>
   <div class="banner" id="banner" hidden></div>
   <div class="feed" id="feed">
+    <div class="toast" id="audioIssue" role="status" hidden><p id="audioIssueText"></p><button class="listen" id="retryAudio"></button></div>
     <div class="toast" id="toast" hidden>
       <div class="t" id="tTitle"></div>
       <div class="ar" id="tAr" lang="ar"></div>
@@ -148,10 +152,13 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
 
 <div class="screen" id="intro">
   <div class="card">
-    <h2 id="iTitle"></h2>
+    <h2 id="iTitle">Umrah in 3D</h2>
     <p id="iText"></p>
     <div class="bar" id="loadBar"><i id="loadFill"></i></div>
-    <p class="muted" id="loadText"></p>
+    <p class="muted" id="loadText" role="status">Loading the scene. You can also open the text and audio lessons.</p>
+    <button class="btn-sec" id="bRetry" hidden>Retry loading</button>
+    <a class="listen" id="fallbackTour" href="index.html?text">Read or listen to the guided lessons</a>
+    <label><span id="qualityLabel">Quality</span> <select id="quality"><option value="auto">Auto</option><option value="low">Low data</option><option value="high">High</option></select></label>
     <div class="dua" id="iNiyyah"></div>
     <div class="dua" id="iTalbiyah"></div>
     <ul id="iHow"></ul>
@@ -171,79 +178,62 @@ canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block
   </div>
 </div>
 
+<script src="lib/runtime.js"></script>
+<script src="lib/content.js"></script>
+<script src="lib/assets.js"></script>
+<script src="lib/layout.js"></script>
+<script src="lib/crowd.js"></script>
+<script>
+document.getElementById('bRetry').onclick = () => location.reload();
+function showStartupFallback() {
+  document.getElementById('intro').hidden = false;
+  document.getElementById('bRetry').hidden = false;
+  document.getElementById('loadText').textContent = document.documentElement.lang === 'ar'
+    ? 'تعذّر تشغيل الجولة. أعد المحاولة أو افتح دروس القراءة والاستماع.'
+    : 'The tour could not start. Retry, or open the text and audio lessons.';
+}
+window.addEventListener('error', (event) => { if (event.message || event.target?.tagName === 'SCRIPT') showStartupFallback(); }, true);
+window.addEventListener('unhandledrejection', showStartupFallback);
+</script>
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /* ======================================================================= text */
-const store = {
-  get(k, d) { try { const v = localStorage.getItem('umrah:' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem('umrah:' + k, JSON.stringify(v)); } catch {} },
-};
+const store = TourRuntime.createStore({ getItem: (key) => localStorage.getItem(key), setItem: (key, value) => localStorage.setItem(key, value) });
 const LANG = store.get('lang', 'en') === 'ar' ? 'ar' : 'en';
 document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
-const T = {
-  en: { intro: 'Umrah in 3D', introText: 'Walk through the Haram and the Mas‘a yourself. Each step of the Umrah is a mission. The minimap shows where to go, and “Guide me” walks for you.',
-        loading: 'Loading the Haram…', ready: 'Ready.', start: 'I am in ihram, begin', how: ['Move: W A S D or arrow keys. Look: drag with the mouse (double-click to lock it, Esc to release).', 'Phone: drag on the left to walk, on the right to look.', '“Guide me” walks you through the current mission, then hands control back. “Run” goes faster.'],
-        note: 'Simplified real-time 3D for orientation, not an exact model. Duas from Hisn al-Muslim; Quran recitation by Mishary Rashid Alafasy.',
-        niyyah: 'At the Miqat, make your intention:', talbiyah: 'Then repeat the Talbiyah:', listen: 'Listen', stop: 'Stop', ok: 'Continue',
-        guide: 'Guide me', guiding: 'Guiding…', run: 'Run', day: 'Day', night: 'Night', tour: 'Guided tour', mission: 'Mission', of: 'of', m: 'm away',
-        beginSai: 'Begin Sa‘i', skipTawaf: 'Fast-forward remaining circuits', skipSai: 'Fast-forward remaining lengths',
-        circuit: (n) => `Circuit ${n} of 7 complete`, length: (n) => `Length ${n} of 7 complete`,
-        wrongWay: 'Wrong direction', wrongWayText: 'Keep the Kaaba on your left. Turn around and walk the other way.',
-        hijr: 'This circuit does not count', hijrText: 'The Hijr Ismail is part of the Kaaba. Walk around the outside of its curved wall.',
-        green: 'Green lights: men walk quickly here, women at their normal pace.',
-        doneTitle: 'Your Umrah is complete', doneText: 'Men shave the head or shorten the hair; women cut a fingertip’s length. May Allah accept it from you.',
-        stats: (t, c, l) => `Time: ${t} · Tawaf circuits: ${c} · Sa‘i lengths: ${l}`, again: 'Start again', back: 'Back to the guided tour',
-        entering: 'Entering the Mas‘a…', rabbana: 'Between the Yemeni Corner and the Black Stone',
-        soundOn: 'Sound on', soundOff: 'Sound off', takbir: 'At the Black Stone line', dhikr: 'Remember Allah',
-        resume: (n, t) => `Continue: mission ${n}, ${t}`, missionDone: (t) => `✓ ${t}`, arriveSafa: 'At Safa', arriveMarwa: 'At Marwah', noWebgl: 'This device cannot show 3D (WebGL2 is not available).' },
-  ar: { intro: 'العمرة ثلاثية الأبعاد', introText: 'امشِ بنفسك في المسجد الحرام والمسعى. كل خطوة من العمرة مهمة. الخريطة الصغيرة تدلّك على الطريق، وزر «أرشدني» يمشي بك.',
-        loading: 'جارٍ تحميل المسجد الحرام…', ready: 'جاهز.', start: 'أنا محرم، ابدأ', how: ['الحركة: مفاتيح W A S D أو الأسهم. النظر: اسحب بالفأرة (انقر مرتين لتثبيتها، وEsc لإلغاء ذلك).', 'على الهاتف: اسحب في اليسار للمشي، وفي اليمين للنظر.', 'زر «أرشدني» يمشي بك خلال المهمة الحالية ثم يعيد إليك التحكم، وزر «أسرع» يزيد السرعة.'],
-        note: 'مشهد ثلاثي الأبعاد مبسّط للمساعدة على التوجّه، وليس نموذجًا دقيقًا. الأدعية من حصن المسلم، والتلاوة بصوت مشاري راشد العفاسي.',
-        niyyah: 'عند الميقات انوِ العمرة:', talbiyah: 'ثم أكثِر من التلبية:', listen: 'استمع', stop: 'إيقاف', ok: 'متابعة',
-        guide: 'أرشدني', guiding: 'جارٍ الإرشاد…', run: 'أسرع', day: 'نهار', night: 'ليل', tour: 'الجولة الموجَّهة', mission: 'المهمة', of: 'من', m: 'م',
-        beginSai: 'ابدأ السعي', skipTawaf: 'تسريع الأشواط المتبقية', skipSai: 'تسريع الأشواط المتبقية',
-        circuit: (n) => `اكتمل الشوط ${n} من 7`, length: (n) => `اكتمل الشوط ${n} من 7`,
-        wrongWay: 'اتجاه خاطئ', wrongWayText: 'اجعل الكعبة عن يسارك، واستدر وامشِ في الاتجاه الآخر.',
-        hijr: 'هذا الشوط لا يُحتسب', hijrText: 'حِجر إسماعيل من الكعبة، فطُف من خارج جداره المقوّس.',
-        green: 'الأضواء الخضراء: يُسرع الرجال هنا، وتمشي النساء مشيًا عاديًّا.',
-        doneTitle: 'تمّت عمرتك', doneText: 'يحلق الرجل رأسه أو يقصّر، وتقصّ المرأة قدر أنملة. تقبّل الله منك.',
-        stats: (t, c, l) => `الوقت: ${t} – أشواط الطواف: ${c} – أشواط السعي: ${l}`, again: 'ابدأ من جديد', back: 'العودة إلى الجولة الموجَّهة',
-        entering: 'الدخول إلى المسعى…', rabbana: 'بين الركن اليماني والحجر الأسود',
-        soundOn: 'الصوت مفعّل', soundOff: 'الصوت مكتوم', takbir: 'عند خط الحجر الأسود', dhikr: 'اذكر الله',
-        resume: (n, t) => `متابعة: المهمة ${n}، ${t}`, missionDone: (t) => `✓ ${t}`, arriveSafa: 'على الصفا', arriveMarwa: 'على المروة', noWebgl: 'لا يدعم هذا الجهاز العرض ثلاثي الأبعاد (WebGL2 غير متوفر).' },
-}[LANG];
-
-const DUA = {
-  niyyah: { ar: 'لَبَّيْكَ اللَّهُمَّ عُمْرَةً', tr: 'Labbayka Allāhumma ʿumrah', en: 'Here I am, O Allah, for Umrah.' },
-  talbiyah: { ar: 'لَبَّيْكَ اللَّهُمَّ لَبَّيْكَ، لَبَّيْكَ لَا شَرِيكَ لَكَ لَبَّيْكَ، إِنَّ الْحَمْدَ وَالنِّعْمَةَ لَكَ وَالْمُلْكَ، لَا شَرِيكَ لَكَ', tr: 'Labbayka Allāhumma labbayk…', en: 'Here I am, O Allah, here I am. You have no partner. All praise, blessings and sovereignty are Yours.' },
-  enter: { ar: 'بِسْمِ اللَّهِ، وَالصَّلَاةُ وَالسَّلَامُ عَلَى رَسُولِ اللَّهِ، اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ', tr: 'Bismillāh, waṣ-ṣalātu was-salāmu ʿalā rasūlillāh…', en: 'In the name of Allah… O Allah, open for me the gates of Your mercy.' },
-  bismillah: { ar: 'بِسْمِ اللَّهِ وَاللَّهُ أَكْبَرُ', tr: 'Bismillāh, wallāhu akbar', en: 'In the name of Allah, and Allah is the Greatest.' },
-  rabbana: { ar: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ', tr: 'Rabbanā ātinā fid-dunyā ḥasanatan…', en: 'Our Lord, give us good in this world and in the Hereafter, and protect us from the Fire.' },
-  maqam: { ar: 'وَاتَّخِذُوا مِن مَّقَامِ إِبْرَاهِيمَ مُصَلًّى', tr: 'Wattakhidhū min maqāmi Ibrāhīma muṣallā', en: 'And take the station of Ibrahim as a place of prayer.' },
-  safa_verse: { ar: 'إِنَّ الصَّفَا وَالْمَرْوَةَ مِن شَعَائِرِ اللَّهِ — أَبْدَأُ بِمَا بَدَأَ اللَّهُ بِهِ', tr: 'Innaṣ-Ṣafā wal-Marwata min shaʿāʾirillāh…', en: 'Safa and Marwah are among the symbols of Allah. I begin with what Allah began with.' },
-  safa_dhikr: { ar: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ', tr: 'Lā ilāha illā Allāhu waḥdahu lā sharīka lah…', en: 'There is no god but Allah alone, without partner…' },
+const T = { ...TourContent.practice.text[LANG],
+  circuit: (n) => LANG === 'ar' ? `اكتمل الشوط ${n} من 7` : `Circuit ${n} of 7 complete`,
+  length: (n) => LANG === 'ar' ? `اكتمل الشوط ${n} من 7` : `Length ${n} of 7 complete`,
+  stats: (t, c, l) => LANG === 'ar' ? `الوقت: ${t} – أشواط الطواف: ${c} – أشواط السعي: ${l}` : `Time: ${t} · Tawaf circuits: ${c} · Sa‘i lengths: ${l}`,
+  resume: (n, t) => LANG === 'ar' ? `متابعة: المهمة ${n}، ${t}` : `Continue: mission ${n}, ${t}`,
+  missionDone: (t) => `✓ ${t}`,
 };
 
+const DUA = TourContent.duas;
+const EXTRA = {
+  en: { retry: 'Retry loading', failed: 'The scene could not load. Retry, or use the text and audio lessons.', lessons: 'Read or listen to the guided lessons', quality: 'Quality', auto: 'Auto', low: 'Low data', high: 'High', pause: 'Pause', resume: 'Resume', paused: 'Paused. Select Resume to continue.', masa: 'Loading the Mas‘a…', audio: 'Audio could not play. Retry, or turn sound off to read captions.', retryAudio: 'Retry audio' },
+  ar: { retry: 'أعد التحميل', failed: 'تعذّر تحميل المشهد. أعد المحاولة أو افتح دروس القراءة والاستماع.', lessons: 'افتح دروس القراءة والاستماع', quality: 'الجودة', auto: 'تلقائية', low: 'توفير البيانات', high: 'عالية', pause: 'إيقاف مؤقت', resume: 'متابعة', paused: 'متوقّف مؤقتًا. اضغط متابعة للاستمرار.', masa: 'جارٍ تحميل المسعى…', audio: 'تعذّر تشغيل الصوت. أعد المحاولة أو اكتم الصوت لقراءة النص.', retryAudio: 'أعد تشغيل الصوت' },
+}[LANG];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let quality = ['auto', 'low', 'high'].includes(store.get('quality', 'auto')) ? store.get('quality', 'auto') : 'auto';
+const session = TourRuntime.createScope();
+let started = false, paused = false, booted = false, loopStarted = false, retryAction = null, pausedCues = [];
+
 /* short, well-known dhikr shown as text during the long walks (no audio) */
-const DHIKR = [
-  ['سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَلَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ', 'Subḥān Allāh, wal-ḥamdu lillāh, wa lā ilāha illā Allāh, wallāhu akbar', 'Glory be to Allah, praise be to Allah, there is no god but Allah, and Allah is the Greatest.'],
-  ['أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ', 'Astaghfirullāha wa atūbu ilayh', 'I seek Allah’s forgiveness and turn to Him in repentance.'],
-  ['لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', 'Lā ḥawla wa lā quwwata illā billāh', 'There is no power and no strength except with Allah.'],
-  ['اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ', 'Allāhumma ṣalli wa sallim ʿalā nabiyyinā Muḥammad', 'O Allah, send prayers and peace upon our Prophet Muhammad.'],
-  ['رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ', 'Rabbighfir lī wa li-wālidayya', 'My Lord, forgive me and my parents.'],
-  ['اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', 'Allāhumma innaka ʿafuwwun tuḥibbul-ʿafwa faʿfu ʿannī', 'O Allah, You are the Pardoner and You love to pardon, so pardon me.'],
-];
+const DHIKR = TourContent.practice.dhikr;
 
 /* ======================================================================= scene constants (Blender metres, z up) */
-const KX = 5.85, KY = 6.45, R = 48, NB = 52;
-const MAQAM = [2, 17];
+const layout = TourLayout;
+const KX = layout.haram.kaaba.halfWidth, KY = layout.haram.kaaba.halfDepth, R = layout.haram.arcade.radius, NB = layout.haram.arcade.bays;
+const MAQAM = layout.haram.maqam.slice(0, 2);
 const COOLERS = Array.from({ length: 18 }, (_, k) => { const a = (20 + k * 20) * Math.PI / 180; return [(R - 2.2) * Math.cos(a), (R - 2.2) * Math.sin(a)]; });
 const START_ANG = Math.PI / 4;                      // Black Stone corner direction
-const PORTAL = [63 * Math.cos(25 * Math.PI / 180), 63 * Math.sin(25 * Math.PI / 180)];
-const HIJR = { cx: -KX, a: 9.1, b: 7.3, rin: 8.4 / 9.1, rout: 9.8 / 9.1, t0: 105 * Math.PI / 180, t1: 255 * Math.PI / 180 };
-const MASA = { safa: 0, marwa: 400, green: [150, 205], hw: 21 };
+const PORTAL = [layout.haram.approach.radius * Math.cos(layout.haram.approach.angleDegrees * Math.PI / 180), layout.haram.approach.radius * Math.sin(layout.haram.approach.angleDegrees * Math.PI / 180)];
+const hijrLayout = layout.haram.hijr, hijrA = hijrLayout.innerA + hijrLayout.thickness / 2;
+const HIJR = { cx: -KX, a: hijrA, b: hijrLayout.innerB + hijrLayout.thickness / 2, rin: hijrLayout.innerA / hijrA, rout: (hijrLayout.innerA + hijrLayout.thickness) / hijrA, t0: hijrLayout.startDegrees * Math.PI / 180, t1: hijrLayout.endDegrees * Math.PI / 180 };
+const MASA = { safa: layout.masa.safa, marwa: layout.masa.marwa, green: layout.masa.green, hw: layout.masa.walkableHalfWidth };
 const toV = (x, y, z = 0) => new THREE.Vector3(x, z, -y);   // Blender -> three
 
 /* rmin(θ): closest radius from the Kaaba centre that is clear of the Kaaba and the Hijr */
@@ -271,14 +261,20 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 } catch (e) {
-  document.getElementById('loadText').textContent = T.noWebgl; throw e;
+  document.getElementById('loadText').textContent = T.noWebgl; document.getElementById('bRetry').hidden = false; throw e;
 }
 const MOBILE = matchMedia('(pointer: coarse)').matches;
 const LOWQ = /[?&]lowq/.test(location.search);   // software-GL test runs
-renderer.setPixelRatio(LOWQ ? +(new URLSearchParams(location.search).get('lowq') || 0.35) : Math.min(window.devicePixelRatio || 1, MOBILE ? 1.5 : 2));
+function applyQuality() {
+  const low = quality === 'low' || (quality === 'auto' && (MOBILE || navigator.connection?.saveData));
+  renderer.setPixelRatio(LOWQ ? 0.35 : Math.min(window.devicePixelRatio || 1, low ? 1 : 2));
+  renderer.shadowMap.enabled = !low && !LOWQ;
+  renderer.setSize(innerWidth, innerHeight, false);
+}
+applyQuality();
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.shadowMap.enabled = !MOBILE && !LOWQ;
+renderer.shadowMap.enabled = !LOWQ && (quality === 'high' || quality === 'auto' && !MOBILE && !navigator.connection?.saveData);
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 3000);
@@ -296,23 +292,65 @@ const hemi = new THREE.HemisphereLight(0xdfe8ff, 0x8a7a66, 0.6);
 scene.add(sun, sun.target, hemi);
 const floods = new THREE.Group();
 for (const az of [45, 135, 225, 315]) {
-  const a = az * Math.PI / 180, L = new THREE.SpotLight(0xfff2de, 9, 0, 0.16, 0.6, 0);
+  const a = az * Math.PI / 180, L = new THREE.SpotLight(0xfff6ed, 6500, 160, 0.78, 0.7, 2);
   L.position.copy(toV(Math.cos(a) * 46, Math.sin(a) * 46, 34)); L.target.position.copy(toV(0, 0, 5));
   floods.add(L, L.target);
 }
 scene.add(floods);
+// One shadow source represents a roof floodlight bank; the other banks provide
+// soft fill. Keeping a single shadow pass avoids multiplying mobile draw work.
+const floodKey = new THREE.DirectionalLight(0xfff8ee, 1.5);
+floodKey.position.copy(toV(44, 40, 36)); floodKey.target.position.copy(toV(0, 0, 3));
+floodKey.castShadow = !MOBILE; floodKey.shadow.mapSize.set(2048, 2048);
+Object.assign(floodKey.shadow.camera, { left: -28, right: 28, top: 28, bottom: -28, near: 1, far: 150 });
+floodKey.shadow.normalBias = 0.025; floodKey.shadow.bias = -0.0001;
+scene.add(floodKey, floodKey.target);
 
 /* ======================================================================= loading */
 const loader = new GLTFLoader();
-const SIZES = { h: 11.4e6, m: 4.2e6, p: 5e4 }, got = { h: 0, m: 0, p: 0 };
-function setProgress(key, loaded, total) {
-  got[key] = Math.min(1, loaded / (total || SIZES[key])) * SIZES[key];
-  const f = Object.values(got).reduce((a, b) => a + b, 0) / Object.values(SIZES).reduce((a, b) => a + b, 0);
-  document.getElementById('loadFill').style.width = Math.round(f * 100) + '%';
+let progressKeys = ['haram', 'pilgrims'];
+const got = {};
+function setProgress(key, loaded) {
+  got[key] = loaded;
+  const total = progressKeys.reduce((sum, k) => sum + TourAssets.models[k].bytes, 0);
+  const done = progressKeys.reduce((sum, k) => sum + Math.min(got[k] || 0, TourAssets.models[k].bytes), 0);
+  $('loadFill').style.width = Math.round(done / total * 100) + '%';
 }
-const load = (url, key) => new Promise((res, rej) => loader.load(url, res, (e) => setProgress(key, e.loaded, e.total), rej));
+async function loadModel(name) {
+  const { url } = TourAssets.models[name];
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error('Model download failed');
+    let buffer;
+    if (response.body?.getReader) {
+      const reader = response.body.getReader(), chunks = []; let loaded = 0;
+      while (true) { const result = await reader.read(); if (result.done) break; chunks.push(result.value); loaded += result.value.length; setProgress(name, loaded); }
+      const bytes = new Uint8Array(loaded); let offset = 0;
+      for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+      buffer = bytes.buffer;
+    } else buffer = await response.arrayBuffer();
+    setProgress(name, buffer.byteLength);
+    return await loader.parseAsync(buffer, new URL('fps/', location.href).href);
+  } finally { clearTimeout(timeout); }
+}
+const worldLoads = {};
+async function ensureWorld(name) {
+  if (worlds[name]) return worlds[name];
+  if (!worldLoads[name]) worldLoads[name] = loadModel(name).then((gltf) => { prepWorld(gltf, name); return worlds[name]; }).catch((error) => { delete worldLoads[name]; throw error; });
+  return worldLoads[name];
+}
+function loadFailure(retry) {
+  $('loadText').textContent = EXTRA.failed; $('bRetry').hidden = false; retryAction = retry;
+}
 let skyTex = null;
-const skyP = new Promise((res) => new THREE.TextureLoader().load('fps/sky_1k.jpg', (t) => { t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace; skyTex = t; res(t); }, undefined, () => res(null)));
+const skyP = new Promise((resolve) => {
+  const timeout = setTimeout(() => resolve(null), 10000);
+  new THREE.TextureLoader().load('fps/sky_1k.jpg', (texture) => {
+    clearTimeout(timeout); texture.mapping = THREE.EquirectangularReflectionMapping; texture.colorSpace = THREE.SRGBColorSpace; skyTex = texture; resolve(texture);
+  }, undefined, () => { clearTimeout(timeout); resolve(null); });
+});
 
 const worlds = {};          // haram / masa: { root, crowd }
 let pilgrimProto = null;
@@ -331,21 +369,25 @@ function prepWorld(gltf, name) {
       for (let i = 0; i < o.count; i++) o.setColorAt(i, c.setHex(pal[i % pal.length]));
       m.color.set(0xffffff);
     }
-    if (m && /Kiswa/.test(m.name)) {
-      o.material = new THREE.MeshPhysicalMaterial({ name: m.name, color: 0x060607, roughness: 0.8, specularIntensity: 0.12, sheen: 0.6, sheenRoughness: 0.5, sheenColor: new THREE.Color(0x2a2a2e) });
-    }
-    if (m && /Glass/.test(m.name)) { m.transparent = true; m.opacity = 0.25; m.depthWrite = false; }
+    const role = m?.userData?.umrahRole;
+    // Keep glTF's normal/roughness maps and UVs. Replacing the material here used
+    // to flatten the silk after export.
+    if (role === 'cloth') { m.metalness = 0; m.roughness = Math.max(m.roughness, 0.7); }
+    if (role === 'glass') { m.transparent = true; m.opacity = 0.18; m.depthWrite = false; o.castShadow = false; }
+    if (role === 'contact') { m.depthWrite = false; o.castShadow = false; o.receiveShadow = false; o.renderOrder = 1; }
+
   });
   worlds[name] = { root, crowd: null };
   return root;
 }
 
 /* ======================================================================= crowd (instanced, animated) */
+const crowdClock = { value: 0 };
 function makeCrowd(kind) {
   const group = new THREE.Group();
   const variants = [];          // [{meshes:[InstancedMesh...], weight}]
-  const weights = { pilgrim_man: 5, pilgrim_woman_w: 2, pilgrim_woman_b: 3, pilgrim_woman_c: 1 };
-  const N = LOWQ ? 200 : kind === 'haram' ? (MOBILE ? 700 : 1300) : (MOBILE ? 450 : 800);
+  const weights = { pilgrim_man: 5, pilgrim_man_b: 4, pilgrim_man_c: 3, pilgrim_man_d: 2, pilgrim_woman_w: 2, pilgrim_woman_b: 3, pilgrim_woman_c: 2, pilgrim_woman_b2: 1 };
+  const N = LOWQ || quality === 'low' || (quality === 'auto' && navigator.connection?.saveData) ? 200 : kind === 'haram' ? (MOBILE ? 550 : 1000) : (MOBILE ? 350 : 600);
   const protos = [];
   pilgrimProto.traverse((o) => { if (o.isMesh) protos.push(o); });
   const byName = {};
@@ -364,12 +406,20 @@ function makeCrowd(kind) {
   names.forEach((n, vi) => {
     const ims = byName[n].map((src) => {
       const mat = src.material.clone();
-      const isSkin = /Skin/.test(mat.name);
+      const isSkin = mat.userData.umrahRole === 'pilgrimSkin' || /Skin/.test(mat.name);
+      const isDetail = mat.userData.umrahRole === 'pilgrimDetail';
       mat.color.set(0xffffff);
-      const im = new THREE.InstancedMesh(src.geometry, mat, counts[vi]);
+      const geometry = src.geometry.clone();
+      if (!geometry.getAttribute('_umrah_gait')) geometry.setAttribute('_umrah_gait', new THREE.BufferAttribute(new Float32Array(geometry.getAttribute('position').count * 3).map((v,i) => i % 3 === 2 ? 1 : 0), 3));
+      geometry.setAttribute('crowdMotion', new THREE.InstancedBufferAttribute(new Float32Array(counts[vi] * 2), 2));
+      TourCrowd.animateMaterial(mat, crowdClock);
+      const im = new THREE.InstancedMesh(geometry, mat, counts[vi]);
+      im.customDepthMaterial = TourCrowd.animateMaterial(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), crowdClock);
+      im.userData.bodyHeight = src.parent?.userData.crowdHeight || src.userData.crowdHeight || 1;
       im.castShadow = !MOBILE; im.receiveShadow = false; im.frustumCulled = false;
       const c = new THREE.Color();
-      for (let k = 0; k < counts[vi]; k++) im.setColorAt(k, c.setHex(isSkin ? skins[(k * 7) % skins.length] : (robe[n] || robe.pilgrim_man)[(k * 3) % (robe[n] || robe.pilgrim_man).length]));
+      const palette = robe[n] || (n.startsWith('pilgrim_man') ? robe.pilgrim_man : robe.pilgrim_woman_b);
+      for (let k = 0; k < counts[vi]; k++) im.setColorAt(k, c.setHex(isSkin ? skins[(k * 7) % skins.length] : isDetail ? 0x302821 : palette[(k * 3) % palette.length]));
       group.add(im); return im;
     });
     variants.push(ims);
@@ -383,12 +433,14 @@ function makeCrowd(kind) {
     } else {
       p.dir = rnd() < 0.5 ? 1 : -1;
       let y; do { y = (3.4 + rnd() * 16.5) * p.dir; } while (Math.abs(Math.abs(y) - 11) < 1.3);
-      p.y = y; p.x = 2 + rnd() * 396; p.speed = 0.8 + rnd() * 0.6; p.scale = 0.9 + rnd() * 0.18;
+      p.lane = Math.abs(y); p.distance = rnd() * (2 * (MASA.marwa - MASA.safa - 16) + 2 * Math.PI * p.lane); p.speed = 0.8 + rnd() * 0.6; p.scale = 0.9 + rnd() * 0.18;
     }
     p.phase = rnd() * 10;
+    for (const im of variants[p.v]) { const motion = im.geometry.getAttribute('crowdMotion'); motion.setXY(p.slot, p.phase, p.speed / (p.scale * im.userData.bodyHeight)); motion.needsUpdate = true; }
   }
   const dummy = new THREE.Object3D();
   function update(dt, t) {
+    crowdClock.value += dt;
     for (const p of people) {
       let x, y, rot;
       if (kind === 'haram') {
@@ -396,32 +448,35 @@ function makeCrowd(kind) {
         p.a += (p.speed / r0) * dt;
         x = r0 * Math.cos(p.a); y = r0 * Math.sin(p.a); rot = p.a;
       } else {
-        p.x += p.speed * p.dir * dt; if (p.x > 399) p.x = 1; if (p.x < 1) p.x = 399;
-        x = p.x; y = p.y; rot = p.dir > 0 ? -Math.PI / 2 : Math.PI / 2;
+        // A continuous oval at the end halls replaces the visible 400 m wrap.
+        p.distance += p.speed * dt;
+        ({ x, y, rot } = TourRuntime.masaCrowdPose(p.distance, p.lane, MASA));
+
       }
       // step aside around the player so nobody walks through the camera
       const ax = x - player.x, ay = y - player.y, d2 = ax * ax + ay * ay;
       if (d2 < 3.24) { const d = Math.sqrt(d2) || 0.01, k = (1.8 - d) / d; x += ax * k; y += ay * k; }
-      dummy.position.copy(toV(x, y, Math.abs(Math.sin(t * 4 + p.phase)) * 0.025));
-      dummy.rotation.set(0, rot, Math.sin(t * 4 + p.phase) * 0.03);
+      dummy.position.copy(toV(x, y, 0));
+      dummy.rotation.set(0, rot, 0);
       dummy.scale.setScalar(p.scale);
       dummy.updateMatrix();
       for (const im of variants[p.v]) im.setMatrixAt(p.slot, dummy.matrix);
     }
     for (const ims of variants) for (const im of ims) im.instanceMatrix.needsUpdate = true;
   }
+  update(0, 0); // reduced-motion users still get a correctly placed static crowd
   return { group, update };
 }
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 /* ======================================================================= markers */
 const markers = new THREE.Group(); scene.add(markers);
-const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 40, 24, 1, true),
+const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 2.8, 16, 1, true),
   new THREE.MeshBasicMaterial({ color: 0xd6ad5e, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
 const ring = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.5, 48), new THREE.MeshBasicMaterial({ color: 0xd6ad5e, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
 ring.rotation.x = -Math.PI / 2;
 markers.add(beam, ring);
-function placeMarker(x, y, z = 0) { markers.visible = x !== null; if (x === null) return; beam.position.copy(toV(x, y, z + 20)); ring.position.copy(toV(x, y, z + 0.03)); }
+function placeMarker(x, y, z = 0) { markers.visible = x !== null; if (x === null) return; beam.position.copy(toV(x, y, z + 1.4)); ring.position.copy(toV(x, y, z + 0.03)); }
 // green start line on the Mataf floor (a guide aid, not a real marking)
 const startLine = new THREE.Mesh(new THREE.PlaneGeometry(37, 0.18), new THREE.MeshBasicMaterial({ color: 0x46d27a, transparent: true, opacity: 0.55, depthWrite: false }));
 startLine.rotation.set(-Math.PI / 2, 0, START_ANG); startLine.position.copy(toV(Math.cos(START_ANG) * 27.5, Math.sin(START_ANG) * 27.5, 0.02));
@@ -445,7 +500,7 @@ const portal = new THREE.Group();
 const player = { x: 0, y: 0, yaw: 0, pitch: 0, z: 0, speed: 2.2 };
 const input = { f: 0, s: 0, run: false, guide: false, ff: false };
 const keys = {};
-addEventListener('keydown', (e) => { keys[e.code] = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = true; if (e.code === 'KeyG') toggleGuide(); });
+addEventListener('keydown', (e) => { if (!started || paused || e.target.closest?.('button, a, select, input')) return; keys[e.code] = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = true; if (e.code === 'KeyG') toggleGuide(); });
 addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = false; });
 // mouse: drag to look, click locks pointer
 let drag = null;
@@ -463,6 +518,7 @@ document.addEventListener('pointerlockchange', () => { document.getElementById('
 const joy = document.getElementById('joy'), knob = document.getElementById('joyKnob');
 const touches = {};
 canvas.addEventListener('touchstart', (e) => {
+  if (!started || paused || game.busy) return;
   for (const t of e.changedTouches) {
     const left = t.clientX < innerWidth / 2;
     touches[t.identifier] = { kind: left ? 'move' : 'look', x0: t.clientX, y0: t.clientY, x: t.clientX, y: t.clientY };
@@ -471,6 +527,7 @@ canvas.addEventListener('touchstart', (e) => {
   e.preventDefault();
 }, { passive: false });
 canvas.addEventListener('touchmove', (e) => {
+  if (!started || paused || game.busy) return;
   for (const t of e.changedTouches) {
     const s = touches[t.identifier]; if (!s) continue;
     if (s.kind === 'look') { look((t.clientX - s.x) * 1.6, (t.clientY - s.y) * 1.6); }
@@ -533,34 +590,34 @@ function floorZ(x, y) {
 }
 
 /* ======================================================================= missions */
-const M = [
-  { id: 'enter', scene: 'haram', title: { en: 'Enter the Haram', ar: 'ادخل المسجد الحرام' }, goal: { en: 'Walk into the open courtyard around the Kaaba (the Mataf).', ar: 'امشِ إلى الصحن المكشوف حول الكعبة (المطاف).' }, audio: ['n:enter_1', 'd:enter'] },
-  { id: 'stone', title: { en: 'Go to the Black Stone', ar: 'توجّه إلى الحجر الأسود' }, goal: { en: 'Stand on the green start line, facing the Black Stone corner.', ar: 'قف على خط البداية الأخضر مستقبلًا ركن الحجر الأسود.' }, audio: ['n:enter_2', 'n:enter_4', 'n:start_0'] },
-  { id: 'tawaf', title: { en: 'Tawaf: 7 circuits', ar: 'الطواف: سبعة أشواط' }, goal: { en: 'Walk around the Kaaba keeping it on your left. Each return to the green line is one circuit.', ar: 'طُف حول الكعبة وهي عن يسارك. كل عودة إلى الخط الأخضر شوط.' }, audio: ['n:start_2', 'd:bismillah', 'n:start_3'] },
-  { id: 'maqam', title: { en: 'Pray behind Maqam Ibrahim', ar: 'صلِّ خلف مقام إبراهيم' }, goal: { en: 'Go behind the golden Maqam and pray two short rak‘ahs.', ar: 'قف خلف المقام الذهبي وصلِّ ركعتين خفيفتين.' }, audio: ['d:maqam', 'n:maqam_1'] },
-  { id: 'zamzam', title: { en: 'Drink Zamzam water', ar: 'اشرب من ماء زمزم' }, goal: { en: 'Find a Zamzam cooler at the edge of the courtyard.', ar: 'اذهب إلى أحد برّادات زمزم عند أطراف الصحن.' }, audio: ['n:maqam_2'] },
-  { id: 'masa', title: { en: 'Go to the Mas‘a', ar: 'اذهب إلى المسعى' }, goal: { en: 'Walk under the arcades to the green Mas‘a sign.', ar: 'امشِ تحت الأروقة إلى لوحة المسعى الخضراء.' }, audio: ['n:maqam_3'] },
-  { id: 'safa', scene: 'masa', title: { en: 'At Safa', ar: 'على الصفا' }, goal: { en: 'Face the Kaaba, raise your hands, and remember Allah. Then begin.', ar: 'استقبل الكعبة وارفع يديك واذكر الله، ثم ابدأ.' }, audio: ['n:safa_0', 'd:safa_verse', 'n:safa_1', 'd:safa_dhikr'] },
-  { id: 'sai', title: { en: 'Sa‘i: 7 lengths', ar: 'السعي: سبعة أشواط' }, goal: { en: 'Walk to Marwah and back. Seven lengths in total, ending at Marwah.', ar: 'امشِ إلى المروة ثم عُد. سبعة أشواط تنتهي عند المروة.' }, audio: ['n:safa_2'] },
-];
-const freshTawaf = () => ({ acc: 0, last: null, count: 0, penalty: 0, voided: -1, wrongT: 0, warnAt: -99, fired: new Set() });
-const freshSai = () => ({ count: 0, last: 'safa', fired: new Set(), inGreen: false });
-const game = { mi: 0, tawaf: freshTawaf(), sai: freshSai(), t0: 0, zamzam: null, busy: false };
+const M = TourContent.practice.missions;
+const { freshTawaf, freshSai } = TourRuntime;
+const game = { mi: 0, tawaf: freshTawaf(), sai: freshSai(), t0: 0, elapsed: 0, zamzam: null, busy: false };
+let lastSave = 0;
+function saveExplore() {
+  if (!started || game.busy || game.mi >= M.length) return;
+  const elapsed = game.elapsed + (paused ? 0 : (performance.now() - game.t0) / 1000);
+  store.set('explore', TourRuntime.exploreSnapshot(game, player, M, elapsed));
+}
+function clearInput() { for (const key of Object.keys(keys)) delete keys[key]; input.f = input.s = 0; drag = null; for (const key of Object.keys(touches)) delete touches[key]; joy.hidden = true; }
+function setPaused(value) {
+  if (!started || value === paused) return;
+  if (value) {
+    game.elapsed += (performance.now() - game.t0) / 1000;
+    pausedCues = [...(snd.cur?.cue ? [snd.cur.cue] : []), ...snd.q];
+    stopGuide(); clearInput(); stopAudio();
+  } else { game.t0 = performance.now(); if (!game.busy) say(pausedCues); pausedCues = []; }
+  paused = value; saveExplore();
+  for (const id of ['bGuide', 'bRun', 'bSkip', 'bAct']) $(id).disabled = value;
+  $('bPause').textContent = value ? EXTRA.resume : EXTRA.pause;
+  $('bPause').setAttribute('aria-pressed', value);
+  if (value) banner(EXTRA.paused, 6000);
+}
 const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 /* what plays during the 7 circuits: [fraction of the circuit, audio], keyed by circuit index (0 = first) */
-const TAWAF_SCRIPT = {
-  0: [[0.06, 'n:start_4'], [0.30, 'n:hijr_0'], [0.42, 'n:hijr_1'], [0.66, 'n:yemeni_0']],
-  1: [[0.12, 'n:start_1'], [0.45, 'dhikr:0']],
-  2: [[0.15, 'n:yemeni_2'], [0.45, 'dhikr:1']],
-  3: [[0.15, 'n:hijr_2'], [0.45, 'dhikr:2']],
-  4: [[0.15, 'n:hijr_3'], [0.45, 'dhikr:3']],
-  5: [[0.15, 'n:enter_3'], [0.45, 'dhikr:4']],
-  6: [[0.15, 'n:yemeni_3'], [0.45, 'dhikr:5']],
-};
-/* Sa'i: [length index, x where it plays, audio]; even lengths go to Marwah (x grows), odd ones back to Safa */
-const SAI_SCRIPT = [[0, 70, 'n:green_0'], [1, 340, 'n:marwa_1'], [2, 60, 'n:safa_3'], [3, 330, 'n:green_2'],
-  [4, 90, 'dhikr:0'], [5, 300, 'dhikr:2'], [6, 90, 'dhikr:5']];
+const TAWAF_SCRIPT = TourContent.practice.tawafScript;
+const SAI_SCRIPT = TourContent.practice.saiScript;
 
 function missionTarget() {
   const m = M[game.mi]; if (!m) return null;
@@ -608,7 +665,7 @@ function tawafTick(dt) {
     if (frac > 0.76 && frac < 0.97 && !tw.fired.has(raw + ':rabbana')) { tw.fired.add(raw + ':rabbana'); say(cnt === 0 ? ['n:yemeni_1', 'd:rabbana'] : ['d:rabbana']); }
   }
   if (cnt > tw.count) {
-    tw.count = cnt; banner(T.circuit(cnt)); chime(); updateHud();
+    tw.count = cnt; saveExplore(); banner(T.circuit(cnt)); chime(); updateHud();
     if (cnt >= 7) { input.ff = false; return nextMission(); }
     stopAudio();                                        // leftovers from the last circuit stop here
     if (!input.ff) say(['d:bismillah']);                // takbir each time you pass the Black Stone
@@ -629,7 +686,7 @@ function saiTick() {
   }
 }
 function arrived(where) {
-  const s = game.sai; banner(T.length(s.count)); chime(); updateHud(); setProg(0);
+  const s = game.sai; saveExplore(); banner(T.length(s.count)); chime(); updateHud(); setProg(0);
   if (s.count >= 7) { input.ff = false; return finish(); }
   stopAudio();
   if (!input.ff) say(s.count === 1 ? ['n:marwa_0', 'd:safa_dhikr'] : ['d:safa_dhikr']);   // the dhikr is repeated on each hill
@@ -644,29 +701,42 @@ function nextMission() {
   if (done && done.id !== 'tawaf') { banner(T.missionDone(done.title[LANG]), 2000); chime(); }
   startMission();
 }
-function startMission() {
+function startMission({ resume = false } = {}) {
   const m = M[game.mi];
-  if (m.id === 'tawaf') game.tawaf = freshTawaf();
-  if (m.id === 'sai') game.sai = freshSai();
+  if (!resume && m.id === 'tawaf') game.tawaf = freshTawaf();
+  if (!resume && m.id === 'sai') game.sai = freshSai();
   if (m.id === 'stone' || m.id === 'tawaf') scene.add(startLine); else scene.remove(startLine);
-  stopAudio(); say(m.audio);
-  store.set('explore', { mi: game.mi });
+  stopAudio(); if (paused) pausedCues = [...m.audio]; else say(m.audio);
+  saveExplore();
   updateHud();
 }
 async function goToMasa() {
-  game.busy = true;
-  const fade = $('fade'); fade.classList.add('on'); stopGuide(); stopAudio(); banner(T.entering, 1500);
-  await sleep(700);
-  setWorld('masa'); Object.assign(player, { x: -4, y: 3, yaw: Math.PI, pitch: 0.05, z: 0.6 });
-  game.mi++;
-  await sleep(250); fade.classList.remove('on'); game.busy = false;
-  startMission();
+  if (game.busy) return;
+  const token = session.token();
+  game.busy = true; stopGuide(); stopAudio(); clearInput();
+  $('intro').hidden = false; $('bStart').disabled = true; $('bResume').hidden = true;
+  $('loadText').textContent = EXTRA.masa; $('bRetry').hidden = true;
+  progressKeys = ['masa']; setProgress('masa', 0);
+  try {
+    await ensureWorld('masa');
+    if (!session.current(token)) return;
+    const fade = $('fade'); if (!reduceMotion) { fade.classList.add('on'); await sleep(650); }
+    if (!session.current(token)) return;
+    setWorld('masa'); Object.assign(player, { x: -4, y: 3, yaw: Math.PI, pitch: 0.05, z: 0.6 });
+    game.mi++; game.busy = false; $('intro').hidden = true; fade.classList.remove('on');
+    startMission();
+  } catch (error) {
+    if (!session.current(token)) return;
+    game.busy = false; setPaused(true); loadFailure(() => { setPaused(false); goToMasa(); });
+  }
 }
+
 function finish() {
   stopGuide(); stopAudio(); say(['n:done_0', 'n:done_1']);
   game.mi = M.length;                                   // nothing ticks after the end
   store.set('explore', null);
-  const secs = Math.round((performance.now() - game.t0) / 1000);
+  const secs = Math.round(game.elapsed + (performance.now() - game.t0) / 1000);
+  started = false; clearInput();
   $('dStats').textContent = T.stats(`${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`, game.tawaf.count, game.sai.count);
   $('done').hidden = false;
   if (document.pointerLockElement) document.exitPointerLock();
@@ -709,14 +779,13 @@ function startGuide() { input.guide = true; const b = document.getElementById('b
 function stopGuide() { if (!input.guide) return; input.guide = false; input.ff = false; const b = document.getElementById('bGuide'); b.setAttribute('aria-pressed', 'false'); b.textContent = T.guide; }
 
 /* ======================================================================= audio */
-const NARR = /*@NARR_TEXT@*/{};
+const NARR = TourContent.narration;
 /* one voice at a time: mission audio queues in order; tips play only when the voice is free and are dropped
    if they wait too long; a quiet generated ambience runs underneath and dips while someone speaks */
 const snd = { el: new Audio(), q: [], tips: [], cur: null, on: store.get('sound', true), ctx: null, master: null, amb: null };
 function urlFor(a) { return a.startsWith('d:') ? `audio/${a.slice(2)}.mp3` : `voice/${LANG}/${a.slice(2)}.mp3`; }
 function audioIdle() { return !snd.cur && !snd.q.length; }
 function say(list) {
-  if (!snd.on) { const d = list.filter((a) => a.startsWith('d:')).pop(); if (d) showDua(d.slice(2), 12000); return; }
   snd.q.push(...list); pump();
 }
 function tip(a) {
@@ -730,13 +799,13 @@ function pump() {
   let a = snd.q.shift();
   while (!a && snd.tips.length) { const t = snd.tips.shift(); if (performance.now() - t.t < 25000) a = t.a; }
   if (!a) { duck(false); return; }
-  const tok = {}; snd.cur = tok; duck(true);
+  const tok = { cue: a }; snd.cur = tok; duck(snd.on);
   if (a.startsWith('d:')) showDua(a.slice(2)); else showCaption(a.slice(2));
   let lastT = -1, lastMove = performance.now();
   const watch = setInterval(() => {          // a clip that stalls (network, blocked autoplay) must not block the tour
     if (snd.cur !== tok) return clearInterval(watch);
     if (snd.el.currentTime !== lastT) { lastT = snd.el.currentTime; lastMove = performance.now(); }
-    else if (performance.now() - lastMove > 6000) done();
+    else if (performance.now() - lastMove > 6000) failed();
   }, 1000);
   const done = () => {
     clearInterval(watch);
@@ -744,11 +813,22 @@ function pump() {
     if (a.startsWith('n:')) hideCaption(); else hideDuaSoon();
     setTimeout(pump, 400);
   };
-  snd.el.onended = done; snd.el.onerror = done;
-  snd.el.src = urlFor(a); snd.el.play().catch(done);
+  const failed = () => {
+    clearInterval(watch);
+    if (snd.cur !== tok) return;
+    snd.cur = null; snd.el.pause(); snd.q.unshift(a); duck(false);
+    $('audioIssueText').textContent = EXTRA.audio; $('retryAudio').textContent = EXTRA.retryAudio;
+    $('audioIssue').hidden = false;
+  };
+  snd.el.onended = done; snd.el.onerror = failed;
+  if (!snd.on) {
+    clearInterval(watch);
+    const text = a.startsWith('n:') ? NARR[a.slice(2)]?.[LANG] || '' : DUA[a.slice(2)]?.en || '';
+    tok.timer = setTimeout(done, Math.max(4500, text.split(/\s+/).length * 430));
+  } else { snd.el.src = urlFor(a); snd.el.play().then(() => { if (snd.cur === tok) $('audioIssue').hidden = true; }).catch(failed); }
 }
 function stopAudio() {
-  snd.q.length = 0; snd.tips.length = 0; snd.cur = null; snd.el.pause(); hideCaption(); duck(false);
+  $('audioIssue').hidden = true; snd.q.length = 0; snd.tips.length = 0; clearTimeout(snd.cur?.timer); snd.cur = null; snd.el.pause(); hideCaption(); duck(false);
   if (toastDua && !$('toast').hidden) hideDuaSoon();
 }
 function initAudio() {
@@ -784,8 +864,9 @@ function duck(speaking) {
   snd.amb.level.gain.setTargetAtTime(target, snd.ctx.currentTime, 0.6);
 }
 function setSound(on) {
+  const pending = [...(snd.cur?.cue ? [snd.cur.cue] : []), ...snd.q];
   snd.on = on; store.set('sound', on);
-  if (!on) stopAudio();
+  stopAudio(); if (pending.length) say(pending);
   if (snd.master) snd.master.gain.setTargetAtTime(on ? 1 : 0, snd.ctx.currentTime, 0.1);
   $('bSound').textContent = on ? T.soundOn : T.soundOff; $('bSound').setAttribute('aria-pressed', on);
 }
@@ -806,6 +887,7 @@ function updateHud() {
   else c.hidden = true;
   $('mProg').hidden = c.hidden;
   $('bSkip').textContent = m.id === 'sai' ? T.skipSai : T.skipTawaf;
+  $('bSkip').hidden = input.ff || !(m.id === 'tawaf' && game.tawaf.count > 0 || m.id === 'sai' && game.sai.count > 0);
   placeFeed();
   $('bAct').hidden = m.id !== 'safa'; $('bAct').textContent = T.beginSai;
 }
@@ -834,7 +916,12 @@ function showDhikr(i) {
 function showWarn(title, text) { toastDua = null; card(title, '', '', text, { warn: true, ms: 6000 }); }
 function showCaption(id) { const t = NARR[id]?.[LANG]; const c = $('cap'); if (!t) { c.hidden = true; return; } c.textContent = t; c.hidden = false; placeFeed(); }
 function hideCaption() { $('cap').hidden = true; }
-function setProg(f) { $('mProgFill').style.width = (f * 100).toFixed(1) + '%'; }
+function setProg(f) {
+  const percent = Math.max(0, Math.min(100, f * 100));
+  $('mProgFill').style.width = percent.toFixed(1) + '%';
+  $('mProg').setAttribute('aria-valuenow', Math.round(percent));
+  $('mProg').setAttribute('aria-label', M[game.mi]?.title[LANG] || '');
+}
 function placeFeed() {
   const f = $('feed');
   f.style.top = innerWidth <= 900 ? Math.round(document.querySelector('.mission').getBoundingClientRect().bottom + 8) + 'px' : '';
@@ -887,7 +974,17 @@ function drawMini() {
 /* ======================================================================= world switching + lighting */
 let night = store.get('night', true);
 function setWorld(name) {
+  frameTimes.length = 0;
   for (const k of Object.keys(worlds)) { scene.remove(worlds[k].root); if (worlds[k].crowd) scene.remove(worlds[k].crowd.group); }
+  // The journey moves from Haram to Mas'a. Release the previous environment's
+  // textures rather than keeping both large worlds resident on a phone.
+  for (const k of Object.keys(worlds)) if (k !== name) {
+    const old = worlds[k]; TourRuntime.disposeModel(old.root);
+    if (old.crowd) TourRuntime.disposeModel(old.crowd.group);
+    // Per-world crowd geometry owns its motion attributes; source prototypes
+    // remain available for reuse without retaining old GPU buffers.
+    delete worlds[k]; delete worldLoads[k];
+  }
   const w = worlds[name];
   if (!w.crowd) w.crowd = makeCrowd(name);
   scene.add(w.root, w.crowd.group);
@@ -898,7 +995,7 @@ function applyLight() {
   const masa = current === 'masa';
   if (night && !masa) {
     scene.background = new THREE.Color(0x05070d); scene.environment = envNight; scene.fog = new THREE.Fog(0x05070d, 250, 1400);
-    sun.color.set(0xfff6ea); sun.intensity = 2.0; sun.position.copy(toV(10, -20, 120)); hemi.intensity = 0.35; hemi.color.set(0x8090c0); hemi.groundColor.set(0x504436);
+    sun.intensity = 0; hemi.intensity = 0.65; hemi.color.set(0xdce3ee); hemi.groundColor.set(0x9e968a);
     renderer.toneMappingExposure = 0.95;
   } else if (masa) {
     scene.background = new THREE.Color(0xe8e2d6); scene.environment = envDay; scene.fog = new THREE.Fog(0xe8e2d6, 120, 420);
@@ -910,23 +1007,40 @@ function applyLight() {
     renderer.toneMappingExposure = 0.9;
   }
   sun.target.position.set(0, 0, 0);
-  floods.visible = night && !masa;
+  floods.visible = night && !masa; floodKey.visible = night && !masa;
+  sun.castShadow = !MOBILE && !night && !masa;
   for (const w of Object.values(worlds)) w.root.traverse((o) => { if (o.isMesh && o.material && o.material.emissiveIntensity !== undefined && /lamp|light|Clock face/i.test(o.material.name)) { o.material.userData.e0 ??= o.material.emissiveIntensity; o.material.emissiveIntensity = o.material.userData.e0 * (night && !masa ? 1.6 : 1); } });
   $('bTime').textContent = night ? T.day : T.night; $('bTime').hidden = masa;
 }
 let envDay = null, envNight = null;
 
 /* ======================================================================= main loop */
+// Optional DOM-visible diagnostics for repeatable browser reviews (?stats).
+// No telemetry leaves the device; ordinary lessons show no diagnostic UI.
+const visualStats = new URLSearchParams(location.search).has('stats') ? document.createElement('output') : null;
+const frameTimes = []; let lastFrameTime = performance.now(), lastStatsTime = 0;
+if (visualStats) { visualStats.id = 'visualStats'; visualStats.setAttribute('aria-label', 'Visual performance'); visualStats.style.cssText = 'position:fixed;left:12px;top:70px;z-index:100;background:#10151ee8;color:#dbe6ef;padding:10px;font:11px/1.5 monospace;white-space:pre;pointer-events:none'; document.body.append(visualStats); }
+function reportVisualStats() {
+  const now = performance.now();
+  if (started && current && !paused && !document.hidden) { frameTimes.push(now - lastFrameTime); if (frameTimes.length > 600) frameTimes.shift(); }
+  lastFrameTime = now;
+  if (!visualStats || now - lastStatsTime < 1000 || !frameTimes.length) return;
+  lastStatsTime = now;
+  const sorted = [...frameTimes].sort((a,b) => a-b), mean = frameTimes.reduce((a,b) => a+b,0) / frameTimes.length;
+  visualStats.textContent = JSON.stringify({ sceneVersion: layout.sceneVersion, world: current, quality, frames: frameTimes.length, fps: +(1000 / mean).toFixed(1), p95Ms: +sorted[Math.floor((sorted.length-1)*.95)].toFixed(1), drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries, dpr: renderer.getPixelRatio() }, null, 2);
+}
+
 const clock = new THREE.Clock();
 let simT = 0;
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.05); simT += dt;
-  if (current && !$('hud').hidden) { step(dt, simT); drawMini(); }
+  if (current && started && !paused && !game.busy) { step(dt, simT); drawMini(); if (simT - lastSave > 1) { saveExplore(); lastSave = simT; } }
   const t = simT;
-  const bob = (Math.abs(input.f) + Math.abs(input.s) > 0.1 || input.guide) ? Math.sin(t * 7) * 0.025 : 0;
+  const bob = !reduceMotion && !paused && (Math.abs(input.f) + Math.abs(input.s) > 0.1 || input.guide) ? Math.sin(t * 7) * 0.025 : 0;
   camera.position.copy(toV(player.x, player.y, player.z + 1.6 + bob));
   camera.rotation.set(player.pitch, player.yaw - Math.PI / 2, 0);
   renderer.render(scene, camera);
+  if (visualStats) reportVisualStats();
   requestAnimationFrame(frame);
 }
 function step(dt, t) {
@@ -947,7 +1061,7 @@ function step(dt, t) {
         const calm = M[game.mi]?.id === 'tawaf' ? 0.8 : current === 'masa' ? 1.6 : 1.4;
         const speed = 2.0 * (input.ff ? 6 : input.run ? 2.4 : calm);
         vx = d[0] * speed; vy = d[1] * speed;
-        if (simT > lookHold) { const dy = wrapA(Math.atan2(d[1], d[0]) - player.yaw); player.yaw += dy * Math.min(1, dt * (input.ff ? 6 : 3)); }
+        if (!reduceMotion && simT > lookHold) { const dy = wrapA(Math.atan2(d[1], d[0]) - player.yaw); player.yaw += dy * Math.min(1, dt * (input.ff ? 6 : 3)); }
       }
     } else if (f || s) {
       const fx = Math.cos(player.yaw), fy = Math.sin(player.yaw), rx = Math.sin(player.yaw), ry = -Math.cos(player.yaw);
@@ -962,8 +1076,8 @@ function step(dt, t) {
     const tg = missionTarget();
     if (tg && tg[2] !== 'path') { placeMarker(tg[0], tg[1], current === 'masa' ? floorZ(tg[0], tg[1]) : 0); const d = Math.hypot(tg[0] - player.x, tg[1] - player.y); $('mDist').textContent = d > 3 ? `${Math.round(d)} ${T.m}` : ''; }
     else { placeMarker(null); $('mDist').textContent = ''; }
-    beam.material.opacity = 0.16 + 0.08 * Math.sin(t * 3);
-    worlds[current].crowd?.update(dt, t);
+    beam.material.opacity = reduceMotion ? 0.2 : 0.16 + 0.08 * Math.sin(t * 3);
+    if (!reduceMotion) worlds[current].crowd?.update(dt, t);
   }
 }
 /* fixed-step simulation for automated tests: runs the game logic without rendering */
@@ -990,11 +1104,31 @@ $('bAct').onclick = () => { if (M[game.mi]?.id === 'safa') { stopAudio(); nextMi
 $('bSound').onclick = () => { initAudio(); setSound(!snd.on); };
 $('bSkip').onclick = () => { input.ff = true; stopAudio(); startGuide(); $('bSkip').hidden = true; };
 $('bTime').onclick = () => { night = !night; store.set('night', night); applyLight(); };
-$('bTour').onclick = $('bBack').onclick = () => { location.href = 'index.html'; };
+$('bTour').onclick = $('bBack').onclick = () => { saveExplore(); stopAudio(); location.href = 'index.html'; };
 $('bAgain').onclick = () => { $('done').hidden = true; begin(0); };
-$('bStart').onclick = () => { $('intro').hidden = true; begin(0); };
-$('bResume').onclick = () => { $('intro').hidden = true; begin(saved.mi); };
-const saved = store.get('explore', null) || { mi: 0 };
+$('bStart').onclick = () => begin(0);
+$('bResume').onclick = () => begin(saved.mi, saved);
+const saved = TourRuntime.exploreState(store.get('explore', null), M);
+$('retryAudio').onclick = () => { $('audioIssue').hidden = true; pump(); };
+$('bPause').textContent = EXTRA.pause; $('bPause').onclick = () => setPaused(!paused);
+$('qualityLabel').textContent = EXTRA.quality; $('quality').value = quality;
+for (const option of $('quality').options) option.textContent = EXTRA[option.value];
+$('quality').onchange = () => {
+  quality = $('quality').value; store.set('quality', quality); applyQuality();
+  // The initial world is prepared behind the welcome screen. Rebuild its crowd
+  // when that screen's quality choice changes, instead of retaining Auto density.
+  for (const [name, w] of Object.entries(worlds)) if (w.crowd) {
+    scene.remove(w.crowd.group); TourRuntime.disposeModel(w.crowd.group);
+    w.crowd = makeCrowd(name);
+    if (name === current) scene.add(w.crowd.group);
+  }
+};
+$('fallbackTour').textContent = EXTRA.lessons; $('bRetry').textContent = EXTRA.retry;
+$('bRetry').onclick = () => { $('bRetry').hidden = true; if (retryAction) retryAction(); else location.reload(); };
+addEventListener('pagehide', saveExplore);
+addEventListener('blur', () => { clearInput(); if (started) setPaused(true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && started) setPaused(true); });
+canvas.addEventListener('webglcontextlost', (event) => { event.preventDefault(); saveExplore(); setPaused(true); $('intro').hidden = false; loadFailure(() => location.reload()); });
 /* where each mission starts when you resume it */
 function spawnFor(mi) {
   const at = (r, deg, face) => { const a = deg * Math.PI / 180; return { x: r * Math.cos(a), y: r * Math.sin(a), yaw: face ?? a + Math.PI, pitch: 0.05, z: 0 }; };
@@ -1004,32 +1138,47 @@ function spawnFor(mi) {
   if (mi <= 5) return at(13, 52, Math.atan2(MAQAM[1] - 13 * Math.sin(0.9), MAQAM[0] - 13 * Math.cos(0.9)));
   return { x: -4, y: 3, yaw: Math.PI, pitch: 0.05, z: 0.6 };
 }
-function begin(from = 0) {
-  initAudio(); stopAudio(); stopGuide(); input.ff = false;
-  game.mi = Math.max(0, Math.min(from, M.length - 1)); game.zamzam = null; game.busy = false; game.t0 = performance.now();
-  game.tawaf = freshTawaf(); game.sai = freshSai();
-  $('done').hidden = true; $('toast').hidden = true; $('bSkip').hidden = true;
-  setWorld(game.mi >= 6 ? 'masa' : 'haram');
-  Object.assign(player, spawnFor(game.mi));
-  $('hud').hidden = false; $('bAct').hidden = true; startMission(); duck(false);
+async function begin(from = 0, restored = null) {
+  const token = session.next();
+  initAudio(); stopAudio(); stopGuide(); clearInput(); input.ff = false;
+  const mi = Math.max(0, Math.min(from, M.length - 1));
+  const world = mi >= 6 ? 'masa' : 'haram';
+  $('bStart').disabled = true; $('bResume').disabled = true; $('bRetry').hidden = true;
+  if (!worlds[world]) { progressKeys = [world]; setProgress(world, 0); $('loadText').textContent = world === 'masa' ? EXTRA.masa : T.loading; }
+  try {
+    await ensureWorld(world);
+    if (!session.current(token)) return;
+    game.mi = mi; game.zamzam = null; game.busy = false; game.t0 = performance.now(); game.elapsed = restored?.elapsed || 0;
+    game.tawaf = restored?.tawaf || freshTawaf(); game.sai = restored?.sai || freshSai();
+    $('done').hidden = true; $('toast').hidden = true; $('bSkip').hidden = true; $('intro').hidden = true;
+    setWorld(world); Object.assign(player, restored?.position || spawnFor(mi));
+    (world === 'masa' ? collideMasa : collideHaram)(player);
+    started = true; paused = false; $('bPause').textContent = EXTRA.pause; $('bPause').setAttribute('aria-pressed', false);
+    for (const id of ['bGuide', 'bRun', 'bSkip', 'bAct']) $(id).disabled = false;
+    pausedCues = []; if (document.hidden) setPaused(true);
+    $('hud').hidden = false; $('bAct').hidden = true; startMission({ resume: !!restored }); duck(false);
+    $('bGuide').focus();
+  } catch (error) { if (session.current(token)) loadFailure(() => begin(from, restored)); }
+  finally { if (session.current(token)) { $('bStart').disabled = !booted; $('bResume').disabled = false; } }
 }
 
 /* ======================================================================= boot */
-(async () => {
+async function boot() {
   try {
-    const [haram, masa, pil] = await Promise.all([load('fps/haram.json', 'h'), load('fps/masa.json', 'm'), load('fps/pilgrims.json', 'p'), skyP]);
-    prepWorld(haram, 'haram'); prepWorld(masa, 'masa'); pilgrimProto = pil.scene;
-    envDay = skyTex ? pmrem.fromEquirectangular(skyTex).texture : null;
-    envNight = (() => { const s = new THREE.Scene(); s.background = new THREE.Color(0x0c1018); return pmrem.fromScene(s, 0.04).texture; })();
-    setWorld('haram');
-    const a = 80 * Math.PI / 180; Object.assign(player, { x: 57 * Math.cos(a), y: 57 * Math.sin(a), yaw: a + Math.PI, pitch: 0.05 });
-    $('loadFill').style.width = '100%'; $('loadText').textContent = T.ready; $('bStart').disabled = false;
-    if (saved.mi > 0 && saved.mi < M.length) { $('bResume').hidden = false; $('bResume').textContent = T.resume(saved.mi + 1, M[saved.mi].title[LANG]); }
-    requestAnimationFrame(frame);
-  } catch (e) {
-    console.error(e); $('loadText').textContent = String(e.message || e);
-  }
-})();
+    const initialWorld = saved && saved.mi >= 6 ? 'masa' : 'haram';
+    progressKeys = [initialWorld, 'pilgrims']; $('loadText').textContent = initialWorld === 'masa' ? EXTRA.masa : T.loading;
+    const [world, pil] = await Promise.all([ensureWorld(initialWorld), pilgrimProto ? Promise.resolve(null) : loadModel('pilgrims'), skyP]);
+    if (pil) pilgrimProto = pil.scene;
+    if (!envDay) envDay = skyTex ? pmrem.fromEquirectangular(skyTex).texture : null;
+    if (!envNight) { const sky = new THREE.Scene(); sky.background = new THREE.Color(0x0c1018); envNight = pmrem.fromScene(sky, 0.04).texture; }
+    setWorld(initialWorld);
+    Object.assign(player, spawnFor(initialWorld === 'masa' ? 6 : 0));
+    booted = true; $('loadFill').style.width = '100%'; $('loadText').textContent = T.ready; $('bStart').disabled = false;
+    if (saved) { $('bResume').hidden = false; $('bResume').textContent = T.resume(saved.mi + 1, M[saved.mi].title[LANG]); }
+    if (!loopStarted) { loopStarted = true; requestAnimationFrame(frame); }
+  } catch (error) { loadFailure(boot); }
+}
+boot();
 
 /* test hooks (used by automated checks) */
 window.__game = { player, game, M, input, setWorld, goToMasa, missionTarget, nextMission, begin, sim, renderer, scene, camera, worlds, snd };

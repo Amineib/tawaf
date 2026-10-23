@@ -1,0 +1,67 @@
+{
+  "sceneVersion": "kaaba-v1",
+  "assets": [
+    {
+      "file": "haram.glb",
+      "bytes": 7769724,
+      "uniqueTriangles": 132462,
+      "meshes": 153,
+      "materials": 26,
+      "textures": 16,
+      "estimatedTextureMiB": 68.67,
+      "materialRoles": [
+        "cloth",
+        "contact",
+        "embroidery",
+        "floor",
+        "glass",
+        "gold",
+        "marble",
+        "plaster",
+        "silver",
+        "stone"
+      ],
+      "extensions": [
+        "EXT_mesh_gpu_instancing",
+        "KHR_materials_emissive_strength",
+        "KHR_mesh_quantization"
+      ]
+    },
+    {
+      "file": "masa.glb",
+      "bytes": 2360588,
+      "uniqueTriangles": 32856,
+      "meshes": 48,
+      "materials": 11,
+      "textures": 12,
+      "estimatedTextureMiB": 48.0,
+      "materialRoles": [
+        "floor",
+        "glass",
+        "marble",
+        "plaster",
+        "rock"
+      ],
+      "extensions": [
+        "EXT_mesh_gpu_instancing",
+        "KHR_materials_emissive_strength",
+        "KHR_mesh_quantization"
+      ]
+    },
+    {
+      "file": "pilgrims.glb",
+      "bytes": 352392,
+      "uniqueTriangles": 15396,
+      "meshes": 8,
+      "materials": 24,
+      "textures": 0,
+      "estimatedTextureMiB": 0.0,
+      "materialRoles": [
+        "pilgrimCloth",
+        "pilgrimDetail",
+        "pilgrimSkin"
+      ],
+      "extensions": []
+    }
+  ]
+}
