@@ -95,15 +95,17 @@
       get size() { return entries.size; },
     };
   }
-  // Continuous crowd path: straight lanes joined by rounded end-hall turns.
+  // Continuous crowd path: straight lanes joined by end-hall turns. The turns are
+  // flattened ellipses (at most 5 m deep) so walkers stay clear of the Safa and
+  // Marwah rocks instead of swinging a full lane-radius semicircle into them.
   function masaCrowdPose(distance, lane, masa) {
-    const r = lane, length = masa.marwa - masa.safa - 16, turn = Math.PI * r;
+    const r = lane, rx = Math.min(r, 5), length = masa.marwa - masa.safa - 16, turn = Math.PI * r;
     const total = 2 * length + 2 * turn, d = ((distance % total) + total) % total;
     if (d < length) return { x: masa.safa + 8 + d, y: r, rot: -Math.PI / 2 };
-    if (d < length + turn) { const a = (d - length) / r; return { x: masa.marwa - 8 + r * Math.sin(a), y: r * Math.cos(a), rot: Math.atan2(-Math.cos(a), -Math.sin(a)) }; }
+    if (d < length + turn) { const a = (d - length) / r; return { x: masa.marwa - 8 + rx * Math.sin(a), y: r * Math.cos(a), rot: Math.atan2(-rx * Math.cos(a), -r * Math.sin(a)) }; }
     if (d < 2 * length + turn) return { x: masa.marwa - 8 - (d - length - turn), y: -r, rot: Math.PI / 2 };
     const a = (d - 2 * length - turn) / r;
-    return { x: masa.safa + 8 - r * Math.sin(a), y: -r * Math.cos(a), rot: Math.atan2(Math.cos(a), Math.sin(a)) };
+    return { x: masa.safa + 8 - rx * Math.sin(a), y: -r * Math.cos(a), rot: Math.atan2(rx * Math.cos(a), r * Math.sin(a)) };
   }
   function disposeModel(root) {
     const geometries = new Set(), materials = new Set(), textures = new Set();

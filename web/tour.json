@@ -815,8 +815,8 @@
           "ar": "توجّه إلى الحجر الأسود"
         },
         "goal": {
-          "en": "Stand on the green start line, facing the Black Stone corner.",
-          "ar": "قف على خط البداية الأخضر مستقبلًا ركن الحجر الأسود."
+          "en": "Stand on the green start line, facing the Black Stone corner. The line is only a guide in this app; in the Haram, look for the green light on the wall.",
+          "ar": "قف على خط البداية الأخضر مستقبلًا ركن الحجر الأسود. هذا الخط دليل في التطبيق فقط، أمّا في المسجد الحرام فابحث عن الضوء الأخضر على الجدار."
         },
         "audio": [
           "n:enter_2",
@@ -831,8 +831,8 @@
           "ar": "الطواف: سبعة أشواط"
         },
         "goal": {
-          "en": "Walk around the Kaaba keeping it on your left. Each return to the green line is one circuit.",
-          "ar": "طُف حول الكعبة وهي عن يسارك. كل عودة إلى الخط الأخضر شوط."
+          "en": "Walk around the Kaaba keeping it on your left. Each return to the Black Stone line is one circuit (in the Haram, the green light on the wall marks it).",
+          "ar": "طُف حول الكعبة وهي عن يسارك. كل عودة إلى خط الحجر الأسود شوط (يدلّ عليه في المسجد الحرام الضوءُ الأخضر على الجدار)."
         },
         "audio": [
           "n:start_2",
@@ -1109,9 +1109,11 @@
         "arriveMarwa": "At Marwah",
         "noWebgl": "This device cannot show 3D (WebGL2 is not available).",
         "how": [
-          "Move: W A S D or arrow keys. Look: drag with the mouse (double-click to lock it, Esc to release).",
-          "Phone: drag on the left to walk, on the right to look.",
-          "“Guide me” walks you through the current mission, then hands control back. “Run” goes faster."
+          "Tap or click a spot on the floor to walk there.",
+          "Keyboard: W A S D or the arrow keys to move. Drag with the mouse to look (double-click to lock it, Esc to release).",
+          "Phone: drag on the left half to walk, on the right half to look.",
+          "“Guide me” walks you through the current mission, then hands control back. “Run” goes faster.",
+          "Menu → Settings: larger text, camera sway and look speed."
         ]
       },
       "ar": {
@@ -1157,9 +1159,11 @@
         "arriveMarwa": "على المروة",
         "noWebgl": "لا يدعم هذا الجهاز العرض ثلاثي الأبعاد (WebGL2 غير متوفر).",
         "how": [
-          "الحركة: مفاتيح W A S D أو الأسهم. النظر: اسحب بالفأرة (انقر مرتين لتثبيتها، وEsc لإلغاء ذلك).",
-          "على الهاتف: اسحب في اليسار للمشي، وفي اليمين للنظر.",
-          "زر «أرشدني» يمشي بك خلال المهمة الحالية ثم يعيد إليك التحكم، وزر «أسرع» يزيد السرعة."
+          "انقر أو المس مكانًا على الأرض للمشي إليه.",
+          "لوحة المفاتيح: W A S D أو الأسهم للحركة. اسحب بالفأرة للنظر (انقر مرتين لتثبيتها، وEsc لإلغاء ذلك).",
+          "على الهاتف: اسحب في النصف الأيسر للمشي، وفي النصف الأيمن للنظر.",
+          "زر «أرشدني» يمشي بك خلال المهمة الحالية ثم يعيد إليك التحكم، وزر «أسرع» يزيد السرعة.",
+          "القائمة ← الإعدادات: تكبير الخط، واهتزاز الكاميرا، وسرعة النظر."
         ]
       }
     }

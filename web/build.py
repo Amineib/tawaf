@@ -1,10 +1,15 @@
 """Build and validate the static site from canonical content and source assets.
 
-    python web/build.py                 # writes web/dist
-    python web/build.py --check         # validates sources and the committed build
+    python web/build.py                 # writes web/dist (not committed; CI builds it)
+    python web/build.py --review        # also includes the developer visual-review page
+    python web/build.py --check         # validates sources by building in isolation
+    python web/build.py --artifact --output /tmp/claude-artifact
+                                        # 3D models as self-contained .json (for hosts that
+                                        # do not serve .glb, such as the Claude artifact link)
     python web/build.py --output /tmp/tour-build
 """
 import argparse
+import base64
 import hashlib
 import json
 from pathlib import Path
@@ -90,7 +95,20 @@ def js_json(data):
     return json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
 
 
-def build(output, renders=None):
+def glb_to_json(source):
+    """Self-contained glTF JSON with the binary chunk embedded as a data URI."""
+    data = source.read_bytes()
+    require(data[:4] == b'glTF', f'Not a GLB: {source}')
+    json_len = int.from_bytes(data[12:16], 'little')
+    gltf = json.loads(data[20:20 + json_len])
+    offset = 20 + json_len
+    if offset < len(data):
+        bin_len = int.from_bytes(data[offset:offset + 4], 'little')
+        gltf['buffers'][0]['uri'] = 'data:application/octet-stream;base64,' + base64.b64encode(data[offset + 8:offset + 8 + bin_len]).decode()
+    return json.dumps(gltf, separators=(',', ':'))
+
+
+def build(output, renders=None, review=False, artifact=False):
     from PIL import Image
     renders = Path(renders or ROOT / 'renders4k').resolve()
     views = {}
@@ -134,9 +152,14 @@ def build(output, renders=None):
     for name in ('haram', 'masa', 'pilgrims'):
         source = ROOT / 'fps' / f'{name}.glb'
         require(source.is_file() and source.read_bytes()[:4] == b'glTF', f'Missing or invalid GLB: {source}')
-        shutil.copy2(source, output / 'fps' / source.name)
         version = hashlib.sha256(source.read_bytes()).hexdigest()[:12]
-        models[name] = {'url': f'fps/{source.name}?v={version}', 'bytes': source.stat().st_size}
+        if artifact:
+            target = output / 'fps' / f'{name}.json'
+            target.write_text(glb_to_json(source), encoding='utf-8')
+        else:
+            target = output / 'fps' / source.name
+            shutil.copy2(source, target)
+        models[name] = {'url': f'fps/{target.name}?v={version}', 'bytes': target.stat().st_size}
     shutil.copy2(ROOT / 'fps' / 'sky_1k.jpg', output / 'fps' / 'sky_1k.jpg')
     lines = {lang: narration_text(lang, data) for lang in ('en', 'ar')}
     data['narration'] = {key: {lang: values[key] for lang, values in lines.items() if key in values} for key in lines['en']}
@@ -150,33 +173,28 @@ def build(output, renders=None):
         html = (WEB / source).read_text(encoding='utf-8')
         require('/*@' not in html, f'Unresolved build placeholder in {source}')
         (output / target).write_text(html, encoding='utf-8')
-    review = ROOT / 'docs' / 'visual-review'
-    if review.is_dir():
-        shutil.copytree(review, output / 'visual-review')
+    # The visual-review page is a developer tool; it is left out of the public site.
+    review_dir = ROOT / 'docs' / 'visual-review'
+    if review and review_dir.is_dir():
+        shutil.copytree(review_dir, output / 'visual-review')
         shutil.copy2(WEB / 'visual-review.html', output / 'visual-review' / 'index.html')
     return assets
-
-
-def file_hashes(folder):
-    return {p.relative_to(folder).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in Path(folder).rglob('*') if p.is_file()}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('renders', nargs='?', help='Optional panorama source folder (default: renders4k)')
     parser.add_argument('--output', type=Path, default=WEB / 'dist')
-    parser.add_argument('--check', action='store_true', help='Fail if the committed output is stale or contains obsolete files')
+    parser.add_argument('--check', action='store_true', help='Validate content, audio and assets by building in isolation; writes nothing')
+    parser.add_argument('--review', action='store_true', help='Include the developer visual-review page')
+    parser.add_argument('--artifact', action='store_true', help='Emit 3D models as .json instead of .glb')
     args = parser.parse_args()
     # Build in isolation; validation or encoding failures never leave a partial published site.
     with tempfile.TemporaryDirectory(prefix='umrah-build-') as temp:
         staging = Path(temp) / 'site'
-        build(staging, args.renders)
+        build(staging, args.renders, review=args.review, artifact=args.artifact)
         if args.check:
-            expected, actual = file_hashes(staging), file_hashes(args.output)
-            changed = sorted(k for k in set(expected) | set(actual) if expected.get(k) != actual.get(k))
-            require(not changed, 'Stale build files: ' + ', '.join(changed))
-            print('Build, content, audio, landmarks, and committed output verified.')
+            print('Build, content, audio and landmarks verified.')
         else:
             target = args.output.resolve()
             require(target not in (ROOT.resolve(), WEB.resolve(), Path('/')) and target not in ROOT.resolve().parents, 'Refusing to replace source directory')

@@ -6,3 +6,4 @@ out/
 *.tgz
 .venv/
 gpu/runs/
+web/dist/

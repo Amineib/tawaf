@@ -76,6 +76,16 @@ class BuildTests(unittest.TestCase):
             self.assertLess(assets['models']['haram']['bytes'] + assets['models']['pilgrims']['bytes'], 9_000_000)
             self.assertRegex(assets['models']['haram']['url'], r'^fps/haram\.glb\?v=[a-f0-9]{12}$')
             self.assertTrue((out / 'lib' / 'layout.js').is_file())
+            self.assertFalse((out / 'visual-review').exists(), 'Developer review page must stay out of the public site')
+
+    def test_artifact_build_embeds_models_as_json(self):
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / 'site'
+            assets = build.build(out, artifact=True)
+            self.assertFalse(list((out / 'fps').glob('*.glb')))
+            gltf = json.loads((out / 'fps' / 'pilgrims.json').read_text())
+            self.assertTrue(gltf['buffers'][0]['uri'].startswith('data:application/octet-stream;base64,'))
+            self.assertRegex(assets['models']['haram']['url'], r'^fps/haram\.json\?v=[a-f0-9]{12}$')
 
     def test_missing_render_metadata_fails_before_emitting_a_partial_site(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -35,8 +35,16 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
 .mission .k { font-size: .82rem; color: var(--gold); letter-spacing: .03em; display: flex; justify-content: space-between; gap: 8px; }
 .mission h1 { margin: 0; font-size: 1.25rem; line-height: 1.25; text-wrap: balance; }
 .mission p { margin: 0; color: var(--fg); font-size: 1rem; line-height: 1.4; }
-.mission .count { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
-.mission .count small { font-size: .5em; color: var(--muted); font-weight: 400; }
+.mission .count { display: flex; align-items: center; gap: 12px; font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.dots { display: flex; gap: 7px; }
+.dots i { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--gold); }
+.dots i.on { background: var(--gold); }
+.dots i.now { box-shadow: 0 0 0 4px rgba(214, 173, 94, .3); }
+.settings-row { display: grid; gap: 8px; }
+.settings-row > span { color: var(--muted); font-size: .92rem; }
+.seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg button { min-height: 48px; min-width: 64px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line); background: #20272c; font-weight: 700; }
+.seg button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
 .mission .dist { font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 .topbtns { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); inset-inline-end: max(14px, env(safe-area-inset-right, 0px)); display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 50%; }
@@ -122,7 +130,8 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
   .mission h1 { font-size: 1.05rem; text-wrap: pretty; }
   .mission .k { font-size: .72rem; }
   .mission .dist { font-size: .76rem; }
-  .mission .count { font-size: 1.35rem; }
+  .mission .count { font-size: 1rem; gap: 8px; }
+  .dots { gap: 5px; } .dots i { width: 12px; height: 12px; }
   .mission .prog { height: 4px; }
   .mission-info > summary { cursor: pointer; padding-inline-end: 16px; position: relative; }
   .mission-info > summary::after { content: '+'; color: var(--gold); position: absolute; inset-inline-end: 0; top: 18px; }
@@ -191,6 +200,7 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
     <button class="pill" id="bSound" aria-pressed="true"></button>
     <button class="pill" id="bTime"></button>
     <button class="pill" id="bPause" aria-pressed="false"></button>
+    <button class="pill" id="bSettings" aria-haspopup="dialog"></button>
     <button class="pill" id="bTour"></button>
   </div></div>
   <div class="minimap"><canvas id="mini" width="420" height="420"></canvas></div>
@@ -226,7 +236,7 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
     <div class="bar" id="loadBar"><i id="loadFill"></i></div>
     <p class="muted" id="loadText" role="status">Loading the scene. You can also open the text and audio lessons.</p>
     <button class="btn-sec" id="bRetry" hidden>Retry loading</button>
-    <details class="intro-section"><summary id="ritualsLabel">Intention and Talbiyah</summary><div>
+    <details class="intro-section" open><summary id="ritualsLabel">Intention and Talbiyah</summary><div>
       <div class="dua" id="iNiyyah"></div><div class="dua" id="iTalbiyah"></div>
     </div></details>
     <div class="cta"><button class="btn-big" id="bStart" disabled></button>
@@ -237,6 +247,16 @@ canvas#gl { touch-action: none; position: fixed; inset: 0; width: 100%; height: 
     <label><span id="qualityLabel">Quality</span> <select id="quality"><option value="auto">Auto</option><option value="low">Low data</option><option value="high">High</option></select></label>
     </div></details>
     <details class="intro-section"><summary id="introAboutLabel">About this tour</summary><p class="muted" id="iNote"></p></details>
+  </div>
+</div>
+
+<div class="screen" id="settings" role="dialog" aria-modal="true" aria-labelledby="sTitle" hidden>
+  <div class="card">
+    <h2 id="sTitle"></h2>
+    <div class="settings-row"><span id="sSizeLabel"></span><div class="seg" id="sSize"><button data-size="1">A</button><button data-size="1.18" style="font-size:1.2em">A</button></div></div>
+    <div class="settings-row"><span id="sBobLabel"></span><div class="seg" id="sBob"><button data-bob="1"></button><button data-bob="0"></button></div></div>
+    <div class="settings-row"><span id="sLookLabel"></span><div class="seg" id="sLook"><button data-look="0.6"></button><button data-look="1"></button><button data-look="1.5"></button></div></div>
+    <button class="btn-big" id="sClose"></button>
   </div>
 </div>
 
@@ -265,8 +285,10 @@ function showStartupFallback() {
     ? 'تعذّر تشغيل الجولة. أعد المحاولة أو افتح دروس القراءة والاستماع.'
     : 'The tour could not start. Retry, or open the text and audio lessons.';
 }
-window.addEventListener('error', (event) => { if (event.message || event.target?.tagName === 'SCRIPT') showStartupFallback(); }, true);
-window.addEventListener('unhandledrejection', showStartupFallback);
+// Only a failure while starting replaces the welcome screen; once walking, an
+// isolated error must not cover the tour (it is still reported in the console).
+window.addEventListener('error', (event) => { if (!window.__tourStarted && (event.message || event.target?.tagName === 'SCRIPT')) showStartupFallback(); }, true);
+window.addEventListener('unhandledrejection', () => { if (!window.__tourStarted) showStartupFallback(); });
 </script>
 <script type="module">
 import * as THREE from 'three';
@@ -286,8 +308,10 @@ const T = { ...TourContent.practice.text[LANG],
 
 const DUA = TourContent.duas;
 const EXTRA = {
-  en: { retry: 'Retry loading', failed: 'The scene could not load. Retry, or use the text and audio lessons.', lessons: 'Read or listen to the guided lessons', quality: 'Quality', auto: 'Auto', low: 'Low data', high: 'High', pause: 'Pause', resume: 'Resume', paused: 'Paused. Select Resume to continue.', masa: 'Loading the Mas‘a…', audio: 'Audio could not play. Retry, or turn sound off to read captions.', retryAudio: 'Retry audio' },
-  ar: { retry: 'أعد التحميل', failed: 'تعذّر تحميل المشهد. أعد المحاولة أو افتح دروس القراءة والاستماع.', lessons: 'افتح دروس القراءة والاستماع', quality: 'الجودة', auto: 'تلقائية', low: 'توفير البيانات', high: 'عالية', pause: 'إيقاف مؤقت', resume: 'متابعة', paused: 'متوقّف مؤقتًا. اضغط متابعة للاستمرار.', masa: 'جارٍ تحميل المسعى…', audio: 'تعذّر تشغيل الصوت. أعد المحاولة أو اكتم الصوت لقراءة النص.', retryAudio: 'أعد تشغيل الصوت' },
+  en: { retry: 'Retry loading', failed: 'The scene could not load. Retry, or use the text and audio lessons.', lessons: 'Read or listen to the guided lessons', quality: 'Quality', auto: 'Auto', low: 'Low data', high: 'High', pause: 'Pause', resume: 'Resume', paused: 'Paused. Select Resume to continue.', masa: 'Loading the Mas‘a…', audio: 'Audio could not play. Retry, or turn sound off to read captions.', retryAudio: 'Retry audio',
+    settings: 'Settings', size: 'Text size', bob: 'Camera sway while walking', on: 'On', off: 'Off', look: 'Look speed', slow: 'Slow', normal: 'Normal', fast: 'Fast', close: 'Done' },
+  ar: { retry: 'أعد التحميل', failed: 'تعذّر تحميل المشهد. أعد المحاولة أو افتح دروس القراءة والاستماع.', lessons: 'افتح دروس القراءة والاستماع', quality: 'الجودة', auto: 'تلقائية', low: 'توفير البيانات', high: 'عالية', pause: 'إيقاف مؤقت', resume: 'متابعة', paused: 'متوقّف مؤقتًا. اضغط متابعة للاستمرار.', masa: 'جارٍ تحميل المسعى…', audio: 'تعذّر تشغيل الصوت. أعد المحاولة أو اكتم الصوت لقراءة النص.', retryAudio: 'أعد تشغيل الصوت',
+    settings: 'الإعدادات', size: 'حجم الخط', bob: 'اهتزاز الكاميرا أثناء المشي', on: 'تشغيل', off: 'إيقاف', look: 'سرعة النظر', slow: 'بطيئة', normal: 'عادية', fast: 'سريعة', close: 'تم' },
 }[LANG];
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const compactHUD = matchMedia('(max-width: 900px)');
@@ -295,6 +319,13 @@ const mobileText = LANG === 'ar'
   ? { menu: 'القائمة', more: 'المزيد', less: 'أقل', read: 'اقرأ', rituals: 'النية والتلبية', how: 'طريقة الحركة', about: 'عن الجولة', options: 'الإعدادات والدروس', skip: 'تسريع الباقي' }
   : { menu: 'Menu', more: 'More', less: 'Less', read: 'Read', rituals: 'Intention and Talbiyah', how: 'How to move', about: 'About this tour', options: 'Settings and lessons', skip: 'Skip ahead' };
 let quality = ['auto', 'low', 'high'].includes(store.get('quality', 'auto')) ? store.get('quality', 'auto') : 'auto';
+/* comfort settings: text size is shared with the guided tour */
+const comfort = {
+  size: [1, 1.18].includes(store.get('size', 1)) ? store.get('size', 1) : 1,
+  bob: store.get('bob', true) !== false,
+  look: [0.6, 1, 1.5].includes(store.get('lookSpeed', 1)) ? store.get('lookSpeed', 1) : 1,
+};
+document.documentElement.style.fontSize = comfort.size * 100 + '%';
 const session = TourRuntime.createScope();
 let started = false, paused = false, booted = false, loopStarted = false, retryAction = null, pausedCues = [];
 
@@ -342,16 +373,18 @@ try {
 }
 const MOBILE = matchMedia('(pointer: coarse)').matches;
 const LOWQ = /[?&]lowq/.test(location.search);   // software-GL test runs
+// One switch for shadows: "High" turns them on for phones too, Auto only on desktops.
+let shadowsOn = false;
 function applyQuality() {
   const low = quality === 'low' || (quality === 'auto' && (MOBILE || navigator.connection?.saveData));
   renderer.setPixelRatio(LOWQ ? 0.35 : Math.min(window.devicePixelRatio || 1, low ? 1 : 2));
-  renderer.shadowMap.enabled = !low && !LOWQ;
+  shadowsOn = !LOWQ && (quality === 'high' || (quality === 'auto' && !MOBILE && !navigator.connection?.saveData));
+  renderer.shadowMap.enabled = shadowsOn;
   renderer.setSize(innerWidth, innerHeight, false);
 }
 applyQuality();
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.shadowMap.enabled = !LOWQ && (quality === 'high' || quality === 'auto' && !MOBILE && !navigator.connection?.saveData);
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 3000);
@@ -361,7 +394,6 @@ addEventListener('resize', resize); resize();
 
 const pmrem = new THREE.PMREMGenerator(renderer);
 const sun = new THREE.DirectionalLight(0xfff1dc, 2.6);
-sun.castShadow = !MOBILE;
 sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 10, far: 400 });
 sun.shadow.bias = -0.0004;
@@ -378,7 +410,7 @@ scene.add(floods);
 // soft fill. Keeping a single shadow pass avoids multiplying mobile draw work.
 const floodKey = new THREE.DirectionalLight(0xfff8ee, 1.5);
 floodKey.position.copy(toV(44, 40, 36)); floodKey.target.position.copy(toV(0, 0, 3));
-floodKey.castShadow = !MOBILE; floodKey.shadow.mapSize.set(2048, 2048);
+floodKey.shadow.mapSize.set(2048, 2048);
 Object.assign(floodKey.shadow.camera, { left: -28, right: 28, top: 28, bottom: -28, near: 1, far: 150 });
 floodKey.shadow.normalBias = 0.025; floodKey.shadow.bias = -0.0001;
 scene.add(floodKey, floodKey.target);
@@ -461,11 +493,23 @@ function prepWorld(gltf, name) {
 
 /* ======================================================================= crowd (instanced, animated) */
 const crowdClock = { value: 0 };
+/* Two levels of detail. People near the player use the articulated pilgrim meshes
+   (about 1,900 triangles each); everyone else is a ~110-triangle robed silhouette.
+   The near radius shrinks or grows so the detailed set stays within a budget. */
+const FAR_BODY = (() => {
+  const pts = [[0, 0], [.2, 0], [.23, .12], [.2, .55], [.19, .95], [.21, 1.28], [.15, 1.4], [.07, 1.45], [0, 1.46]].map(([x, y]) => new THREE.Vector2(x, y));
+  return new THREE.LatheGeometry(pts, 7);
+})();
+const FAR_HEAD = new THREE.SphereGeometry(.105, 7, 5).translate(0, 1.56, 0);
+const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
 function makeCrowd(kind) {
   const group = new THREE.Group();
-  const variants = [];          // [{meshes:[InstancedMesh...], weight}]
+  const variants = [];          // per variant: detailed InstancedMesh parts
   const weights = { pilgrim_man: 5, pilgrim_man_b: 4, pilgrim_man_c: 3, pilgrim_man_d: 2, pilgrim_woman_w: 2, pilgrim_woman_b: 3, pilgrim_woman_c: 2, pilgrim_woman_b2: 1 };
   const N = LOWQ || quality === 'low' || (quality === 'auto' && navigator.connection?.saveData) ? 200 : kind === 'haram' ? (MOBILE ? 550 : 1000) : (MOBILE ? 350 : 600);
+  const lowDetail = LOWQ || quality === 'low' || (quality === 'auto' && (MOBILE || navigator.connection?.saveData));
+  const NEAR_CAP = lowDetail ? 90 : 220, NEAR_MAX = lowDetail ? 16 : 26;
+  let nearR = NEAR_MAX;
   const protos = [];
   pilgrimProto.traverse((o) => { if (o.isMesh) protos.push(o); });
   const byName = {};
@@ -481,7 +525,10 @@ function makeCrowd(kind) {
   const counts = names.map((_, vi) => people.filter((p) => p.v === vi).length);
   const robe = { pilgrim_man: [0xe6e5e0, 0xf1f0ec, 0xd8d7d2, 0xeae6dc], pilgrim_woman_w: [0xecebe7, 0xdedcd6], pilgrim_woman_b: [0x1b1b1f, 0x2a282c, 0x3a3a44, 0x222226], pilgrim_woman_c: [0x8c8274, 0x55585e, 0xcfcfcb] };
   const skins = [0xb38a6a, 0x8a5f43, 0x5a3a26, 0xc79f84, 0x9c6b4c];
+  const partColor = [];        // per variant, per part: (person index within variant) -> hex
   names.forEach((n, vi) => {
+    const palette = robe[n] || (n.startsWith('pilgrim_man') ? robe.pilgrim_man : robe.pilgrim_woman_b);
+    partColor[vi] = [];
     const ims = byName[n].map((src) => {
       const mat = src.material.clone();
       const isSkin = mat.userData.umrahRole === 'pilgrimSkin' || /Skin/.test(mat.name);
@@ -494,18 +541,21 @@ function makeCrowd(kind) {
       const im = new THREE.InstancedMesh(geometry, mat, counts[vi]);
       im.customDepthMaterial = TourCrowd.animateMaterial(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), crowdClock);
       im.userData.bodyHeight = src.parent?.userData.crowdHeight || src.userData.crowdHeight || 1;
-      im.castShadow = !MOBILE; im.receiveShadow = false; im.frustumCulled = false;
-      const c = new THREE.Color();
-      const palette = robe[n] || (n.startsWith('pilgrim_man') ? robe.pilgrim_man : robe.pilgrim_woman_b);
-      for (let k = 0; k < counts[vi]; k++) im.setColorAt(k, c.setHex(isSkin ? skins[(k * 7) % skins.length] : isDetail ? 0x302821 : palette[(k * 3) % palette.length]));
+      im.castShadow = shadowsOn; im.receiveShadow = false; im.frustumCulled = false; im.count = 0;
+      im.setColorAt(0, new THREE.Color());
+      partColor[vi].push((k) => isSkin ? skins[(k * 7) % skins.length] : isDetail ? 0x302821 : palette[(k * 3) % palette.length]);
       group.add(im); return im;
     });
     variants.push(ims);
   });
+  // far silhouettes: one body mesh and one head mesh for everybody, fixed slots
+  const farMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  const farBody = new THREE.InstancedMesh(FAR_BODY, farMat, N), farHead = new THREE.InstancedMesh(FAR_HEAD, farMat, N);
+  for (const m of [farBody, farHead]) { m.frustumCulled = false; m.castShadow = false; m.receiveShadow = false; group.add(m); }
   // initial placement + motion params
-  const slot = names.map(() => 0);
-  for (const p of people) {
-    p.slot = slot[p.v]++;
+  const slot = names.map(() => 0), c = new THREE.Color();
+  people.forEach((p, i) => {
+    p.i = i; p.slot = slot[p.v]++;
     if (kind === 'haram') {
       p.base = 9.5 + 33 * Math.pow(rnd(), 1.4); p.a = rnd() * Math.PI * 2; p.speed = 0.75 + rnd() * 0.5; p.scale = 0.9 + rnd() * 0.18;
     } else {
@@ -513,12 +563,16 @@ function makeCrowd(kind) {
       let y; do { y = (3.4 + rnd() * 16.5) * p.dir; } while (Math.abs(Math.abs(y) - 11) < 1.3);
       p.lane = Math.abs(y); p.distance = rnd() * (2 * (MASA.marwa - MASA.safa - 16) + 2 * Math.PI * p.lane); p.speed = 0.8 + rnd() * 0.6; p.scale = 0.9 + rnd() * 0.18;
     }
-    p.phase = rnd() * 10;
-    for (const im of variants[p.v]) { const motion = im.geometry.getAttribute('crowdMotion'); motion.setXY(p.slot, p.phase, p.speed / (p.scale * im.userData.bodyHeight)); motion.needsUpdate = true; }
-  }
+    p.phase = rnd() * 10; p.near = false;
+    const woman = names[p.v].startsWith('pilgrim_woman');
+    const bodyHex = partColor[p.v][0](p.slot), skinHex = skins[(p.slot * 7) % skins.length];
+    farBody.setColorAt(i, c.setHex(bodyHex)); farHead.setColorAt(i, c.setHex(woman ? bodyHex : skinHex));
+  });
   const dummy = new THREE.Object3D();
   function update(dt, t) {
     crowdClock.value += dt;
+    const fx = Math.cos(player.yaw), fy = Math.sin(player.yaw);
+    const nearIdx = names.map(() => 0); let nearCount = 0;
     for (const p of people) {
       let x, y, rot;
       if (kind === 'haram') {
@@ -529,21 +583,50 @@ function makeCrowd(kind) {
         // A continuous oval at the end halls replaces the visible 400 m wrap.
         p.distance += p.speed * dt;
         ({ x, y, rot } = TourRuntime.masaCrowdPose(p.distance, p.lane, MASA));
-
       }
       // step aside around the player so nobody walks through the camera
-      const ax = x - player.x, ay = y - player.y, d2 = ax * ax + ay * ay;
-      if (d2 < 3.24) { const d = Math.sqrt(d2) || 0.01, k = (1.8 - d) / d; x += ax * k; y += ay * k; }
+      let ax = x - player.x, ay = y - player.y, d2 = ax * ax + ay * ay;
+      if (d2 < 3.24) { const d = Math.sqrt(d2) || 0.01, k = (1.8 - d) / d; x += ax * k; y += ay * k; ax = x - player.x; ay = y - player.y; d2 = ax * ax + ay * ay; }
+      const d = Math.sqrt(d2);
+      const near = nearCount < NEAR_CAP && d < nearR + (p.near ? 2 : 0);
+      p.near = near;
       dummy.position.copy(toV(x, y, 0));
       dummy.rotation.set(0, rot, 0);
       dummy.scale.setScalar(p.scale);
       dummy.updateMatrix();
-      for (const im of variants[p.v]) im.setMatrixAt(p.slot, dummy.matrix);
+      if (near) {
+        nearCount++;
+        const k = nearIdx[p.v]++;
+        variants[p.v].forEach((im, part) => {
+          im.setMatrixAt(k, dummy.matrix); im.setColorAt(k, c.setHex(partColor[p.v][part](p.slot)));
+          im.geometry.getAttribute('crowdMotion').setXY(k, p.phase, p.speed / (p.scale * im.userData.bodyHeight));
+        });
+        farBody.setMatrixAt(p.i, ZERO); farHead.setMatrixAt(p.i, ZERO);
+      } else if (d > 10 && ax * fx + ay * fy < -0.4 * d) {
+        farBody.setMatrixAt(p.i, ZERO); farHead.setMatrixAt(p.i, ZERO);      // well behind the camera
+      } else {
+        farBody.setMatrixAt(p.i, dummy.matrix); farHead.setMatrixAt(p.i, dummy.matrix);
+      }
     }
-    for (const ims of variants) for (const im of ims) im.instanceMatrix.needsUpdate = true;
+    variants.forEach((ims, vi) => ims.forEach((im) => {
+      im.count = nearIdx[vi]; im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true;
+      im.geometry.getAttribute('crowdMotion').needsUpdate = true;
+    }));
+    farBody.instanceMatrix.needsUpdate = farHead.instanceMatrix.needsUpdate = true;
+    // keep the detailed set inside its budget: shrink the radius when it is full, grow it back slowly
+    if (nearCount >= NEAR_CAP) nearR = Math.max(6, nearR * 0.96); else if (nearCount < NEAR_CAP * 0.7) nearR = Math.min(NEAR_MAX, nearR * 1.01);
   }
   update(0, 0); // reduced-motion users still get a correctly placed static crowd
-  return { group, update };
+  return { group, update, stats: () => ({ people: N, nearRadius: +nearR.toFixed(1) }) };
+}
+/* crowd materials and geometries are per-crowd clones, but their textures belong to
+   the shared pilgrim prototypes, so they must stay alive for the next crowd */
+function disposeCrowd(group) {
+  group.traverse((o) => {
+    if (!o.isInstancedMesh) return;
+    if (o.geometry !== FAR_BODY && o.geometry !== FAR_HEAD) o.geometry.dispose();
+    o.material.dispose(); o.customDepthMaterial?.dispose(); o.dispose();
+  });
 }
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -578,19 +661,28 @@ const portal = new THREE.Group();
 const player = { x: 0, y: 0, yaw: 0, pitch: 0, z: 0, speed: 2.2 };
 const input = { f: 0, s: 0, run: false, guide: false, ff: false };
 const keys = {};
-addEventListener('keydown', (e) => { if (!started || paused || e.target.closest?.('button, a, select, input, summary')) return; keys[e.code] = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = true; if (e.code === 'KeyG') toggleGuide(); });
+addEventListener('keydown', (e) => {
+  if (!started || paused || !$('settings').hidden || e.target.closest?.('input, select, textarea')) return;
+  // Space and Enter still press the focused button; movement keys always move.
+  if ((e.code === 'Space' || e.code === 'Enter') && e.target.closest?.('button, a, summary')) return;
+  keys[e.code] = true; walkTarget = null; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = true; if (e.code === 'KeyG') toggleGuide(); });
 addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = false; });
 // mouse: drag to look, click locks pointer
-let drag = null;
-canvas.addEventListener('mousedown', (e) => { drag = { x: e.clientX, y: e.clientY }; });
-addEventListener('mouseup', () => { drag = null; });
+let drag = null, press = null;
+canvas.addEventListener('mousedown', (e) => { drag = { x: e.clientX, y: e.clientY }; press = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+addEventListener('mouseup', (e) => {
+  drag = null;
+  // a click (not a drag) on the scene walks to that spot
+  if (press && e.target === canvas && document.pointerLockElement !== canvas && Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6 && performance.now() - press.t < 400) walkTo(e.clientX, e.clientY);
+  press = null;
+});
 canvas.addEventListener('dblclick', () => { canvas.requestPointerLock?.()?.catch?.(() => {}); });
 addEventListener('mousemove', (e) => {
   if (document.pointerLockElement === canvas) look(e.movementX, e.movementY);
   else if (drag) { look(e.clientX - drag.x, e.clientY - drag.y); drag = { x: e.clientX, y: e.clientY }; }
 });
 let lookHold = 0;     // while the guide walks, looking around pauses its auto-turn instead of stopping it
-function look(dx, dy) { player.yaw -= dx * 0.0032; player.pitch = Math.max(-1.2, Math.min(1.2, player.pitch - dy * 0.0032)); if (Math.abs(dx) + Math.abs(dy) > 1) lookHold = simT + 2.5; }
+function look(dx, dy) { const k = 0.0032 * comfort.look; player.yaw -= dx * k; player.pitch = Math.max(-1.2, Math.min(1.2, player.pitch - dy * k)); if (Math.abs(dx) + Math.abs(dy) > 1) lookHold = simT + 2.5; }
 document.addEventListener('pointerlockchange', () => { document.getElementById('cross').hidden = document.pointerLockElement !== canvas; });
 // touch: left half = joystick, right half = look
 const joy = document.getElementById('joy'), knob = document.getElementById('joyKnob');
@@ -599,8 +691,8 @@ canvas.addEventListener('touchstart', (e) => {
   if (!started || paused || game.busy) return;
   for (const t of e.changedTouches) {
     const left = t.clientX < innerWidth / 2;
-    touches[t.identifier] = { kind: left ? 'move' : 'look', x0: t.clientX, y0: t.clientY, x: t.clientX, y: t.clientY };
-    if (left) { joy.hidden = false; joy.style.left = t.clientX + 'px'; joy.style.top = t.clientY + 'px'; stopGuide(); }
+    touches[t.identifier] = { kind: left ? 'move' : 'look', x0: t.clientX, y0: t.clientY, x: t.clientX, y: t.clientY, t0: performance.now() };
+    if (left) { joy.hidden = false; joy.style.left = t.clientX + 'px'; joy.style.top = t.clientY + 'px'; }
   }
   e.preventDefault();
 }, { passive: false });
@@ -611,6 +703,7 @@ canvas.addEventListener('touchmove', (e) => {
     if (s.kind === 'look') { look((t.clientX - s.x) * 1.6, (t.clientY - s.y) * 1.6); }
     s.x = t.clientX; s.y = t.clientY;
     if (s.kind === 'move') {
+      if (Math.hypot(s.x - s.x0, s.y - s.y0) > 10) { stopGuide(); walkTarget = null; }
       let dx = s.x - s.x0, dy = s.y - s.y0; const L = Math.hypot(dx, dy), M = 55;
       if (L > M) { dx *= M / L; dy *= M / L; }
       knob.style.transform = `translate(${dx}px, ${dy}px)`;
@@ -619,7 +712,31 @@ canvas.addEventListener('touchmove', (e) => {
   }
   e.preventDefault();
 }, { passive: false });
-const endTouch = (e) => { for (const t of e.changedTouches) { const s = touches[t.identifier]; if (s?.kind === 'move') { input.f = input.s = 0; joy.hidden = true; knob.style.transform = ''; } delete touches[t.identifier]; } };
+const endTouch = (e) => {
+  for (const t of e.changedTouches) {
+    const s = touches[t.identifier];
+    if (s?.kind === 'move') { input.f = input.s = 0; joy.hidden = true; knob.style.transform = ''; }
+    // a short tap without dragging walks to that spot
+    if (s && e.type === 'touchend' && Math.hypot(s.x - s.x0, s.y - s.y0) < 12 && performance.now() - s.t0 < 350) walkTo(s.x0, s.y0);
+    delete touches[t.identifier];
+  }
+};
+let walkTarget = null;
+const tapRay = new THREE.Raycaster(), tapNdc = new THREE.Vector2(), tapPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), tapHit = new THREE.Vector3();
+const tapRing = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.5, 32), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false }));
+tapRing.rotation.x = -Math.PI / 2; tapRing.visible = false; scene.add(tapRing);
+function walkTo(clientX, clientY) {
+  if (!started || paused || game.busy) return;
+  tapNdc.set(clientX / innerWidth * 2 - 1, -(clientY / innerHeight) * 2 + 1);
+  tapRay.setFromCamera(tapNdc, camera);
+  tapPlane.constant = -player.z;
+  if (!tapRay.ray.intersectPlane(tapPlane, tapHit)) return;
+  const x = tapHit.x, y = -tapHit.z, d = Math.hypot(x - player.x, y - player.y);
+  if (d < 0.8 || d > 90) return;
+  stopGuide();
+  walkTarget = { x, y, best: d, checkAt: simT + 1.2 };
+  tapRing.position.copy(toV(x, y, player.z + 0.03)); tapRing.visible = true;
+}
 canvas.addEventListener('touchend', endTouch); canvas.addEventListener('touchcancel', endTouch);
 
 /* ======================================================================= collisions (Blender xy) */
@@ -743,7 +860,7 @@ function tawafTick(dt) {
     if (frac > 0.76 && frac < 0.97 && !tw.fired.has(raw + ':rabbana')) { tw.fired.add(raw + ':rabbana'); say(cnt === 0 ? ['n:yemeni_1', 'd:rabbana'] : ['d:rabbana']); }
   }
   if (cnt > tw.count) {
-    tw.count = cnt; saveExplore(); banner(T.circuit(cnt)); chime(); updateHud();
+    tw.count = cnt; saveExplore(); banner(T.circuit(cnt)); chime(); buzz(cnt >= 7); updateHud();
     if (cnt >= 7) { input.ff = false; return nextMission(); }
     stopAudio();                                        // leftovers from the last circuit stop here
     if (!input.ff) say(['d:bismillah']);                // takbir each time you pass the Black Stone
@@ -764,12 +881,13 @@ function saiTick() {
   }
 }
 function arrived(where) {
-  const s = game.sai; saveExplore(); banner(T.length(s.count)); chime(); updateHud(); setProg(0);
+  const s = game.sai; saveExplore(); banner(T.length(s.count)); chime(); buzz(s.count >= 7); updateHud(); setProg(0);
   if (s.count >= 7) { input.ff = false; return finish(); }
   stopAudio();
   if (!input.ff) say(s.count === 1 ? ['n:marwa_0', 'd:safa_dhikr'] : ['d:safa_dhikr']);   // the dhikr is repeated on each hill
   $('bSkip').hidden = false;
 }
+function buzz(final) { try { navigator.vibrate?.(final ? [90, 70, 90] : 70); } catch {} }
 function cue(a) { if (a.startsWith('dhikr:')) showDhikr(+a.slice(6)); else tip(a); }
 function nextMission() {
   const done = M[game.mi];
@@ -779,12 +897,14 @@ function nextMission() {
   if (done && done.id !== 'tawaf') { banner(T.missionDone(done.title[LANG]), 2000); chime(); }
   startMission();
 }
-function startMission({ resume = false } = {}) {
+function startMission({ resume = false, intro = false } = {}) {
   const m = M[game.mi];
   if (!resume && m.id === 'tawaf') game.tawaf = freshTawaf();
   if (!resume && m.id === 'sai') game.sai = freshSai();
   if (m.id === 'stone' || m.id === 'tawaf') scene.add(startLine); else scene.remove(startLine);
-  stopAudio(); if (paused) pausedCues = [...m.audio]; else say(m.audio);
+  // A fresh start begins with the Talbiyah, said from the Miqat until the Tawaf begins.
+  const cues = intro ? ['d:talbiyah', ...m.audio] : m.audio;
+  stopAudio(); if (paused) pausedCues = [...cues]; else say(cues);
   saveExplore();
   updateHud();
 }
@@ -960,9 +1080,11 @@ function updateHud() {
   $('mStep').textContent = `${T.mission} ${game.mi + 1} ${T.of} ${M.length}`;
   $('mTitle').textContent = m.title[LANG]; $('mGoal').textContent = m.goal[LANG];
   const c = $('mCount');
-  if (m.id === 'tawaf') { c.hidden = false; c.innerHTML = `${game.tawaf.count} <small>/ 7</small>`; }
-  else if (m.id === 'sai') { c.hidden = false; c.innerHTML = `${game.sai.count} <small>/ 7</small>`; }
-  else c.hidden = true;
+  if (m.id === 'tawaf' || m.id === 'sai') {
+    const n = m.id === 'tawaf' ? game.tawaf.count : game.sai.count;
+    c.hidden = false;
+    c.innerHTML = `<span class="dots" aria-hidden="true">${Array.from({ length: 7 }, (_, i) => `<i class="${i < n ? 'on' : i === n ? 'now' : ''}"></i>`).join('')}</span><bdi dir="ltr">${n} / 7</bdi>`;
+  } else c.hidden = true;
   $('mProg').hidden = c.hidden;
   const skipLabel = m.id === 'sai' ? T.skipSai : T.skipTawaf;
   $('bSkip').textContent = compactHUD.matches ? mobileText.skip : skipLabel;
@@ -1071,7 +1193,7 @@ function setWorld(name) {
   // textures rather than keeping both large worlds resident on a phone.
   for (const k of Object.keys(worlds)) if (k !== name) {
     const old = worlds[k]; TourRuntime.disposeModel(old.root);
-    if (old.crowd) TourRuntime.disposeModel(old.crowd.group);
+    if (old.crowd) disposeCrowd(old.crowd.group);
     // Per-world crowd geometry owns its motion attributes; source prototypes
     // remain available for reuse without retaining old GPU buffers.
     delete worlds[k]; delete worldLoads[k];
@@ -1099,7 +1221,7 @@ function applyLight() {
   }
   sun.target.position.set(0, 0, 0);
   floods.visible = night && !masa; floodKey.visible = night && !masa;
-  sun.castShadow = !MOBILE && !night && !masa;
+  sun.castShadow = shadowsOn && !night && !masa; floodKey.castShadow = shadowsOn;
   for (const w of Object.values(worlds)) w.root.traverse((o) => { if (o.isMesh && o.material && o.material.emissiveIntensity !== undefined && /lamp|light|Clock face/i.test(o.material.name)) { o.material.userData.e0 ??= o.material.emissiveIntensity; o.material.emissiveIntensity = o.material.userData.e0 * (night && !masa ? 1.6 : 1); } });
   $('bTime').textContent = night ? T.day : T.night; $('bTime').hidden = masa;
 }
@@ -1127,7 +1249,7 @@ function frame() {
   const dt = Math.min(clock.getDelta(), 0.05); simT += dt;
   if (current && started && !paused && !game.busy) { step(dt, simT); drawMini(); if (simT - lastSave > 1) { saveExplore(); lastSave = simT; } }
   const t = simT;
-  const bob = !reduceMotion && !paused && (Math.abs(input.f) + Math.abs(input.s) > 0.1 || input.guide) ? Math.sin(t * 7) * 0.025 : 0;
+  const bob = comfort.bob && !reduceMotion && !paused && (Math.abs(input.f) + Math.abs(input.s) > 0.1 || input.guide || walkTarget) ? Math.sin(t * 7) * 0.025 : 0;
   camera.position.copy(toV(player.x, player.y, player.z + 1.6 + bob));
   camera.rotation.set(player.pitch, player.yaw - Math.PI / 2, 0);
   renderer.render(scene, camera);
@@ -1142,6 +1264,7 @@ function step(dt, t) {
     if (keys.KeyD) s = 1; if (keys.KeyA) s = -1;
     if (keys.ArrowLeft) player.yaw += 1.8 * dt; if (keys.ArrowRight) player.yaw -= 1.8 * dt;
     if ((f || s) && input.guide && (keys.KeyW || keys.KeyS || keys.KeyA || keys.KeyD || input.f || input.s)) stopGuide();
+    if ((f || s || input.guide) && walkTarget) { walkTarget = null; tapRing.visible = false; }
     let base = current === 'masa' ? 2.6 : 2.0; if (input.run) base *= 2.4;
     let vx = 0, vy = 0;
     if (input.guide) {
@@ -1153,6 +1276,16 @@ function step(dt, t) {
         const speed = 2.0 * (input.ff ? 6 : input.run ? 2.4 : calm);
         vx = d[0] * speed; vy = d[1] * speed;
         if (!reduceMotion && simT > lookHold) { const dy = wrapA(Math.atan2(d[1], d[0]) - player.yaw); player.yaw += dy * Math.min(1, dt * (input.ff ? 6 : 3)); }
+      }
+    } else if (walkTarget) {
+      const dx = walkTarget.x - player.x, dy = walkTarget.y - player.y; let d = Math.hypot(dx, dy);
+      // stop on arrival, or when something (a wall, the Kaaba) keeps us from getting closer
+      if (simT > walkTarget.checkAt) { if (d > walkTarget.best - 0.3) d = 0; walkTarget.best = Math.min(walkTarget.best, d); walkTarget.checkAt = simT + 1.2; }
+      if (d < 0.4) { walkTarget = null; tapRing.visible = false; }
+      else {
+        const speed = base * (input.run ? 1 : 0.85);
+        vx = dx / d * speed; vy = dy / d * speed;
+        if (!reduceMotion && simT > lookHold) { const turn = wrapA(Math.atan2(dy, dx) - player.yaw); player.yaw += turn * Math.min(1, dt * 3); }
       }
     } else if (f || s) {
       const fx = Math.cos(player.yaw), fy = Math.sin(player.yaw), rx = Math.sin(player.yaw), ry = -Math.cos(player.yaw);
@@ -1168,7 +1301,7 @@ function step(dt, t) {
     if (tg && tg[2] !== 'path') { placeMarker(tg[0], tg[1], current === 'masa' ? floorZ(tg[0], tg[1]) : 0); const d = Math.hypot(tg[0] - player.x, tg[1] - player.y); $('mDist').textContent = d > 3 ? `${Math.round(d)} ${T.m}` : ''; }
     else { placeMarker(null); $('mDist').textContent = ''; }
     beam.material.opacity = reduceMotion ? 0.2 : 0.16 + 0.08 * Math.sin(t * 3);
-    if (!reduceMotion) worlds[current].crowd?.update(dt, t);
+    worlds[current].crowd?.update(reduceMotion ? 0 : dt, t);
   }
 }
 /* fixed-step simulation for automated tests: runs the game logic without rendering */
@@ -1212,6 +1345,29 @@ $('bGuide').textContent = T.guide; $('bRun').textContent = T.run; $('bTour').tex
 $('bSound').textContent = snd.on ? T.soundOn : T.soundOff; $('bSound').setAttribute('aria-pressed', snd.on);
 $('dTitle').textContent = T.doneTitle; $('dText').textContent = T.doneText; $('bAgain').textContent = T.again; $('bBack').textContent = T.back;
 $('bGuide').onclick = toggleGuide;
+function renderSettings() {
+  $('bSettings').textContent = EXTRA.settings; $('sTitle').textContent = EXTRA.settings;
+  $('sSizeLabel').textContent = EXTRA.size; $('sBobLabel').textContent = EXTRA.bob; $('sLookLabel').textContent = EXTRA.look; $('sClose').textContent = EXTRA.close;
+  for (const b of $('sBob').children) b.textContent = b.dataset.bob === '1' ? EXTRA.on : EXTRA.off;
+  for (const b of $('sLook').children) b.textContent = { '0.6': EXTRA.slow, '1': EXTRA.normal, '1.5': EXTRA.fast }[b.dataset.look];
+  for (const b of $('sSize').children) b.setAttribute('aria-pressed', +b.dataset.size === comfort.size);
+  for (const b of $('sBob').children) b.setAttribute('aria-pressed', (b.dataset.bob === '1') === comfort.bob);
+  for (const b of $('sLook').children) b.setAttribute('aria-pressed', +b.dataset.look === comfort.look);
+}
+let settingsReturn = null;
+function openSettings(open) {
+  $('settings').hidden = !open; clearInput();
+  if (open) { settingsReturn = document.activeElement; renderSettings(); $('sClose').focus(); }
+  else { placeFeed(); settingsReturn?.focus?.(); }
+}
+$('bSettings').onclick = () => { if (compactHUD.matches) setTourMenu(false); openSettings(true); };
+$('sClose').onclick = () => openSettings(false);
+$('settings').addEventListener('click', (e) => { if (e.target === $('settings')) openSettings(false); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('settings').hidden) openSettings(false); });
+for (const b of $('sSize').children) b.onclick = () => { comfort.size = +b.dataset.size; store.set('size', comfort.size); document.documentElement.style.fontSize = comfort.size * 100 + '%'; renderSettings(); placeFeed(); };
+for (const b of $('sBob').children) b.onclick = () => { comfort.bob = b.dataset.bob === '1'; store.set('bob', comfort.bob); renderSettings(); };
+for (const b of $('sLook').children) b.onclick = () => { comfort.look = +b.dataset.look; store.set('lookSpeed', comfort.look); renderSettings(); };
+renderSettings();
 $('bRun').onclick = () => { input.run = !input.run; $('bRun').setAttribute('aria-pressed', input.run); };
 $('bAct').onclick = () => { if (M[game.mi]?.id === 'safa') { stopAudio(); nextMission(); } };
 $('bSound').onclick = () => { initAudio(); setSound(!snd.on); };
@@ -1227,11 +1383,11 @@ $('bPause').textContent = EXTRA.pause; $('bPause').onclick = () => setPaused(!pa
 $('qualityLabel').textContent = EXTRA.quality; $('quality').value = quality;
 for (const option of $('quality').options) option.textContent = EXTRA[option.value];
 $('quality').onchange = () => {
-  quality = $('quality').value; store.set('quality', quality); applyQuality();
+  quality = $('quality').value; store.set('quality', quality); applyQuality(); if (current) applyLight();
   // The initial world is prepared behind the welcome screen. Rebuild its crowd
   // when that screen's quality choice changes, instead of retaining Auto density.
   for (const [name, w] of Object.entries(worlds)) if (w.crowd) {
-    scene.remove(w.crowd.group); TourRuntime.disposeModel(w.crowd.group);
+    scene.remove(w.crowd.group); disposeCrowd(w.crowd.group);
     w.crowd = makeCrowd(name);
     if (name === current) scene.add(w.crowd.group);
   }
@@ -1269,7 +1425,8 @@ async function begin(from = 0, restored = null) {
     started = true; paused = false; $('bPause').textContent = EXTRA.pause; $('bPause').setAttribute('aria-pressed', false);
     for (const id of ['bGuide', 'bRun', 'bSkip', 'bAct']) $(id).disabled = false;
     pausedCues = []; if (document.hidden) setPaused(true);
-    $('hud').hidden = false; $('bAct').hidden = true; startMission({ resume: !!restored }); duck(false);
+    window.__tourStarted = true;
+    $('hud').hidden = false; $('bAct').hidden = true; startMission({ resume: !!restored, intro: !restored && mi === 0 }); duck(false);
     $('bGuide').focus();
   } catch (error) { if (session.current(token)) loadFailure(() => begin(from, restored)); }
   finally { if (session.current(token)) { $('bStart').disabled = !booted; $('bResume').disabled = false; } }

@@ -17,6 +17,16 @@ test('Mas’a crowd remains continuous at both end-hall turns and loop closure',
     assert.ok(Math.hypot(a.x-b.x, a.y-b.y) <= .02001, 'Crowd must not teleport at an endpoint');
   }
 });
+test('Mas’a crowd never walks through the Safa or Marwah rock', () => {
+  const masa = { safa: 0, marwa: 400 };
+  for (const r of [3.4, 8, 12.5, 19.9]) {
+    const total = 2 * 384 + 2 * Math.PI * r;
+    for (let d = 0; d < total; d += .25) {
+      const p = R.masaCrowdPose(d, r, masa);
+      for (const cx of [-15, 415]) assert.ok(((p.x - cx) / 9.5) ** 2 + (p.y / 8) ** 2 > 1, `inside rock at x=${p.x.toFixed(1)}, y=${p.y.toFixed(1)}`);
+    }
+  }
+});
 const missions = ['enter', 'stone', 'tawaf', 'maqam', 'zamzam', 'masa', 'safa', 'sai'].map(id => ({ id }));
 
 test('lesson save restores a stable station ID, step and both counters', () => {
